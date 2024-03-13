@@ -1,0 +1,6 @@
+def printsquare(x_length, y_length,  nozzle_size):
+    z = 150
+
+    for x in range(0,x_length):
+        for y in range(-y_length,length):
+            msb.Move

@@ -1,0 +1,14 @@
+import mecademicpy.robot as mdr
+import time
+
+import mecademicpy.robot as mdr
+import time
+import test_movement
+
+msb = mdr.Robot() #Mega Sono Bot
+msb.Connect(address='192.168.0.100', enable_synchronous_mode=False)
+msb.ActivateAndHome()
+msb.WaitHomed()
+
+
+response = msb.SendCustomCommand('SetTrf(0,0,155,0,0,0)', timeout=10)
