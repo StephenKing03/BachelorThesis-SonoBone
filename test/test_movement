@@ -1,6 +1,71 @@
-def printsquare(x_length, y_length,  nozzle_size):
+import math
+import utility_functions as uf
+
+
+def print_square(x_length, y_length, nozzle_size, x_offset, y_offset):
     z = 150
 
-    for x in range(0,x_length):
-        for y in range(-y_length,length):
-            msb.Move
+    for x in range(0, x_length, nozzle_size):
+        msb.SendCustomCommand(f'MoveLin({x+x_offset}, {-y_length/2+y_offset}, {z}, 180, 0, -180)')
+        msb.SendCustomCommand(f'MoveLin({x+x_offset}, {y_length/2+y_offset}, {z}, 180, 0, -180)')
+        msb.waitIdle()
+    uf.z_hop(1)
+
+    uf.cleanpose()
+        
+
+def print_smiley(diameter, center_x, nozzle_size):
+    z = 150
+    offset_mouth = diameter/10
+    angle_mouth = 60
+    eye_y_offset = diameter/10
+    eye_x_length= diameter/5
+    
+    
+    #travel to outside circle
+    
+    msb.SendCustomCommand(f'MoveLin({center_x + diameter/2, center_x}, {z+10}, 180, 0, -180)')
+    uf.z_hop(-1)
+    #draw outside circle
+    for angle in range(0, 360, nozzle_size/diameter*2/(math.pi*2)*360):
+        x = center_x + diameter/2 * math.cos(math.radians(angle))
+        y = center_x + diameter/2 * math.sin(math.radians(angle))
+        msb.SendCustomCommand(f'MoveLin({x}, {y}, {z}, 180, 0, -180)')
+        #msb.SendCustomCommand(f'MoveLin({x}, {y + diameter}, {z}, 180, 0, -180)')
+        msb.waitIdle()
+        
+
+    #travel to mouth
+    uf.z_hop(1)
+    
+    x = center_x + diameter/2 * math.cos(math.radians(-90-angle_mouth/2))
+    y = center_x + diameter/2 * math.sin(math.radians(-90-angle_mouth/2))
+    msb.SendCustomCommand(f'MoveLin({x}, {y}, {z+10}, 180, 0, -180)')
+    
+    #draw mouth
+    uf.z_hop(-1)
+    for angle in range(-90-angle_mouth/2, -90+angle_mouth/2, nozzle_size/diameter*2/(math.pi*2)*360):
+        x = center_x + diameter/2 * math.cos(math.radians(angle))
+        y = center_x + diameter/2 * math.sin(math.radians(angle))
+        msb.SendCustomCommand(f'MoveLin({x}, {y}, {z}, 180, 0, -180)')
+        #msb.SendCustomCommand(f'MoveLin({x}, {y + diameter}, {z}, 180, 0, -180)')
+        msb.waitIdle()
+        
+
+    #travel to eye1
+    uf.z_hop(1)
+    msb.SendCustomCommand(f'MoveLin({center_x }, {center_x + eye_y_offset}, {z+10}, 180, 0, -180)')
+    uf.z_hop(-1)
+    #draw eye1
+    msb.SendCustomCommand(f'MoveLin({center_x+eye_x_length}, {center_x + eye_y_offset}, {z}, 180, 0, -180)')
+
+    #travel to eye2
+    uf.z_hop(1)
+    msb.SendCustomCommand(f'MoveLin({center_x }, {center_x - eye_y_offset}, {z+10}, 180, 0, -180)')
+    uf.z_hop(-1)
+    #draw eye2
+    msb.SendCustomCommand(f'MoveLin({center_x+eye_x_length}, {center_x - eye_y_offset}, {z}, 180, 0, -180)')
+    uf.z_hop(1)
+
+    uf.cleanpose()
+

@@ -1,16 +1,21 @@
+import mecademicpy.robot as mdr #mechademicpy API import (see Github documentation)
+import time #for time.sleep()
 
-import mecademicpy.robot as mdr
-import time
+import test_movement
 
-msb = mdr.Robot()
-msb.Connect(address='192.168.0.100')
-msb.ActivateRobot()
-msb.Home()
+msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
+msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
+msb.ActivateRobot() #same as in the webinterface: activate Robot
+msb.Home() #Home the robot
 
-msb.MoveJoints(-45, 0, 0, 0, 0, 0)
-time.sleep(5)
-msb.MoveJoints(0, -60, 60, 0, 0, 0)
+robot.SendCustomCommand('SetTrf(0,0,155,0,0,0)') #Set tooltip reference frame to 155mm in front of the end of robot arm
 
+
+#load programs
+#print_smiley(50,150,2)
+#print_square(100,100,2,150,0)
+
+#finish the program
 msb.WaitIdle()
 msb.DeactivateRobot()
 msb.Disconnect()

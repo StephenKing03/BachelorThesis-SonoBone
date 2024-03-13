@@ -1,0 +1,28 @@
+import matplotlib.pyplot as plt
+
+# Create a figure and axis
+fig, ax = plt.subplots()
+
+# Set the font properties
+font_properties = {'family': 'Helvetica', 'size': 12}
+
+# Draw the first text
+text1 = ax.text(0.1, 0.5, 'ARSL', fontdict=font_properties)
+vertices1 = text1.get_path().vertices
+
+# Draw the second text
+text2 = ax.text(0.6, 0.5, 'am', fontdict=font_properties)
+vertices2 = text2.get_path().vertices
+
+# Set the axis limits
+ax.set_xlim(0, 1)
+ax.set_ylim(0, 1)
+
+# Remove the axis ticks and labels
+ax.axis('off')
+
+# Save the figure as a vector graphics file
+plt.savefig('text_vector_graphics.svg', format='svg')
+
+# Show the figure
+plt.show()
