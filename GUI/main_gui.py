@@ -9,10 +9,10 @@ root = tk.CTk()  # create CTk window like you do with the Tk window
 root.geometry("400x240")
 
 def button_function():
-    print("button pressed")
+    print("stuff printed")
 
 # Use CTkButton instead of tkinter Button
-button = tk.CTkButton(master=root, text="CTkButton", command=button_function)
+button = tk.CTkButton(master=root, text="Print Stuff", command=button_function)
 button.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 root.mainloop()
