@@ -2,23 +2,28 @@ import math
 import utility_functions as uf
 
 
-def print_square(x_length, y_length, nozzle_size, x_offset, y_offset):
-    z = 150
+def print_square(x_length, y_length, nozzle_size, x_offset, y_offset, self):
+    z = 68
 
     for x in range(0, x_length, nozzle_size):
-        msb.SendCustomCommand(f'MoveLin({x+x_offset}, {-y_length/2+y_offset}, {z}, 180, 0, -180)')
-        msb.SendCustomCommand(f'MoveLin({x+x_offset}, {y_length/2+y_offset}, {z}, 180, 0, -180)')
-        msb.waitIdle()
-    uf.z_hop(1)
+        self.SendCustomCommand(f'MoveLin({x+x_offset}, {-y_length/2+y_offset}, {z}, 180, 0, -180)')
+        self.SendCustomCommand(f'MoveLin({x+x_offset}, {y_length/2+y_offset}, {z}, 180, 0, -180)')
+        self.WaitIdle()
+    uf.z_hop(1, self)
 
-    uf.cleanpose()
+    uf.cleanpose(self)
+    
+    return
         
 
 def print_smiley(diameter, center_x, nozzle_size):
     z = 150
     offset_mouth = diameter/10
     angle_mouth = 60
-    eye_y_offset = diameter/10
+    eye_y_of
+    
+    
+    fset = diameter/10
     eye_x_length= diameter/5
     
     
@@ -68,4 +73,7 @@ def print_smiley(diameter, center_x, nozzle_size):
     uf.z_hop(1)
 
     uf.cleanpose()
+
+    return
+
 

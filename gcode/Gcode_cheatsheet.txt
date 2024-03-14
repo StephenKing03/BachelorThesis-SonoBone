@@ -1,0 +1,50 @@
+G00 - rapid positioning X Y (=endposition coordinates)
+G01 - Linear Interpolation X Y Z F (=speed)
+G02 - Clockwise Interpolation X Y (= endposition) I J (x and y offset)
+G03 - Counterclockwise Interpolation
+
+
+
+G17 - set XY working plane
+G18 - set XZ working plane
+G19 - set YZ working plane
+
+
+
+
+
+G20 - set units to inches
+G21 - set units to mm
+
+
+G28 - Return home X Y Z (= intermediate point to avoid collision)
+
+
+
+G90 - set absolute coordinates
+G91 - set relative coordinates
+G92 - set current position as X, Y, Z
+
+
+M00 – Program stop
+M02 – End of program
+M03 – Spindle ON – clockwise
+M04 – Spindle ON – counterclockwise
+M05 – Spindle stop
+M06 – Tool change
+M08 – Flood colant ON
+M09 – Flood colant OFF
+M30 – End of program
+
+M84 - disable motors
+
+M104 – Start extruder heating
+M109 – Wait until extruder reaches T0
+M140 – Start bed heating
+M190 – Wait until bed reaches T0
+M106 – Set fan speed
+M107 - turn off fan
+
+M204 - Set acceleration
+
+N## for blocks

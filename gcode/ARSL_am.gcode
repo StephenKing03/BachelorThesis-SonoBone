@@ -1,39 +1,3 @@
-;FLAVOR:Marlin
-;TIME:25
-;Filament used: 0.0556269m
-;Layer height: 0.32
-;MINX:66.549
-;MINY:102.593
-;MINZ:0.32
-;MAXX:153.795
-;MAXY:117.407
-;MAXZ:0.52
-;TARGET_MACHINE.NAME:Creality Ender-3 S1
-;Generated with Cura_SteamEngine 5.6.0
-M82 ;absolute extrusion mode
-; Ender 3 S1 Start G-code
-; M413 S0 ; Disable power loss recovery
-G92 E0 ; Reset Extruder
-
-; Prep surfaces before auto home for better accuracy
-M140 S60
-M104 S200
-
-G28 ; Home all axes
-G1 Z10.0 F3000 ; Move Z Axis up little to prevent scratching of Heat Bed
-G1 X0 Y0
-
-M190 S60
-M109 S200
-
-G1 X0.1 Y20 Z0.3 F5000.0 ; Move to start position
-G1 X0.1 Y200.0 Z0.3 F1500.0 E15 ; Draw the first line
-G1 X0.4 Y200.0 Z0.3 F5000.0 ; Move to side a little
-G1 X0.4 Y20 Z0.3 F1500.0 E30 ; Draw the second line
-G92 E0 ; Reset Extruder
-G1 Z2.0 F3000 ; Move Z Axis up little to prevent scratching of Heat Bed
-G1 X5 Y20 Z0.3 F5000.0 ; Move over to prevent blob squish
-
 G92 E0
 G92 E0
 G1 F2400 E-0.8
