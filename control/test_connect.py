@@ -13,36 +13,39 @@ msb.ClearMotion()
 msb.SendCustomCommand('ResetError()')
 msb.SendCustomCommand('ResumeMotion()')
 msb.SendCustomCommand('SetJointVelLimit(100)')
-msb.SendCustomCommand('SetCartLinVel(40)')
-msb.SendCustomCommand('SetBlending(40)')
+msb.SendCustomCommand('SetCartLinVel(200)')
+msb.SendCustomCommand('SetBlending(60)')
+
+#setpayload!!!!!--------------------------------
 
 
-msb.SendCustomCommand('SetTrf(0,0,160,0,0,0)') #Set tooltip reference frame to 155mm in front of the end of robot arm
+msb.SendCustomCommand('SetTrf(0,0,160,0,0,0)') #Set tooltip reference frame to 160 in front of the end of robot arm
 
+#initial position
 msb.SendCustomCommand(f'MovePose({150},{0},{65+30},180,0,-180)')
-time.sleep(5)
+time.sleep(2)
 
 
-#help(mdr.Robot)
 
-#load programs
+#------------load ---------------------
 #print_smiley(50,150,2)
 #uf.z_hop(1,10,msb)
-#print_square(30,100,1,156,0, msb)
-
+print_square(90,150,1,120,0, msb)
 #draw asrl am logo
-
 # Specify the path to your .gcode file
-file_path = r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\gcode\ARSL_am.gcode"
-
+file_path = r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\gcode\Bone2.gcode"
 # Extract coordinates
 coordinates = gt.extract_coordinates(file_path)
 
 # Write the coordinates
-gt.write_coordinates(coordinates, msb)
+#gt.write_coordinates(coordinates, msb)
 # Print the coordinates
 #for coordinate in coordinates:
  #   print(coordinate)
+
+
+
+# ----- present print ----
 msb.SendCustomCommand(f'MovePose({150},{0},{65+20},180,0,-180)')
 
 

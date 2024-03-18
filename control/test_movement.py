@@ -1,9 +1,10 @@
 import math
 import utility_functions as uf
+import time #for time.sleep()
 
 
 def print_square(x_length, y_length, nozzle_size, x_offset, y_offset, self):
-    z = 65.5
+    z = 63-140.8 + 10.5 +0.45
     self.SendCustomCommand(f'MovePose({x_offset},{-y_length/2+y_offset},{z+10},180,0,-180)')
     time.sleep(10)
 

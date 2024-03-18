@@ -1,8 +1,12 @@
 import mecademicpy.robot as mdr #mechademicpy API import (see Github documentation)
+import time #for time.sleep()
 
 def GetPose(self = mdr.Robot()):
     p = [None] * 5
-    pose = self.SendCustomCommand(self,'GetRtCartPos()',p[1],None)
+    #pose = self.SendCustomCommand(self,'GetRtCartPos()',p[1],None)
+    rtdata = self.GetRobotRtData()
+    pose = rtdata.rt_cart_pos.data
+    #pose = pose_s.strip('[]').split(',')
     #target = self.GetRtTargetCartPos()
     #pose = self.GetRtCartPos()
     #print(f'Target:{target}\n')

@@ -1,9 +1,14 @@
 import math
+import time #for time.sleep()
 
 def extract_coordinates(file_path):
     coordinates = []
     with open(file_path, 'r') as file:
+        i = 0
         for line in file:
+            if i <44:
+                i+=1
+                continue
             if line.startswith('G0') or line.startswith('G1'):
                 # Extracting X, Y, and Z coordinates
                 #print(f'---------------------------------{line}')
@@ -28,19 +33,22 @@ def extract_coordinates(file_path):
     return coordinates
 
 def write_coordinates(coordinates, self):
-    z_std = 68
-    x_offset = 56
+    z_std = 63-140.8 + 10.5 +0.45
+    x_offset = 80
     y_offset = -110
-    non_none_z = 0
-    non_none_x = 0
+    non_none_z = 100
+    non_none_x = 100
     non_none_y = 0
+    i = 0
     
     for x, y, z in coordinates:
+        print(f'--{i}--')
+        i +=1
         #blank line -> skip
         if(x == None and y == None and z == None):
             continue
         #reference so that constant z is managed if z is not specified
-        if(z != None):
+        if(z != None and z != 100 and z != -100):
             non_none_z = z
         if(x != None):
             non_none_x = x
@@ -51,19 +59,30 @@ def write_coordinates(coordinates, self):
         #if z = 100, stop
         if(z == 100 or z == -100):
             print('special case reached -> continued')
-            continue
 
+        elif(x != None and x + x_offset <= 100):
+            print('X-crash detected')
+            continue
+            
+        
         #if x and y are not specified, move to current position with z offset
-        if x == None and y == None:
+        elif x == None and y == None:
             #pose = get_pose()
+            
+            print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_std+10}')
             self.SendCustomCommand(f'MoveLin({non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_std+10}, {180}, {0}, {-180})')
+            
         elif z == None:
+            
+            print(f'{x+x_offset}, {y+y_offset}, {non_none_z+z_std}')
             self.SendCustomCommand(f'MoveLin({x+x_offset}, {y+y_offset}, {non_none_z+z_std}, {180}, {0}, {-180})')
+            
         #throw exception
         else:
-            print("!ALl ZEROES")
-
-    self.WaitIdle()
+            print("!ALL ZEROES")
+        
+        #self.WaitIdle()
+        #time.sleep(0.5)
 
     return
 
