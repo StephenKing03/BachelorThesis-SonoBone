@@ -5,24 +5,11 @@ import gcode_translator as gt
 
 from test_movement import print_smiley, print_square
 
-msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
-msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
-msb.ActivateRobot() #same as in the webinterface: activate Robot
-msb.Home() #Home the robot
-msb.ClearMotion()
-msb.SendCustomCommand('ResetError()')
-msb.SendCustomCommand('ResumeMotion()')
-msb.SendCustomCommand('SetJointVelLimit(100)')
-msb.SendCustomCommand('SetCartLinVel(200)')
-msb.SendCustomCommand('SetBlending(60)')
+printbed_z = -100
 
-#setpayload!!!!!--------------------------------
-
-
-msb.SendCustomCommand('SetTrf(0,0,160,0,0,0)') #Set tooltip reference frame to 160 in front of the end of robot arm
 
 #initial position
-msb.SendCustomCommand(f'MovePose({150},{0},{65+30},180,0,-180)')
+
 time.sleep(2)
 
 

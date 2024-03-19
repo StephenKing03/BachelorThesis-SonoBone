@@ -1,6 +1,9 @@
 import math
 import time #for time.sleep()
+import utility_functions as uf #import utility functions
+from main_control import robot_stats
 
+#---extract the coordinates from the gcode file---------------------------------------------------------
 def extract_coordinates(file_path):
     coordinates = []
     with open(file_path, 'r') as file:
@@ -10,11 +13,10 @@ def extract_coordinates(file_path):
                 i+=1
                 continue
             if line.startswith('G0') or line.startswith('G1'):
-                # Extracting X, Y, and Z coordinates
-                #print(f'---------------------------------{line}')
                 x = None
                 y = None
                 z = None
+                er = False
                 for command in line.split():
                     if command.startswith('X'):
                         x = float(command[1:])
@@ -24,31 +26,34 @@ def extract_coordinates(file_path):
                         try:
                             z = float(command[1:])
                         except:
-                            if command.startswith('E-2'):
-                                z = 100
-                            else:
-                                z = -100
+                            er = True
                 coordinates.append([x, y, z])
                 
     return coordinates
 
+
+#---write the coordinates (2D print) to the robot ---------------------------------------------------------
 def write_coordinates(coordinates, self):
-    z_std = 63-140.8 + 10.5 +0.45
-    x_offset = 80
-    y_offset = -110
-    non_none_z = 100
-    non_none_x = 100
+
+    z_0 = robot_stats.min_z
+    x_offset = robot_stats.min_x
+    y_offset = robot_stats.min_y
+    non_none_z = 0
+    non_none_x = 0
     non_none_y = 0
     i = 0
+
+    #set reference position:
+    uf.startpose(self)
     
-    for x, y, z in coordinates:
+    for x, y, z, er in coordinates:
         print(f'--{i}--')
         i +=1
         #blank line -> skip
         if(x == None and y == None and z == None):
             continue
         #reference so that constant z is managed if z is not specified
-        if(z != None and z != 100 and z != -100):
+        if(z != None):
             non_none_z = z
         if(x != None):
             non_none_x = x
@@ -56,40 +61,52 @@ def write_coordinates(coordinates, self):
             non_none_y = y  
         
 
-        #if z = 100, stop
-        if(z == 100 or z == -100):
-            print('special case reached -> continued')
-
-        elif(x != None and x + x_offset <= 100):
-            print('X-crash detected')
+        #if er = True, continue with the next line
+        if(er == True):
+            print('Error was TRUE -> continued')
             continue
+
+        
+        if(uf.checklimits(x, y, z, self) == 1):
+            x = robot_stats.max_x
+        elif(uf.checklimits(x, y, z, self)  == -1):
+            x = robot_stats.min_x
+
+        if(uf.checklimits(x, y, z, self)  == 2):
+            y = robot_stats.max_y
+        elif(uf.checklimits(x, y, z, self)  == -2):
+            y = robot_stats.max_z
+
+        if(uf.checklimits(x, y, z, self)  == 3):
+            z = robot_stats.max_z
+        elif(uf.checklimits(x, y, z, self)  == -3):
+            z = robot_stats.min_z
+        print(f'Out of bounds detected -> continued')
+            
             
         
         #if x and y are not specified, move to current position with z offset
-        elif x == None and y == None:
+        if (x == None and y == None):
             #pose = get_pose()
             
-            print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_std+10}')
-            self.SendCustomCommand(f'MoveLin({non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_std+10}, {180}, {0}, {-180})')
+            print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_0+10}')
+            uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z+z_std+10, 180, 0, -180)
             
         elif z == None:
             
             print(f'{x+x_offset}, {y+y_offset}, {non_none_z+z_std}')
-            self.SendCustomCommand(f'MoveLin({x+x_offset}, {y+y_offset}, {non_none_z+z_std}, {180}, {0}, {-180})')
+            uf.commandPose(x+x_offset, y+y_offset, non_none_z+z_0, 180, 0, -180)
+            
             
         #throw exception
         else:
-            print("!ALL ZEROES")
+            print("BIG ERROR")
         
         #self.WaitIdle()
         #time.sleep(0.5)
+    
+    uf.endpose(self)
 
     return
 
-#file_path = r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis-SonoBone\gcode\ARSL_am.gcode"
 
-# Extract coordinates
-#coordinates = extract_coordinates(file_path)
-#for i in range(0, len(coordinates)):
-#    print(f'{i}: {coordinates[i]}\n')
-    

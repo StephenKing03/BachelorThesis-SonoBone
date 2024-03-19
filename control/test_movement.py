@@ -3,7 +3,7 @@ import utility_functions as uf
 import time #for time.sleep()
 
 
-def print_square(x_length, y_length, nozzle_size, x_offset, y_offset, self):
+def print_square(x_length, y_length, nozzle_size, x_offset, y_offset, z_offset, self):
     z = 63-140.8 + 10.5 +0.45
     self.SendCustomCommand(f'MovePose({x_offset},{-y_length/2+y_offset},{z+10},180,0,-180)')
     time.sleep(10)
@@ -46,7 +46,6 @@ def print_smiley(diameter, center_x, nozzle_size):
 
     #travel to mouth
     uf.z_hop(1,msb)
-    
     x = center_x + diameter/2 * math.cos(math.radians(-90-angle_mouth/2))
     y = center_x + diameter/2 * math.sin(math.radians(-90-angle_mouth/2))
     msb.SendCustomCommand(f'MoveLin({x}, {y}, {z+10}, 180, 0, -180)')

@@ -1012,31 +1012,3 @@ G1 X90.803 Y171.276 E134.41924
 G1 X89.858 Y171.943 E134.51157
 G1 X88.856 Y172.551 E134.60513
 G1 X87.839 Y173.068 E134.6962
-;TIME_ELAPSED:72.585687
-G1 F2400 E133.8962
-M140 S0
-G91 ;Relative positioning
-G1 E-2 F2700 ;Retract a bit
-G1 E-2 Z0.2 F2400 ;Retract and raise Z
-G1 X5 Y5 F3000 ;Wipe out
-G1 Z10 ;Raise Z more
-G90 ;Absolute positioning
-
-G1 X0 Y220 ;Present print
-M106 S0 ;Turn-off fan
-M104 S0 ;Turn-off hotend
-M140 S0 ;Turn-off bed
-
-M84 X Y E ;Disable all steppers but Z
-
-M82 ;absolute extrusion mode
-;End of Gcode
-;SETTING_3 {"global_quality": "[general]\\nversion = 4\\nname = 2Dprint\\ndefini
-;SETTING_3 tion = creality_ender3s1\\n\\n[metadata]\\ntype = quality_changes\\nq
-;SETTING_3 uality_type = draft\\nsetting_version = 22\\n\\n[values]\\nadhesion_t
-;SETTING_3 ype = none\\n\\n", "extruder_quality": ["[general]\\nversion = 4\\nna
-;SETTING_3 me = 2Dprint\\ndefinition = creality_ender3s1\\n\\n[metadata]\\ntype 
-;SETTING_3 = quality_changes\\nquality_type = draft\\nintent_category = default\
-;SETTING_3 \nposition = 0\\nsetting_version = 22\\n\\n[values]\\nbottom_layers =
-;SETTING_3  0\\ninfill_sparse_density = 0\\nretraction_hop_enabled = True\\ntop_
-;SETTING_3 layers = 0\\n\\n"]}
