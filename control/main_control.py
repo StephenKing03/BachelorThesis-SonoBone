@@ -13,7 +13,7 @@ msb = uf.activationsequence()
 uf.cleanpose(msb)
 
 #------------load file ---------------------
-file_path = r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\gcode\robot_icon.gcode"
+file_path = r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\gcode\ARSL_am.gcode"
 
 #-----------print 2D file-----------------------
 gt.write_coordinates(gt.extract_coordinates(file_path), msb)

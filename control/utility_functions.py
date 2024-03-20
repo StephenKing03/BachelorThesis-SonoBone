@@ -97,7 +97,7 @@ def cleanpose(self = mdr.Robot()):
 #---move the robot to a predifined position (endpose) so that it is ready to present the print---------------------------------------------------------
 def endpose(self = mdr.Robot()):
 
-    self.SendCustomCommand(f'MovePose({150},{0},{65+30},180,0,-180)')
+    self.SendCustomCommand(f'MovePose({150},{0},{65},180,0,-180)')
 
     self.WaitIdle()
     print('endpose reached')
@@ -133,7 +133,7 @@ def activationsequence():
     #setpayload!!!!!--------------------------------
 
     #Set tooltip reference frame to 160 in front of the end of robot arm
-    msb.SendCustomCommand('SetTrf(0,0,160,0,0,0)')
+    msb.SendCustomCommand(f'SetTrf({robot_stats.tooloffset_x},{robot_stats.tooloffset_y},{robot_stats.tooloffset_z},{robot_stats.tooloffset_alpha},{robot_stats.tooloffset_beta},{robot_stats.tooloffset_gamma})')
 
     #send info text
     msb.WaitIdle()
