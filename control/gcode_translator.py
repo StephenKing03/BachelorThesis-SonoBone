@@ -1,17 +1,21 @@
 import math
 import time #for time.sleep()
 import utility_functions as uf #import utility functions
-from main_control import robot_stats
+from utility_functions import robot_stats
 
 #---extract the coordinates from the gcode file---------------------------------------------------------
 def extract_coordinates(file_path):
     coordinates = []
+
+    
     with open(file_path, 'r') as file:
         i = 0
         for line in file:
             if i <44:
                 i+=1
                 continue
+            if line.startswith(';TIME_ELAPSED'):
+                break
             if line.startswith('G0') or line.startswith('G1'):
                 x = None
                 y = None
@@ -27,7 +31,7 @@ def extract_coordinates(file_path):
                             z = float(command[1:])
                         except:
                             er = True
-                coordinates.append([x, y, z])
+                coordinates.append([x, y, z, er])
                 
     return coordinates
 
@@ -36,8 +40,8 @@ def extract_coordinates(file_path):
 def write_coordinates(coordinates, self):
 
     z_0 = robot_stats.min_z
-    x_offset = robot_stats.min_x
-    y_offset = robot_stats.min_y
+    x_offset = robot_stats.min_x + robot_stats.print_offset_x
+    y_offset = robot_stats.min_y + robot_stats.print_offset_y
     non_none_z = 0
     non_none_x = 0
     non_none_y = 0
@@ -66,22 +70,6 @@ def write_coordinates(coordinates, self):
             print('Error was TRUE -> continued')
             continue
 
-        
-        if(uf.checklimits(x, y, z, self) == 1):
-            x = robot_stats.max_x
-        elif(uf.checklimits(x, y, z, self)  == -1):
-            x = robot_stats.min_x
-
-        if(uf.checklimits(x, y, z, self)  == 2):
-            y = robot_stats.max_y
-        elif(uf.checklimits(x, y, z, self)  == -2):
-            y = robot_stats.max_z
-
-        if(uf.checklimits(x, y, z, self)  == 3):
-            z = robot_stats.max_z
-        elif(uf.checklimits(x, y, z, self)  == -3):
-            z = robot_stats.min_z
-        print(f'Out of bounds detected -> continued')
             
             
         
@@ -90,17 +78,17 @@ def write_coordinates(coordinates, self):
             #pose = get_pose()
             
             print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_0+10}')
-            uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z+z_std+10, 180, 0, -180)
+            uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z+z_0+10, 180, 0, -180, self)
             
         elif z == None:
             
-            print(f'{x+x_offset}, {y+y_offset}, {non_none_z+z_std}')
-            uf.commandPose(x+x_offset, y+y_offset, non_none_z+z_0, 180, 0, -180)
+            print(f'{x+x_offset}, {y+y_offset}, {non_none_z+z_0}')
+            uf.commandPose(x+x_offset, y+y_offset, non_none_z+z_0, 180, 0, -180, self)
             
             
         #throw exception
         else:
-            print("BIG ERROR")
+            print("!-!-!-!-!Line skip error!-!-!-!-!")
         
         #self.WaitIdle()
         #time.sleep(0.5)

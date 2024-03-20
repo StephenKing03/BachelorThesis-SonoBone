@@ -1,7 +1,7 @@
 import mecademicpy.robot as mdr #mechademicpy API import (see Github documentation)
 import time #for time.sleep()
-from main_control import robot_stats
-
+from robot_stats import robot_stats
+robot_stats = robot_stats()
 
 #---get real time cartesian position of the robot as an array [x,y,z,alpha,beta,gamma]-------------------------------------------
 def GetPose(self = mdr.Robot()):
@@ -46,46 +46,77 @@ def z_hop(up=-1, hop=10, self = mdr.Robot()):
 
 #--check if the given coordinates are within the limits of the buildspace ---------------------------------------------------------
 def checklimits(x, y, z, self = mdr.Robot()):
-    if(x > robot_stats.max_x or x < robot_stats.min_x): #check x limits
-        print(f'x out of bounds in iteration {iteration} for {x}')
+    #check x limits
+    if(x > robot_stats.max_x): 
+        print(f'x out of bounds for {x}')
         self.WaitIdle()
-        time.sleep(2)
+        #time.sleep(2)
         return 1
-    if(y > robot_stats.max_y or y < robot_stats.min_y): #check y limits
-        print(f'y out of bounds in iteration {iteration} for {y}')
+    elif(x < robot_stats.min_x):
+        print(f'x out of bounds for {x}')
         self.WaitIdle()
-        time.sleep(2)
+        #time.sleep(2)
+        return -1
+    #check y limits
+    if(y > robot_stats.max_y): 
+        print(f'y out of bounds for {y}')
+        self.WaitIdle()
+        #time.sleep(2)
         return 2
-    if(z > robot_stats.max_y or z < 0): #check z limits
-        print(f'z out of bounds in iteration {iteration} for {z}')
+    elif(y < robot_stats.min_y):
+        print(f'y out of bounds for {y}')
         self.WaitIdle()
-        time.sleep(2)
+        #time.sleep(2)
+        return -2
+
+    #check z limits
+    if(z > robot_stats.max_z ): 
+        print(f'z out of bounds for {z}')
+        self.WaitIdle()
+        #time.sleep(2)
         return 3
+    elif(z < robot_stats.min_z):
+        print(f'z out of bounds for {z}')
+        self.WaitIdle()
+        #time.sleep(2)
+        return -3
     return 0
 
 
 #---move the robot to a predefined position (cleanpose) so that it doesn't obstruct anything---------------------------------------------------------
 def cleanpose(self = mdr.Robot()):
 
-    robot.MoveJoints(0, -60, 60, 0, 0, 0)
+    self.MoveJoints(0, -60, 60, 0, 0, 0)
 
-    robot.WaitIdle()
+    self.WaitIdle()
     print('cleanpose reached')
     time.sleep(1)
 
     return
 
+#---move the robot to a predifined position (endpose) so that it is ready to present the print---------------------------------------------------------
 def endpose(self = mdr.Robot()):
 
-    msb.SendCustomCommand(f'MovePose({150},{0},{65+30},180,0,-180)')
+    self.SendCustomCommand(f'MovePose({150},{0},{65+30},180,0,-180)')
 
-    robot.WaitIdle()
+    self.WaitIdle()
     print('endpose reached')
     time.sleep(1)
 
     return
 
-#single activation command
+#---move the robot to a predifined position (startpose) so that it is ready to start the print---------------------------------------------------------
+def startpose(self = mdr.Robot()):
+
+    self.SendCustomCommand(f'MovePose({150},{0},{robot_stats.min_z + 15},180,0,-180)')
+
+    self.WaitIdle()
+    print('startpose reached')
+    time.sleep(3)
+
+    return
+
+#---single activation command to initialize the robot and set the reference frame---------------------------------------------------------
 def activationsequence():
 
     msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
@@ -112,11 +143,43 @@ def activationsequence():
 
     return msb
 
-def deactivationsequence():
+#---single command to deactivate the robot and disconnect it--------------------------------------------------------
+def deactivationsequence(self = mdr.Robot()):
 
-    msb.WaitIdle()
-    msb.DeactivateRobot()
-    msb.Disconnect()
+    self.WaitIdle()
+    self.DeactivateRobot()
+    self.Disconnect()
+
+    return
+
+
+#---move the robot to specified position with out of bounds check---------------------------------------------------------
+def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
+
+    #check if the pose is within the limits
+    if(checklimits(x, y, z, self) != 0):
+        print(f'Out of bounds detected -> continued')
+
+        if(checklimits(x, y, z, self) == 1):
+            x = robot_stats.max_x
+        elif(checklimits(x, y, z, self)  == -1):
+            x = robot_stats.min_x
+
+        if(checklimits(x, y, z, self)  == 2):
+            y = robot_stats.max_y
+        elif(checklimits(x, y, z, self)  == -2):
+            y = robot_stats.max_z
+
+        if(checklimits(x, y, z, self)  == 3):
+            z = robot_stats.max_z
+        elif(checklimits(x, y, z, self)  == -3):
+            z = robot_stats.min_z
+    
+
+    self.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')
+    #self.WaitIdle()
+    print(f'Pose reached: {x},{y},{z},{alpha},{beta},{gamma}')
+    #time.sleep(0.3)
 
     return
     
