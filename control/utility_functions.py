@@ -128,7 +128,7 @@ def activationsequence():
     msb.SendCustomCommand('ResumeMotion()')
     msb.SendCustomCommand(f'SetJointVelLimit({robot_stats.joint_vel_limit})')
     msb.SendCustomCommand(f'SetCartLinVel({robot_stats.max_linvel})')
-    msb.SendCustomCommand('SetBlending(60)')
+    msb.SendCustomCommand('SetBlending(40)')
 
     #setpayload!!!!!--------------------------------
 
