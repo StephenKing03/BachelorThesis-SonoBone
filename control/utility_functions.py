@@ -1,7 +1,7 @@
 import mecademicpy.robot as mdr #mechademicpy API import (see Github documentation)
 import time #for time.sleep()
-from robot_stats import robot_stats
-robot_stats = robot_stats()
+from globals import RobotStats
+RobotStats = RobotStats()
 
 #---get real time cartesian position of the robot as an array [x,y,z,alpha,beta,gamma]-------------------------------------------
 def GetPose(self = mdr.Robot()):
@@ -64,35 +64,35 @@ def z_hop(up=-1, hop=10, self = mdr.Robot()):
 #--check if the given coordinates are within the limits of the buildspace ---------------------------------------------------------
 def checklimits(x, y, z, self = mdr.Robot()):
     #check x limits
-    if(x > robot_stats.max_x): 
+    if(x > RobotStats.max_x): 
         print(f'x out of bounds for {x}')
         self.WaitIdle()
         #time.sleep(2)
         return 1
-    elif(x < robot_stats.min_x):
+    elif(x < RobotStats.min_x):
         print(f'x out of bounds for {x}')
         self.WaitIdle()
         #time.sleep(2)
         return -1
     #check y limits
-    if(y > robot_stats.max_y): 
+    if(y > RobotStats.max_y): 
         print(f'y out of bounds for {y}')
         self.WaitIdle()
         #time.sleep(2)
         return 2
-    elif(y < robot_stats.min_y):
+    elif(y < RobotStats.min_y):
         print(f'y out of bounds for {y}')
         self.WaitIdle()
         #time.sleep(2)
         return -2
 
     #check z limits
-    if(z > robot_stats.max_z ): 
+    if(z > RobotStats.max_z ): 
         print(f'z out of bounds for {z}')
         self.WaitIdle()
         #time.sleep(2)
         return 3
-    elif(z < robot_stats.min_z):
+    elif(z < RobotStats.min_z):
         print(f'z out of bounds for {z}')
         self.WaitIdle()
         #time.sleep(2)
@@ -125,7 +125,7 @@ def endpose(self = mdr.Robot()):
 #---move the robot to a predifined position (startpose) so that it is ready to start the print---------------------------------------------------------
 def startpose(self = mdr.Robot()):
 
-    self.SendCustomCommand(f'MovePose({150},{0},{robot_stats.min_z + 15},180,0,-180)')
+    self.SendCustomCommand(f'MovePose({150},{0},{RobotStats.min_z + 15},180,0,-180)')
 
     self.WaitIdle()
     print('startpose reached')
@@ -143,14 +143,14 @@ def activationsequence():
     msb.ClearMotion()
     msb.SendCustomCommand('ResetError()')
     msb.SendCustomCommand('ResumeMotion()')
-    msb.SendCustomCommand(f'SetJointVelLimit({robot_stats.joint_vel_limit_start})')
-    msb.SendCustomCommand(f'SetCartLinVel({robot_stats.max_linvel_start})')
+    msb.SendCustomCommand(f'SetJointVelLimit({RobotStats.joint_vel_limit_start})')
+    msb.SendCustomCommand(f'SetCartLinVel({RobotStats.max_linvel_start})')
     msb.SendCustomCommand('SetBlending(40)')
 
     #setpayload!!!!!--------------------------------
 
     #Set tooltip reference frame to 160 in front of the end of robot arm
-    msb.SendCustomCommand(f'SetTrf({robot_stats.tooloffset_x},{robot_stats.tooloffset_y},{robot_stats.tooloffset_z},{robot_stats.tooloffset_alpha},{robot_stats.tooloffset_beta},{robot_stats.tooloffset_gamma})')
+    msb.SendCustomCommand(f'SetTrf({RobotStats.tooloffset_x},{RobotStats.tooloffset_y},{RobotStats.tooloffset_z},{RobotStats.tooloffset_alpha},{RobotStats.tooloffset_beta},{RobotStats.tooloffset_gamma})')
 
     #send info text
     msb.WaitIdle()
@@ -181,19 +181,19 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
         print(f'Out of bounds detected -> continued')
 
         if(checklimits(x, y, z, self) == 1):
-            x = robot_stats.max_x
+            x = RobotStats.max_x
         elif(checklimits(x, y, z, self)  == -1):
-            x = robot_stats.min_x
+            x = RobotStats.min_x
 
         if(checklimits(x, y, z, self)  == 2):
-            y = robot_stats.max_y
+            y = RobotStats.max_y
         elif(checklimits(x, y, z, self)  == -2):
-            y = robot_stats.max_z
+            y = RobotStats.max_z
 
         if(checklimits(x, y, z, self)  == 3):
-            z = robot_stats.max_z
+            z = RobotStats.max_z
         elif(checklimits(x, y, z, self)  == -3):
-            z = robot_stats.min_z
+            z = RobotStats.min_z
     
 
     self.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')

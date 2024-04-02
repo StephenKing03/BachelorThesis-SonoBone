@@ -1,7 +1,7 @@
 import math
 import time #for time.sleep()
 import utility_functions as uf #import utility functions
-from utility_functions import robot_stats
+from utility_functions import RobotStats
 import rt_user_functions as ruf #extra functions such as 'exiting'
 
 
@@ -47,20 +47,21 @@ def extract_coordinates(file_path):
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
 def write_coordinates(coordinates, self):
     
-    self.SendCustomCommand(f'SetJointVelLimit({robot_stats.joint_vel_limit})')
-    self.SendCustomCommand(f'SetCartLinVel({robot_stats.max_linvel})')
+    #set printing speed
+    self.SendCustomCommand(f'SetJointVelLimit({RobotStats.joint_vel_limit})')
+    self.SendCustomCommand(f'SetCartLinVel({RobotStats.max_linvel})')
+
+
     #coordinates consist of [x, y, z, e, er]        
-    z_0 = robot_stats.min_z
-    x_offset = robot_stats.min_x + robot_stats.print_offset_x
-    y_offset = robot_stats.min_y + robot_stats.print_offset_y
+    z_0 = RobotStats.min_z
+    x_offset = RobotStats.min_x + RobotStats.print_offset_x
+    y_offset = RobotStats.min_y + RobotStats.print_offset_y
     non_none_z = 0
     non_none_x = 0
     non_none_y = 0
     i = 0
 
-    #set reference position:
-    #self.WaitIdle()
-    #with self.FileLogger(0.01, file_name='log.txt'):
+    #set starting position
     uf.startpose(self)
     
     
@@ -110,20 +111,13 @@ def write_coordinates(coordinates, self):
             print(f'{x+x_offset}, {y+y_offset}, {non_none_z+z_0}')
             uf.commandPose(x+x_offset, y+y_offset, non_none_z+z_0, 180, 0, -180, self)
             
-            
         #throw exception
         else:
             print("!-!-!-!-!Line skip error!-!-!-!-!")
-        
-        #while(uf.ReachedPose(self) == False):
-            #time.sleep(0.1)
-            #print('waiting for pose')
-        #print('current pose: ', uf.GetPose(self))
-        #print('target pose: ', uf.GetTargetPose(self))
 
         self.WaitIdle()
         time.sleep(0.1)
-    
+    #-------------------finished print -----------------------------
     uf.endpose(self)
 
     return

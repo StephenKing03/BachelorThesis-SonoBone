@@ -2,13 +2,12 @@ import mecademicpy.robot as mdr #mechademicpy API import (see Github documentati
 import time #for time.sleep()
 import utility_functions as uf #import utility functions
 import gcode_translator as gt #import gcode translator
-from utility_functions import robot_stats
 import rt_user_functions as ruf #extra functions such as 'exiting'
 
 
-#initiate exit indicator
-#setup exit key
-ruf.check_for_exit()
+
+#setup parallel thread for checking exit
+ruf.start_thread()
 
 #initiate robot
 msb = uf.activationsequence()

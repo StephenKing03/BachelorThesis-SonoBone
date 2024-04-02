@@ -1,29 +1,29 @@
 import keyboard
 import time
 from globals import GlobalState
+from globals import RobotStats
 import threading
 import utility_functions as uf
 
+
+#check for the exot key 'x' to stop the program
 def check_for_exit_key():
     
     while True:
         if keyboard.is_pressed('x'):
             print("Program stopped by user - ef")
             GlobalState().exit_program = True
-            time.sleep(2)
             break
-    print("deactivating robot")
-    uf.cleanpose()
-    uf.clean_motion()
-    #while True:
-        #time.sleep(0.2)
-        #print(f'exit_program ------- ruf: {GlobalState().exit_program}')
-           
 
+    print("deactivating robot")
+    uf.endpose()
+    uf.clean_motion()
+    uf.deactivationsequence()
+    
     return False
 
 #parallel thread for checking exit (stop)
-def check_for_exit():
+def start_thread():
     
     exit_thread = threading.Thread(target=check_for_exit_key)
     exit_thread.start()
