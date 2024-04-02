@@ -5,7 +5,7 @@ robot_stats = robot_stats()
 
 #---get real time cartesian position of the robot as an array [x,y,z,alpha,beta,gamma]-------------------------------------------
 def GetPose(self = mdr.Robot()):
-    p = [None] * 5
+    
     #pose = self.SendCustomCommand(self,'GetRtCartPos()',p[1],None)
     rtdata = self.GetRobotRtData()
     pose = rtdata.rt_cart_pos.data
@@ -14,9 +14,26 @@ def GetPose(self = mdr.Robot()):
     #pose = self.GetRtCartPos()
     #print(f'Target:{target}\n')
     #print(f'Pos:{pose}\n')
+    
 
     #manipulate so that pose is an array
     return pose
+
+
+def GetTargetPose(self = mdr.Robot()):
+    
+
+    rtdata = self.GetRobotRtData()
+    targetpose = rtdata.rt_target_cart_pos.data
+
+    return targetpose
+
+def ReachedPose(self = mdr.Robot()):
+
+    if(GetPose(self) == GetTargetPose(self)):
+        return True
+    else:
+        return False
 
 
 #---get real time  joint position of the robot as an array [j1,j2,j3,j4,j5,j6]-------------------------------------------
@@ -126,8 +143,8 @@ def activationsequence():
     msb.ClearMotion()
     msb.SendCustomCommand('ResetError()')
     msb.SendCustomCommand('ResumeMotion()')
-    msb.SendCustomCommand(f'SetJointVelLimit({robot_stats.joint_vel_limit})')
-    msb.SendCustomCommand(f'SetCartLinVel({robot_stats.max_linvel})')
+    msb.SendCustomCommand(f'SetJointVelLimit({robot_stats.joint_vel_limit_start})')
+    msb.SendCustomCommand(f'SetCartLinVel({robot_stats.max_linvel_start})')
     msb.SendCustomCommand('SetBlending(40)')
 
     #setpayload!!!!!--------------------------------
@@ -152,6 +169,9 @@ def deactivationsequence(self = mdr.Robot()):
 
     return
 
+def clean_motion(self = mdr.Robot()):
+
+    self.sendCustomCommand("ClearMotion()")
 
 #---move the robot to specified position with out of bounds check---------------------------------------------------------
 def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):

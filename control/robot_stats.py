@@ -1,3 +1,5 @@
+from multiprocessing import Value
+
 class robot_stats:
     def __init__(self):
         self.min_z = -75.3
@@ -14,13 +16,12 @@ class robot_stats:
         self.tooloffset_beta = 0
         self.tooloffset_gamma = 0
         
-        self.joint_vel_limit = 20
-        self.max_linvel = 20
+        self.joint_vel_limit = 10
+        self.max_linvel = 5
+        self.joint_vel_limit_start = 100
+        self.max_linvel_start = 5
 
         self.print_offset_x = -40
         self.print_offset_y = 0
-        
-
-
 
     

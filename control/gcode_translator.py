@@ -2,6 +2,8 @@ import math
 import time #for time.sleep()
 import utility_functions as uf #import utility functions
 from utility_functions import robot_stats
+import rt_user_functions as ruf #extra functions such as 'exiting'
+
 
 #---extract the coordinates from the gcode file---------------------------------------------------------
 def extract_coordinates(file_path):
@@ -20,6 +22,10 @@ def extract_coordinates(file_path):
                 x = None
                 y = None
                 z = None
+                alpha = None
+                beta = None
+                gamma = None
+                e = None
                 er = False
                 for command in line.split():
                     if command.startswith('X'):
@@ -31,14 +37,19 @@ def extract_coordinates(file_path):
                             z = float(command[1:])
                         except:
                             er = True
-                coordinates.append([x, y, z, er])
+                    elif command.startswith('E'):
+                        e = float(command[1:])
+                coordinates.append([x, y, z, e, er])
                 
     return coordinates
 
 
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
 def write_coordinates(coordinates, self):
-
+    
+    self.SendCustomCommand(f'SetJointVelLimit({robot_stats.joint_vel_limit})')
+    self.SendCustomCommand(f'SetCartLinVel({robot_stats.max_linvel})')
+    #coordinates consist of [x, y, z, e, er]        
     z_0 = robot_stats.min_z
     x_offset = robot_stats.min_x + robot_stats.print_offset_x
     y_offset = robot_stats.min_y + robot_stats.print_offset_y
@@ -48,10 +59,21 @@ def write_coordinates(coordinates, self):
     i = 0
 
     #set reference position:
+    #self.WaitIdle()
+    #with self.FileLogger(0.01, file_name='log.txt'):
     uf.startpose(self)
     
-    for x, y, z, er in coordinates:
+    
+    for x, y, z, e, er in coordinates:
+        
         print(f'--{i}--')
+        print(f'exit?: {ruf.GlobalState().exit_program}')
+        if ruf.GlobalState().exit_program:  # Check exit_program.value instead of exit_program
+            
+            print('BREAK - exitprogram')
+            uf.cleanpose(self)
+            time.sleep(10)
+            break
         i +=1
         #blank line -> skip
         if(x == None and y == None and z == None):
@@ -70,7 +92,10 @@ def write_coordinates(coordinates, self):
             print('Error was TRUE -> continued')
             continue
 
-            
+        #extrusion information
+        if(e != None):
+            print(f'extrusion: {e}')
+            #time.sleep(1)
             
         
         #if x and y are not specified, move to current position with z offset
@@ -90,8 +115,14 @@ def write_coordinates(coordinates, self):
         else:
             print("!-!-!-!-!Line skip error!-!-!-!-!")
         
-        #self.WaitIdle()
-        #time.sleep(0.5)
+        #while(uf.ReachedPose(self) == False):
+            #time.sleep(0.1)
+            #print('waiting for pose')
+        #print('current pose: ', uf.GetPose(self))
+        #print('target pose: ', uf.GetTargetPose(self))
+
+        self.WaitIdle()
+        time.sleep(0.1)
     
     uf.endpose(self)
 
