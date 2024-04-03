@@ -10,12 +10,9 @@ import rt_user_functions as ruf  # extra functions such as 'exiting'
 from globals import GlobalState
 from globals import RobotStats
 
-
 def button_function():
     print("Button pressed")
     return
-
-
 
 global status_text
 global z_offset_textbox
@@ -41,6 +38,7 @@ def print_control(root, leftcol, rightcol, buttoncolor, rcol):
     return
 
 def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
+
     global status_text
 
     #status info
@@ -65,6 +63,7 @@ def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
 
 def cosmetics(root, leftcol, rightcol, buttoncolor, rcol):
     #title
+
     info_title = tk.CTkLabel(master=root, text="SonoBone control interface", font=("Avenir Heavy", 25, 'bold'), fg_color= '#333332', width = root.winfo_screenwidth(), pady = 20, anchor = 'center')
     info_title.place(relwidth = 1)
 
@@ -75,6 +74,7 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
 
     global z_offset_textbox
     global speed_textbox
+
     #set z offsetbutton up and down
     z_offset_up_button = tk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= buttoncolor, command=z_up_but, width = 50, height = 25, anchor = 'center')
     z_offset_up_button.place(relx=rcol, rely=0.25, anchor=tk.NW)
@@ -109,7 +109,13 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
 #------------------ Button functions ------------------
 
 def start_print_but():
-
+    status_text.configure(text="Printing ...")
+    GlobalState().initialize = False
+    GlobalState().start_printing = True
+    #gt.write_coordinates(gt.extract_coordinates(GlobalState().filepath), msb)
+    d5.d5_write_coordinates(d5.d5_extract_coordinates(GlobalState().filepath), msb)
+    status_text.configure(text="Finished printing!")
+    
     return
     
 
@@ -119,8 +125,18 @@ def stop_print_but():
 
 
 def init_print_but():
-    #initiate robot
-    Robotuf.activationsequence()
+    global status_text
+
+    GlobalState().initialize = True
+    status_text.configure(text="Initializing robot...")
+    
+    ruf.start_threads()
+    RobotStats().msb = uf.activationsequence()
+    RobotStats().msb.WaitIdle()
+    status_text.configure(text="Robot initialized")
+    uf.cleanpose(RobotStats().msb)
+    RobotStats().msb.WaitIdle()
+    status_text.configure(text="Ready to print")
     return
 
 
@@ -161,16 +177,13 @@ def speed_down_but():
     speed_textbox.insert(0, f'{GlobalState().printspeed_percentage}%')
     return
     
-
-
 def select_file():
     global status_text
     file_path = filedialog.askopenfilename()
     print("Selected file:", file_path)
     # Use the file_path variable as needed
     GlobalState.filepath = file_path
-    GlobalState.status_text = "File selected"
-    status_text.configure(text=GlobalState().status_text)
+    status_text.configure(text="File selected")
 
 
 # ------------------ GUI ------------------

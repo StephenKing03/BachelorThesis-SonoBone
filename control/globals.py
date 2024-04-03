@@ -3,16 +3,19 @@
 class GlobalState:
     _instance = None
     exit_program = False
-    user_z_offset = 0
-    user_z_offset_increment = 0.15
-    start_program = False
     initialize = False
-    filepath = " "
-    start_printing = False
     reset = False
     stop_printing = False
+    start_printing = False
+    user_z_offset = 0
+    user_z_offset_increment = 0.15
+    
+    filepath = " "
+    
+    
+    
     terminal_text = "terminal activated \n "
-    status_text = " - \n "
+    status = 0
     printspeed_percentage = 100
     printspeed_increment = 2
 
