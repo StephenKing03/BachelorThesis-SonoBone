@@ -76,7 +76,7 @@ def write_coordinates(coordinates, self):
             uf.cleanpose(self)
             time.sleep(10)
             break
-        i +=1
+        i += 1
         #blank line -> skip
         if(x == None and y == None and z == None):
             continue
@@ -104,12 +104,12 @@ def write_coordinates(coordinates, self):
         if (x == None and y == None):
             #pose = get_pose()
             
-            print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_0+10}')
+            #print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_0+10}')
             uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + ruf.GlobalState().user_z_offset, 180, 0, -180, self)
             
         elif z == None:
             
-            print(f'{x+x_offset}, {y+y_offset}, {non_none_z+z_0}')
+            #print(f'{x+x_offset}, {y+y_offset}, {non_none_z+z_0}')
             uf.commandPose(x+x_offset, y+y_offset, non_none_z + z_0 + ruf.GlobalState().user_z_offset, 180, 0, -180, self)
             
         #throw exception
@@ -117,7 +117,7 @@ def write_coordinates(coordinates, self):
             print("!-!-!-!-!Line skip error!-!-!-!-!")
 
         self.WaitIdle()
-        time.sleep(0.1)
+        time.sleep(0.5)
     #-------------------finished print -----------------------------
     uf.endpose(self)
 

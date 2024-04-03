@@ -7,8 +7,8 @@ import test_5d_gcode as d5
 
 
 
-#setup parallel thread for checking exitwwww
-ruf.start_thread()
+#setup parallel thread for checking exit
+ruf.start_threads()
 
 #initiate robot
 msb = uf.activationsequence()
@@ -17,7 +17,7 @@ msb = uf.activationsequence()
 uf.cleanpose(msb)
 
 #------------load file path---------------------
-file_path = r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\gcode\5d\100_converted.txt"
+file_path = r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\gcode\5d\100_correctly_scaled_25.txt"
 
 #-----------print 2D file-----------------------
 #gt.write_coordinates(gt.extract_coordinates(file_path), msb)

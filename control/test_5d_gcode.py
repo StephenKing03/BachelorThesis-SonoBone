@@ -29,10 +29,13 @@ def d5_extract_coordinates(file_path):
                     z = float(command[1:])
                 if(i == 3):
                     alpha = float(command[1:])
+                    alpha = math.radians(alpha)
                 if(i == 4):
                     beta = float(command[1:])
+                    beta = math.radians(beta)
                 if(i == 5):
                     gamma = float(command[1:])
+                    beta = math.radians(gamma)
                 i += 1
             coordinates.append([x,y,z,alpha,beta,gamma])
                     

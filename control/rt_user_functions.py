@@ -4,6 +4,16 @@ from globals import GlobalState
 from globals import RobotStats
 import threading
 import utility_functions as uf
+import gcode_translator as gt #import gcode translator
+
+def start_printing():
+    #check if file path is set:
+    if GlobalState().filepath == " ":
+        print("No file path set")
+        GlobalState().start_printing = False
+        return False
+    gt.write_coordinates(gt.extract_coordinates(GlobalState().filepath), msb)
+    return True
 
 
 #check for the exot key 'x' to stop the program
@@ -41,12 +51,30 @@ def z_tuning():
 
 
 #parallel thread for checking exit (stop) and tuning of z_offset
-def start_thread():
+def start_threads():
     
     exit_thread = threading.Thread(target=check_for_exit_key)
     exit_thread.start()
     z_tune_thread = threading.Thread(target=z_tuning)
     z_tune_thread.start()
+
+def main_program():
+
+    start_thread()
+
+    #wait for start signal and then initiate robot
+    while(not GlobalState().startProgram):
+        time.sleep(0.1)
+    msb = uf.activationsequence()
+
+    #wait for start signal and then initiate robot
+    while(not GlobalState().startProgram):
+        time.sleep(0.1)
+    
+    
+
+
+    
 
 
 

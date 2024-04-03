@@ -88,12 +88,12 @@ def checklimits(x, y, z, self = mdr.Robot()):
         return -2
 
     #check z limits
-    if(z > RobotStats.max_z ): 
+    if(z > RobotStats.max_z + ruf.GlobalState().user_z_offset ): 
         print(f'z out of bounds for {z}')
         self.WaitIdle()
         #time.sleep(2)
         return 3
-    elif(z < RobotStats.min_z):
+    elif(z < RobotStats.min_z+ ruf.GlobalState().user_z_offset):
         print(f'z out of bounds for {z}')
         self.WaitIdle()
         #time.sleep(2)
@@ -198,6 +198,25 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
             z = RobotStats.min_z+ ruf.GlobalState().user_z_offset
     
 
+    print(f'alpha: {alpha}, beta: {beta}, gamma: {gamma}')
+   
+    
+    
+    alpha += alpha +180
+
+    if(alpha >180):
+        alpha -= 360
+
+     #----------disclaimer ------
+    
+    if(alpha <180-20):
+        print(f'alpha out of bounds for {alpha}')
+        alpha = 180-20
+        
+    if(alpha >-180+20):
+        print(f'alpha out of bounds for {alpha}')
+        alpha = -180+20
+    
     self.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')
     #self.WaitIdle()
     print(f'Pose reached: {x},{y},{z},{alpha},{beta},{gamma}')
