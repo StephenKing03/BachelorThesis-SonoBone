@@ -2,6 +2,7 @@ import mecademicpy.robot as mdr #mechademicpy API import (see Github documentati
 import time #for time.sleep()
 from globals import RobotStats
 RobotStats = RobotStats()
+import rt_user_functions as ruf #extra functions such as 'exiting'
 
 #---get real time cartesian position of the robot as an array [x,y,z,alpha,beta,gamma]-------------------------------------------
 def GetPose(self = mdr.Robot()):
@@ -163,6 +164,7 @@ def activationsequence():
 #---single command to deactivate the robot and disconnect it--------------------------------------------------------
 def deactivationsequence(self = mdr.Robot()):
 
+    print(f'GlobalState().user_z_offset: {ruf.GlobalState().user_z_offset}')
     self.WaitIdle()
     self.DeactivateRobot()
     self.Disconnect()
@@ -191,9 +193,9 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
             y = RobotStats.max_z
 
         if(checklimits(x, y, z, self)  == 3):
-            z = RobotStats.max_z
+            z = RobotStats.max_z + ruf.GlobalState().user_z_offset
         elif(checklimits(x, y, z, self)  == -3):
-            z = RobotStats.min_z
+            z = RobotStats.min_z+ ruf.GlobalState().user_z_offset
     
 
     self.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')

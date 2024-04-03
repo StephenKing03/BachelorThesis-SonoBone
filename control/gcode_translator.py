@@ -53,7 +53,7 @@ def write_coordinates(coordinates, self):
 
 
     #coordinates consist of [x, y, z, e, er]        
-    z_0 = RobotStats.min_z
+    z_0 = RobotStats.min_z 
     x_offset = RobotStats.min_x + RobotStats.print_offset_x
     y_offset = RobotStats.min_y + RobotStats.print_offset_y
     non_none_z = 0
@@ -68,8 +68,9 @@ def write_coordinates(coordinates, self):
     for x, y, z, e, er in coordinates:
         
         print(f'--{i}--')
-        print(f'exit?: {ruf.GlobalState().exit_program}')
-        if ruf.GlobalState().exit_program:  # Check exit_program.value instead of exit_program
+        
+        # Check exit_program.value instead of exit_program
+        if ruf.GlobalState().exit_program:  
             
             print('BREAK - exitprogram')
             uf.cleanpose(self)
@@ -104,12 +105,12 @@ def write_coordinates(coordinates, self):
             #pose = get_pose()
             
             print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_0+10}')
-            uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z+z_0+10, 180, 0, -180, self)
+            uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + ruf.GlobalState().user_z_offset, 180, 0, -180, self)
             
         elif z == None:
             
             print(f'{x+x_offset}, {y+y_offset}, {non_none_z+z_0}')
-            uf.commandPose(x+x_offset, y+y_offset, non_none_z+z_0, 180, 0, -180, self)
+            uf.commandPose(x+x_offset, y+y_offset, non_none_z + z_0 + ruf.GlobalState().user_z_offset, 180, 0, -180, self)
             
         #throw exception
         else:

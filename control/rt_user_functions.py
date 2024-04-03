@@ -22,9 +22,31 @@ def check_for_exit_key():
     
     return False
 
-#parallel thread for checking exit (stop)
+
+def z_tuning():
+        offset_interval = 0.15
+        while True:
+            if keyboard.is_pressed('i'):
+                print("w pressed")
+                GlobalState().user_z_offset += offset_interval
+                print(f"offset: now", {GlobalState().user_z_offset})
+               
+            elif keyboard.is_pressed('k'):
+                print("s pressed")
+                GlobalState().user_z_offset -= offset_interval
+                print(f"offset:  now", {GlobalState().user_z_offset})
+
+
+        return False
+
+
+#parallel thread for checking exit (stop) and tuning of z_offset
 def start_thread():
     
     exit_thread = threading.Thread(target=check_for_exit_key)
     exit_thread.start()
+    z_tune_thread = threading.Thread(target=z_tuning)
+    z_tune_thread.start()
+
+
 
