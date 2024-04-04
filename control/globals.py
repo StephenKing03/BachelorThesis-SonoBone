@@ -3,21 +3,17 @@
 class GlobalState:
     _instance = None
     exit_program = False
-    initialize = False
-    reset = False
-    stop_printing = False
-    start_printing = False
+    
+    printing_state = 0 #0: not printing, 1:ready 2:printing, 3: paused 3: finished 4: error 5: stopped
     user_z_offset = 0
-    user_z_offset_increment = 0.15
+    user_z_offset_increment = 0.05
     
     filepath = " "
     
-    
-    
     terminal_text = "terminal activated \n "
     status = 0
-    printspeed_percentage = 100
-    printspeed_increment = 2
+    printspeed = 10 #mm/s #adjust also RobotStats
+    printspeed_increment = 1
 
 
     def __new__(cls, *args, **kwargs):
@@ -44,9 +40,10 @@ class RobotStats:
         self.tooloffset_gamma = 0
         
         self.joint_vel_limit = 10
-        self.max_linvel = 5
+        self.max_linvel = 10
         self.joint_vel_limit_start = 100
         self.max_linvel_start = 30
+        self.max_lin_acc = 100  
 
         self.print_offset_x = -50
         self.print_offset_y = 20

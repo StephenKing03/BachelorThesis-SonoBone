@@ -1,8 +1,15 @@
 import mecademicpy.robot as mdr #mechademicpy API import (see Github documentation)
 import time #for time.sleep()
 from globals import RobotStats
+from globals import GlobalState
 RobotStats = RobotStats()
-import rt_user_functions as ruf #extra functions such as 'exiting'
+
+
+
+def adjust_speed(speed, self = mdr.Robot()):
+    self.SendCustomCommand(f'SetCartLinVel({speed})')
+    print(f'LinVel set to {speed} mm/s')
+    return
 
 #---get real time cartesian position of the robot as an array [x,y,z,alpha,beta,gamma]-------------------------------------------
 def GetPose(self = mdr.Robot()):
@@ -88,12 +95,12 @@ def checklimits(x, y, z, self = mdr.Robot()):
         return -2
 
     #check z limits
-    if(z > RobotStats.max_z + ruf.GlobalState().user_z_offset ): 
+    if(z > RobotStats.max_z + GlobalState().user_z_offset ): 
         print(f'z out of bounds for {z}')
         self.WaitIdle()
         #time.sleep(2)
         return 3
-    elif(z < RobotStats.min_z+ ruf.GlobalState().user_z_offset):
+    elif(z < RobotStats.min_z+ GlobalState().user_z_offset):
         print(f'z out of bounds for {z}')
         self.WaitIdle()
         #time.sleep(2)
@@ -145,6 +152,7 @@ def activationsequence():
     msb.SendCustomCommand('ResetError()')
     msb.SendCustomCommand('ResumeMotion()')
     msb.SendCustomCommand(f'SetJointVelLimit({RobotStats.joint_vel_limit_start})')
+    msb.SenCustomCommand(f'SetCartLinVel({RobotStats.max_lin_acc})')
     msb.SendCustomCommand(f'SetCartLinVel({RobotStats.max_linvel_start})')
     msb.SendCustomCommand('SetBlending(40)')
 
@@ -164,7 +172,7 @@ def activationsequence():
 #---single command to deactivate the robot and disconnect it--------------------------------------------------------
 def deactivationsequence(self = mdr.Robot()):
 
-    print(f'GlobalState().user_z_offset: {ruf.GlobalState().user_z_offset}')
+    print(f'GlobalState().user_z_offset: {GlobalState().user_z_offset}')
     self.WaitIdle()
     self.DeactivateRobot()
     self.Disconnect()
@@ -193,9 +201,9 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
             y = RobotStats.max_z
 
         if(checklimits(x, y, z, self)  == 3):
-            z = RobotStats.max_z + ruf.GlobalState().user_z_offset
+            z = RobotStats.max_z + GlobalState().user_z_offset
         elif(checklimits(x, y, z, self)  == -3):
-            z = RobotStats.min_z+ ruf.GlobalState().user_z_offset
+            z = RobotStats.min_z+ GlobalState().user_z_offset
     
 
     print(f'alpha: {alpha}, beta: {beta}, gamma: {gamma}')
