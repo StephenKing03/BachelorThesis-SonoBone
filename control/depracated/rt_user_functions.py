@@ -6,22 +6,13 @@ import threading
 import utility_functions as uf
 import gcode_translator as gt #import gcode translator
 
-def start_printing():
-    #check if file path is set:
-    if GlobalState().filepath == " ":
-        print("No file path set")
-        GlobalState().start_printing = False
-        return False
-    gt.write_coordinates(gt.extract_coordinates(GlobalState().filepath), msb)
-    return True
-
-
 #check for the exot key 'x' to stop the program
 def check_for_exit_key():
     
     while True:
         if keyboard.is_pressed('x'):
             print("Program stopped by user - ef")
+            GlobalState().terminal_text += "program was stopped by user pressing 'X'\n"
             GlobalState().exit_program = True
             break
 
@@ -33,8 +24,10 @@ def check_for_exit_key():
     return False
 
 
+
+#depracated
 def z_tuning():
-        offset_interval = 0.15
+        offset_interval = GlobalState().user_z_offset_increment
         while True:
             if keyboard.is_pressed('i'):
                 print("w pressed")
@@ -53,23 +46,19 @@ def z_tuning():
 #parallel thread for checking exit (stop) and tuning of z_offset
 def start_threads():
     
-    exit_thread = threading.Thread(target=check_for_exit_key)
-    exit_thread.start()
-    z_tune_thread = threading.Thread(target=z_tuning)
-    z_tune_thread.start()
+    #exit_thread = threading.Thread(target=check_for_exit_key)
+    #exit_thread.start()
+    #z_tune_thread = threading.Thread(target=z_tuning)
+    #z_tune_thread.start()
+    #speed_thread = threading.Thread(target=speed_tuning)
+    #speed_thread.start()
+    return
 
 def main_program():
 
-    start_thread()
+    start_threads()
 
-    #wait for start signal and then initiate robot
-    while(not GlobalState().startProgram):
-        time.sleep(0.1)
-    msb = uf.activationsequence()
-
-    #wait for start signal and then initiate robot
-    while(not GlobalState().startProgram):
-        time.sleep(0.1)
+    return
     
     
 

@@ -5,7 +5,7 @@ from globals import GlobalState
 RobotStats = RobotStats()
 
 
-
+#---set the speed of the robot in mm/s---------------------------------------------------------
 def adjust_speed(speed, self = mdr.Robot()):
     self.SendCustomCommand(f'SetCartLinVel({speed})')
     print(f'LinVel set to {speed} mm/s')
@@ -74,22 +74,26 @@ def checklimits(x, y, z, self = mdr.Robot()):
     #check x limits
     if(x > RobotStats.max_x): 
         print(f'x out of bounds for {x}')
+        GlobalState().terminal_text += f'x out of bounds for x = {x}\n'
         self.WaitIdle()
         #time.sleep(2)
         return 1
     elif(x < RobotStats.min_x):
         print(f'x out of bounds for {x}')
+        GlobalState().terminal_text += f'x out of bounds for x = {x}\n'
         self.WaitIdle()
         #time.sleep(2)
         return -1
     #check y limits
     if(y > RobotStats.max_y): 
         print(f'y out of bounds for {y}')
+        GlobalState().terminal_text += f'y out of bounds for y = {y}\n'
         self.WaitIdle()
         #time.sleep(2)
         return 2
     elif(y < RobotStats.min_y):
         print(f'y out of bounds for {y}')
+        GlobalState().terminal_text += f'y out of bounds for y = {y}\n'
         self.WaitIdle()
         #time.sleep(2)
         return -2
@@ -97,11 +101,13 @@ def checklimits(x, y, z, self = mdr.Robot()):
     #check z limits
     if(z > RobotStats.max_z + GlobalState().user_z_offset ): 
         print(f'z out of bounds for {z}')
+        GlobalState().terminal_text += f'z out of bounds for z = {z}\n'
         self.WaitIdle()
         #time.sleep(2)
         return 3
     elif(z < RobotStats.min_z+ GlobalState().user_z_offset):
         print(f'z out of bounds for {z}')
+        GlobalState().terminal_text += f'z out of bounds for z = {z}\n'
         self.WaitIdle()
         #time.sleep(2)
         return -3
@@ -115,6 +121,7 @@ def cleanpose(self = mdr.Robot()):
 
     self.WaitIdle()
     print('cleanpose reached')
+    GlobalState().terminal_text += "Cleanpose reached\n"
     time.sleep(1)
 
     return
@@ -126,6 +133,7 @@ def endpose(self = mdr.Robot()):
 
     self.WaitIdle()
     print('endpose reached')
+    GlobalState().terminal_text += "Endpose reached\n"
     time.sleep(1)
 
     return
@@ -137,58 +145,30 @@ def startpose(self = mdr.Robot()):
 
     self.WaitIdle()
     print('startpose reached')
-    time.sleep(3)
+    GlobalState().terminal_text += "Startpose reached\n"
+    time.sleep(1.5)
 
     return
-
-#---single activation command to initialize the robot and set the reference frame---------------------------------------------------------
-def activationsequence():
-
-    msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
-    msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
-    msb.ActivateRobot() #same as in the webinterface: activate Robot
-    msb.Home() #Home the robot
-    msb.ClearMotion()
-    msb.SendCustomCommand('ResetError()')
-    msb.SendCustomCommand('ResumeMotion()')
-    msb.SendCustomCommand(f'SetJointVelLimit({RobotStats.joint_vel_limit_start})')
-    msb.SenCustomCommand(f'SetCartLinVel({RobotStats.max_lin_acc})')
-    msb.SendCustomCommand(f'SetCartLinVel({RobotStats.max_linvel_start})')
-    msb.SendCustomCommand('SetBlending(40)')
-
-    #setpayload!!!!!--------------------------------
-
-    #Set tooltip reference frame to 160 in front of the end of robot arm
-    msb.SendCustomCommand(f'SetTrf({RobotStats.tooloffset_x},{RobotStats.tooloffset_y},{RobotStats.tooloffset_z},{RobotStats.tooloffset_alpha},{RobotStats.tooloffset_beta},{RobotStats.tooloffset_gamma})')
-
-    #send info text
-    msb.WaitIdle()
-    print('Robot activated and ready to go!')
-    time.sleep(1)
-
-
-    return msb
 
 #---single command to deactivate the robot and disconnect it--------------------------------------------------------
 def deactivationsequence(self = mdr.Robot()):
 
-    print(f'GlobalState().user_z_offset: {GlobalState().user_z_offset}')
-    self.WaitIdle()
-    self.DeactivateRobot()
-    self.Disconnect()
+    
 
     return
 
 def clean_motion(self = mdr.Robot()):
 
     self.sendCustomCommand("ClearMotion()")
+    GlobalState().terminal_text += "Cleared motion queue \n"
 
 #---move the robot to specified position with out of bounds check---------------------------------------------------------
 def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
 
     #check if the pose is within the limits
     if(checklimits(x, y, z, self) != 0):
-        print(f'Out of bounds detected -> continued')
+        print(f'Out of bounds detected -> override')
+        #GlobalState().terminal_text += "out of bounds\n"
 
         if(checklimits(x, y, z, self) == 1):
             x = RobotStats.max_x
@@ -206,10 +186,10 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
             z = RobotStats.min_z+ GlobalState().user_z_offset
     
 
-    print(f'alpha: {alpha}, beta: {beta}, gamma: {gamma}')
+    #print(f'alpha: {alpha}, beta: {beta}, gamma: {gamma}')
    
     
-    
+    '''
     alpha += alpha +180
 
     if(alpha >180):
@@ -222,13 +202,15 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
         alpha = 180-20
         
     if(alpha >-180+20):
-        print(f'alpha out of bounds for {alpha}')
+        print(f'alpha out of bounds for {alpha}')       
         alpha = -180+20
-    
+    '''
     self.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')
     #self.WaitIdle()
     print(f'Pose reached: {x},{y},{z},{alpha},{beta},{gamma}')
+    GlobalState().terminal_text += "f'Pose reached: {x},{y},{z},{alpha},{beta},{gamma}' \n"
     #time.sleep(0.3)
+    
 
     return
     

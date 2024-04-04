@@ -3,6 +3,7 @@ import time #for time.sleep()
 import utility_functions as uf #import utility functions
 from utility_functions import RobotStats
 import rt_user_functions as ruf #extra functions such as 'exiting'
+from globals import GlobalState
 
 
 #---extract the coordinates from the gcode file---------------------------------------------------------
@@ -64,13 +65,14 @@ def write_coordinates(coordinates, self):
     #set starting position
     uf.startpose(self)
     
-    
     for x, y, z, e, er in coordinates:
         
         print(f'--{i}--')
+        GlobalState().terminal_text += f'--{i}--'
+        
         
         # Check exit_program.value instead of exit_program
-        if ruf.GlobalState().exit_program:  
+        if GlobalState().exit_program:  
             
             print('BREAK - exitprogram')
             uf.cleanpose(self)
@@ -115,6 +117,7 @@ def write_coordinates(coordinates, self):
         #throw exception
         else:
             print("!-!-!-!-!Line skip error!-!-!-!-!")
+            
 
         self.WaitIdle()
         time.sleep(0.5)
