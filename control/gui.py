@@ -8,7 +8,6 @@ from tkinter import filedialog
 
 import utility_functions as uf  # import utility functions
 import gcode_translator as gt  # import gcode translator
-import rt_user_functions as ruf  # extra functions such as 'exiting'
 
 from globals import GlobalState
 from globals import RobotStats
@@ -115,7 +114,6 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
 
 def start_print_but():
     global status_text
-    global terminal_text
 
     #in case of restart - make it not shut down again
     GlobalState().exit_program = False
@@ -143,7 +141,6 @@ def start_print_but():
     
     return
     
-    
 
 def stop_print_but():
     global status_text
@@ -151,9 +148,6 @@ def stop_print_but():
     GlobalState().printing_state = 0 #0 = not printing
     status_text.configure(text="print stopped")
     GlobalState().exit_program = True
-
-
-
     return
 
 
@@ -165,9 +159,6 @@ def init_print_but():
     status_text.configure(text="Initializing robot...")
     
     #--from utility function - activation sequence()--
-
-    #start threads for checking exit and tuning
-    ruf.start_threads()
 
     #connect to robot if the robot is not connected already (e.g. from reset)
     if GlobalState().msb == None:
@@ -224,19 +215,18 @@ def reset():
     uf.deactivationsequence(GlobalState().msb)
     init_print_but()
     terminal_text.configure(text="Reset complete!")
-    
-
 
     return
 
 def select_file():
-
     global status_text
 
+    #get the file path
     file_path = filedialog.askopenfilename()
     print("Selected file:", file_path)
-    # Use the file_path variable as needed
-    GlobalState.filepath = file_path
+
+    # save the file path into GlobalState().filepath for later use
+    GlobalState().filepath = file_path
     filename = os.path.basename(file_path)
     status_text.configure(text="File selected: \n"  + filename)
     GlobalState().terminal_text += f"File selected: {filename}\r\n"
@@ -251,8 +241,8 @@ def z_up_but():
     GlobalState().user_z_offset += GlobalState().user_z_offset_increment
     GlobalState().user_z_offset = round(GlobalState().user_z_offset, 2)
     z_offset_textbox.delete(0, tk.END)
+
     # Insert the new text
-    
     z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
     print(GlobalState().user_z_offset)
     return
@@ -296,6 +286,17 @@ def terminal_update():
         time.sleep(0.5)
     return
 
+def speed_update():
+   
+    speed = GlobalState().printspeed
+    while True:
+        if speed != GlobalState().printspeed:
+            speed = GlobalState().printspeed_increment
+            uf.adjust_speed(GlobalState().printspeed)
+
+    return False
+    return
+
 def status_update():
     text = GlobalState().status_text
     while True:
@@ -307,6 +308,7 @@ def status_update():
 
 def init_gui():
     
+    #define soime parameters
     leftcol = 0.05
     rightcol = 0.35
     rcol = 0.88
@@ -320,15 +322,17 @@ def init_gui():
     root.title("SonoBone control interface")
 
 
+    #initialize all the gui parts
     print_control(root, leftcol,rightcol,buttoncolor,rcol)
     print_monitor(root, leftcol,rightcol,buttoncolor,rcol)
     cosmetics(root, leftcol,rightcol,buttoncolor,rcol)
     tuning(root, leftcol,rightcol,buttoncolor,rcol)
 
+    #start the terminal update thread
     update_terminal_thread = threading.Thread(target=terminal_update)
     update_terminal_thread.start()
 
-    update_status_thread = threading.Thread()
+    
 
     root.mainloop()
 

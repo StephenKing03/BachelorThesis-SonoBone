@@ -2,7 +2,6 @@ import math
 import time #for time.sleep()
 import utility_functions as uf #import utility functions
 from utility_functions import RobotStats
-import rt_user_functions as ruf #extra functions such as 'exiting'
 from globals import GlobalState
 
 
