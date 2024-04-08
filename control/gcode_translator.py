@@ -118,10 +118,10 @@ def write_coordinates(coordinates, self):
             print("!-!-!-!-!Line skip error!-!-!-!-!")
             
         #wait for the robot to finish the movement (be close to the target)
-        while(uf.ReachedPose() != True):
-            time.sleep(0.1)
-        #self.WaitIdle()
-        time.sleep(0.5)
+        #while(uf.ReachedPose() != True):
+            #time.sleep(0.1)
+        self.WaitIdle()
+        time.sleep(0.05)
     #-------------------finished print -----------------------------
     uf.endpose(self)
 

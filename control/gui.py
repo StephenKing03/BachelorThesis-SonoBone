@@ -188,6 +188,9 @@ def init_print_but():
     
     #setpayload!!!!!--------------------------------
 
+    msb.WaitIdle()
+    msb.StartLogging(0.001)
+
     #send info text
     msb.WaitIdle()
     print('Robot activated and ready to go!')
@@ -292,9 +295,10 @@ def terminal_update():
             last_line = lines[len(lines)-2]
             terminal_text.insert(ctk.END, current_time_string + ": " + last_line + "\r\n")
             text = GlobalState().terminal_text
+            terminal_text.see(tk.END)
             print(last_line)
-            time.sleep(0.6)
-        time.sleep(0.1)
+        time.sleep(0.01)
+            
     return
 
 def speed_update():
@@ -303,7 +307,7 @@ def speed_update():
     while True:
         if speed != GlobalState().printspeed:
             speed = GlobalState().printspeed_increment
-            uf.adjust_speed(GlobalState().printspeed)
+            uf.adjust_speed(GlobalState().printspeed, GlobalState().msb)
 
     return False
     return

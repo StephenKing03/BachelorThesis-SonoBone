@@ -21,7 +21,7 @@ def GetPose(self = mdr.Robot()):
     #target = self.GetRtTargetCartPos()
     #pose = self.GetRtCartPos()
     #print(f'Target:{target}\n')
-    #print(f'Pos:{pose}\n')
+    print(f'Pos:{pose}\n')
     
 
     #manipulate so that pose is an array
@@ -162,6 +162,7 @@ def startpose(self = mdr.Robot()):
 #---single command to deactivate the robot and disconnect it--------------------------------------------------------
 def deactivationsequence(self = mdr.Robot()):
 
+    #ToDo: add deactivation sequence
     
 
     return
@@ -217,7 +218,7 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
     self.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')
     #self.WaitIdle()
     print(f'Pose reached: {x},{y},{z},{alpha},{beta},{gamma}')
-    GlobalState().terminal_text += "Pose reached:" + str(x) + "," + str(y) + "," + str(z) + "," + str(alpha) + "," + str(beta) + ","  + str(gamma) + " \n"
+    GlobalState().terminal_text += "Pose reached:" + str(round(x,4)) + "," + str(round(y,4)) + "," + str(round(z,4)) + "," + str(round(alpha,4)) + "," + str(round(beta,4)) + ","  + str(round(gamma,4)) + " \n"
     #time.sleep(0.3)
     
 
