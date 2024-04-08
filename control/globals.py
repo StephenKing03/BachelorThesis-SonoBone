@@ -60,6 +60,7 @@ class RobotStats:
         self.joint_vel_limit_start = 100
         self.max_linvel_start = 30
         self.max_lin_acc = 100  
+        self.max_acc = 10
 
         self.print_offset_x = 0
         self.print_offset_y = 0

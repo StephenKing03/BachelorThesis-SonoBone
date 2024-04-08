@@ -23,6 +23,7 @@ global status_text
 global z_offset_textbox
 global speed_textbox
 global terminal_text
+global pause_button
 
 def print_control(root, leftcol, rightcol, buttoncolor, rcol):
     #button to initialize the robot
@@ -31,15 +32,24 @@ def print_control(root, leftcol, rightcol, buttoncolor, rcol):
 
     #button to set file path
     file_button = ctk.CTkButton(master=root, text="Select File", font=("Avenir Heavy",15),fg_color= '#089DC3', command=select_file)
-    file_button.place(relx=leftcol, rely=0.50, anchor=ctk.NW)
+    file_button.place(relx=leftcol, rely=0.45, anchor=ctk.NW)
 
     #button to start printing
     start_button = ctk.CTkButton(master=root, text="Start Printing", font=("Avenir Heavy",15),fg_color= buttoncolor, command=start_print_but)
-    start_button.place(relx=leftcol, rely=0.65, anchor=ctk.NW)
+    start_button.place(relx=leftcol, rely=0.55, anchor=ctk.NW)
 
     #button to stop printing
     start_button = ctk.CTkButton(master=root, text="Stop Printing", font=("Avenir Heavy",15), fg_color= '#DC0F24' ,command=stop_print_but)
-    start_button.place(relx=leftcol, rely=0.80, anchor=ctk.NW)
+    start_button.place(relx=leftcol, rely=0.65, anchor=ctk.NW)
+
+    #button to pause and resume printing
+    global pause_button
+    pause_button = ctk.CTkButton(master=root, text="Pause Printing", font=("Avenir Heavy",15), fg_color= buttoncolor, command=pause_print)
+    pause_button.place(relx=leftcol, rely=0.9, anchor=ctk.NW)
+
+    #button to callibrate the robot
+    calibrate_button = ctk.CTkButton(master=root, text="Calibrate", font=("Avenir Heavy",15), fg_color= buttoncolor, command=calibration_but)
+    calibrate_button.place(relx=leftcol, rely=0.75, anchor=ctk.NW)
 
     return
 
@@ -55,7 +65,7 @@ def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
     status_text = ctk.CTkLabel(master=root, text = " - ", font=("Avenir Heavy",12), height=4, width=450, anchor = ctk.W)
     status_text.place(relx=leftcol, rely=0.25, anchor=ctk.NW)
 
-    status_text.configure(text = "waiting...")
+    status_text.configure(text = "Deactivated")
 
     #terminal info
     terminal_label = ctk.CTkLabel(master=root, text="Print info", font=("Avenir Heavy", 15, 'bold'), width = 40, pady = 10, anchor = 'center')
@@ -153,7 +163,8 @@ def stop_print_but():
 
     GlobalState().printing_state = 0 #0 = not printing
     status_text.configure(text="print stopped")
-    GlobalState().exit_program = True
+    GlobalState().exit_program = True #leads to writecoordinates 
+    deactivate()
     return
 
 def init_print_but():
@@ -166,21 +177,22 @@ def init_print_but():
     #--from utility function - activation sequence()--
 
     #connect to robot if the robot is not connected already (e.g. from reset)
-    if GlobalState().msb == None:
-        GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
-        GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
-        GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
-        GlobalState().msb.Home() #Home the robot
+    
+    GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
+    GlobalState().msb.Connect(address='192.168.0.100',enable_synchronous_mode=True) #using IP address of the robot and Port 10000 to control
+    GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
+    GlobalState().msb.Home() #Home the robot
     
     msb = GlobalState().msb
     #setup robot 
     msb.ClearMotion()
-    msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging
+    msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging position
     msb.SendCustomCommand('ResetError()')
     msb.SendCustomCommand('ResumeMotion()')
     msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit_start})')
     msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_lin_acc})')
     msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel_start})')
+    msb.SendCustomCommand(f'SetCartAcc({RobotStats().max_acc}')
     msb.SendCustomCommand('SetBlending(40)')
     #Set tooltip reference frame to 160 in front of the end of robot arm
     msb.SendCustomCommand(f'SetTrf({RobotStats().tooloffset_x},{RobotStats().tooloffset_y},{RobotStats().tooloffset_z},{RobotStats().tooloffset_alpha},{RobotStats().tooloffset_beta},{RobotStats().tooloffset_gamma})')
@@ -189,7 +201,7 @@ def init_print_but():
     #setpayload!!!!!--------------------------------
 
     msb.WaitIdle()
-    msb.StartLogging(0.001)
+    #msb.StartLogging(0.001)
 
     #send info text
     msb.WaitIdle()
@@ -210,21 +222,11 @@ def init_print_but():
     GlobalState().printing_state = 1 #1 = ready to print
     status_text.configure(text="Ready to print")
     GlobalState().terminal_text += "Robot activated and ready to go\n"
+    print(uf.GetPose(msb))
 
     return
 
-def reset():
-    global status_text
-    global terminal_text
-    status_text.configure(text="Resetting ...")
-    GlobalState().printing_state = 0 #0 = not printing
 
-    # Reset the robot
-    uf.deactivationsequence(GlobalState().msb)
-    init_print_but()
-    terminal_text.configure(text="Reset complete!")
-
-    return
 
 def select_file():
     global status_text
@@ -241,6 +243,37 @@ def select_file():
 
     return
 
+def pause_print():
+    global status_text
+    global pause_button
+    if(GlobalState().printing_state == 2):
+
+        status_text.configure(text="Printing paused")
+        GlobalState().printing_state = 3 #3 = paused
+        GlobalState().terminal_text += "Printing paused\n"
+
+        time.sleep(5)
+        pause_button.configure(text="Resume Printing")
+
+    else:
+        status_text.configure(text="Printing...")
+        GlobalState().printing_state = 2 #2 = printing
+        GlobalState().terminal_text += "Printing resumed\n"
+
+        time.sleep(0.1)
+        pause_button.configure(text="Pause Printing")
+
+    return
+
+def calibration_but():
+
+    global status_text
+    status_text.configure(text="Calibrating")
+    uf.callibrationpose(GlobalState().msb)
+
+    return
+
+        
 
 #----- tuning buttons -----
 
@@ -281,19 +314,41 @@ def speed_down_but():
     speed_textbox.insert(0, f'{GlobalState().printspeed}mm/s')
     return
 
+#-------------------Helper functions-------------------
+def deactivate():
+    global status_text
+    global terminal_text
+    status_text.configure(text="Deactivating ...")
+    GlobalState().terminal_text += "Deacticating\n"
+    GlobalState().printing_state = 0 #0 = not printing
 
+    #Deactivate Robot
+    GlobalState().msb.WaitIdle()
+    GlobalState().msb.DeactivateRobot()
+    GlobalState().msb.Disconnect()
+    GlobalState().terminal_text += "Deactivated Robot\n"
+    status_text.configure(text="Deactivated")
+    
+
+    return
 # ------------------ GUI ------------------
+
 
 def terminal_update():
     global terminal_text
+    last_text = " "
     text = GlobalState().terminal_text
     while True:
         if GlobalState().terminal_text != text:
+            #if last_text == text:
+                #time.sleep(0.05)
+                #continue
             current_time = datetime.now().time()
             current_time_string = current_time.strftime("%H:%M:%S")
             lines = GlobalState().terminal_text.split('\n')
             last_line = lines[len(lines)-2]
             terminal_text.insert(ctk.END, current_time_string + ": " + last_line + "\r\n")
+            last_text = text
             text = GlobalState().terminal_text
             terminal_text.see(tk.END)
             print(last_line)
@@ -334,7 +389,7 @@ def init_gui():
     ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
     root = ctk.CTk()  # create CTk window like you do with the Tk window
-    root.geometry("700x420")
+    root.geometry("700x450")
     root.title("SonoBone control interface")
     root.iconbitmap(r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\SonoBone_icon.ico")
 

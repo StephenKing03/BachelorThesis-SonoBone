@@ -3,6 +3,7 @@ import threading
 import time
 import logging
 from globals import GlobalState
+from globals import RobotStats
 import mecademicpy.robot as mdr #mechademicpy API import (see Github documentation)
 import utility_functions as uf
 
@@ -21,7 +22,7 @@ def init_logger():
             time.sleep(0.5)
     return
 
-
+#logging test
 GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
 GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
 GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
@@ -31,15 +32,12 @@ GlobalState().msb.WaitIdle()
 with GlobalState().msb.FileLogger(0.001, fields =['CartPos']):
     GlobalState().msb.MoveJoints(30, -60, 60, 0, 0, 0)
     GlobalState().msb.MoveJoints(0, -60, 60, 0, 0, 0)
-    #print(uf.GetPose(GlobalState().msb))
+    GlobalState().msb.MovePose(150, 0, 65, 180, 0, -180)
+    print(uf.GetPose(GlobalState().msb))
     GlobalState().msb.MoveJoints(0, 0, 0, 0, 0, 0)
     GlobalState().msb.WaitIdle()
 
-
-
-
-
-#logging thread:
+#custom logging thread:
 logging.basicConfig(filename='terminal_text.log', level=logging.INFO, format='%(asctime)s %(message)s')
 logging_thread = threading.Thread(target=init_logger)
 # - en or disable the logging

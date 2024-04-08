@@ -1,8 +1,8 @@
 import math
 import time #for time.sleep()
 import utility_functions as uf #import utility functions
-from utility_functions import RobotStats
 from globals import GlobalState
+from globals import RobotStats
 
 
 #---extract the coordinates from the gcode file---------------------------------------------------------
@@ -43,19 +43,18 @@ def extract_coordinates(file_path):
                 
     return coordinates
 
-
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
 def write_coordinates(coordinates, self):
     
     #set printing speed
-    self.SendCustomCommand(f'SetJointVelLimit({RobotStats.joint_vel_limit})')
-    self.SendCustomCommand(f'SetCartLinVel({RobotStats.max_linvel})')
+    self.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
+    self.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel})')
 
 
     #coordinates consist of [x, y, z, e, er]        
-    z_0 = RobotStats.min_z 
-    x_offset = RobotStats.min_x + RobotStats.print_offset_x
-    y_offset = RobotStats.min_y + RobotStats.print_offset_y
+    z_0 = RobotStats().min_z 
+    x_offset = RobotStats().min_x + RobotStats().print_offset_x
+    y_offset = RobotStats().min_y + RobotStats().print_offset_y
     non_none_z = 0
     non_none_x = 0
     non_none_y = 0
@@ -68,14 +67,18 @@ def write_coordinates(coordinates, self):
         
         print(f'--{i}--')
         GlobalState().terminal_text += f'--{i}--'
+
+        while(GlobalState().printing_state == 3):
+            time.sleep(0.1)
         
         
         # Check exit_program.value instead of exit_program
         if GlobalState().exit_program:  
             
             print('BREAK - exitprogram')
+            GlobalState().terminal_text += "---------------BREAK - Print Process Stopped-----------------------\n"
             uf.cleanpose(self)
-            time.sleep(10)
+            time.sleep(3)
             break
         i += 1
         #blank line -> skip
@@ -118,13 +121,17 @@ def write_coordinates(coordinates, self):
             print("!-!-!-!-!Line skip error!-!-!-!-!")
             
         #wait for the robot to finish the movement (be close to the target)
-        #while(uf.ReachedPose() != True):
-            #time.sleep(0.1)
-        self.WaitIdle()
-        time.sleep(0.05)
-    #-------------------finished print -----------------------------
+        while(uf.ReachedPose() != True):
+            time.sleep(0.1)
+        #self.WaitIdle()
+        #time.sleep(0.05)
+        #-------------------finished print -----------------------------
     uf.endpose(self)
 
     return
 
+def modify_placement(coordinates):
 
+
+
+    return True

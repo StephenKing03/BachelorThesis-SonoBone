@@ -13,17 +13,14 @@ def adjust_speed(speed, self = mdr.Robot()):
 
 #---get real time cartesian position of the robot as an array [x,y,z,alpha,beta,gamma]-------------------------------------------
 def GetPose(self = mdr.Robot()):
-    
-    #pose = self.SendCustomCommand(self,'GetRtCartPos()',p[1],None)
-    rtdata = self.GetRobotRtData()
+
+    print("Hello \n")
+    rtdata = self.GetRobotRtData(synchronous_update = True, timeout = 10)
+    print("World \n")
+    print(rtdata)
     pose = rtdata.rt_cart_pos.data
-    #pose = pose_s.strip('[]').split(',')
-    #target = self.GetRtTargetCartPos()
-    #pose = self.GetRtCartPos()
-    #print(f'Target:{target}\n')
     print(f'Pos:{pose}\n')
     
-
     #manipulate so that pose is an array
     return pose
 
@@ -159,6 +156,18 @@ def startpose(self = mdr.Robot()):
 
     return
 
+def callibrationpose(self = mdr.Robot()):
+
+    self.WaitIdle()
+    commandPose((RobotStats.min_x + RobotStats.max_x)/2, 0, RobotStats.min_z, 180, 0, -180)
+    self.SendCustomCommand(f'MovePose({(RobotStats.min_x + RobotStats.max_x)/2}, 0, {RobotStats.min_z}, 180, 0, -180)')
+    GlobalState().terminal_text += "Ready for callibration - 10mm above the bed\n"
+    print("calibrationpose reached")
+
+    time.sleep(1.5)
+
+    return
+
 #---single command to deactivate the robot and disconnect it--------------------------------------------------------
 def deactivationsequence(self = mdr.Robot()):
 
@@ -171,6 +180,8 @@ def clean_motion(self = mdr.Robot()):
 
     self.sendCustomCommand("ClearMotion()")
     GlobalState().terminal_text += "Cleared motion queue \n"
+
+
 
 #---move the robot to specified position with out of bounds check---------------------------------------------------------
 def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
