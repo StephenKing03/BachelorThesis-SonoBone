@@ -47,8 +47,8 @@ def extract_coordinates(file_path):
 def write_coordinates(coordinates, self):
     
     #set printing speed
-    self.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
-    self.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel})')
+    #self.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
+    #self.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel})')
 
 
     #coordinates consist of [x, y, z, e, er]        
@@ -59,8 +59,12 @@ def write_coordinates(coordinates, self):
     non_none_x = 0
     non_none_y = 0
     i = 0
+    '''
+    print("-.now in the gt loop")
+    uf.commandPose(150, 60, -50, 180,0,-180)
+    uf.WaitReachedPose([150, 60, -50, 180,0,-180])
+'''
 
-    
     for x, y, z, e, er in coordinates:
         
         print(f'--{i}--')
@@ -74,7 +78,7 @@ def write_coordinates(coordinates, self):
         if GlobalState().exit_program:  
             
             print('BREAK - exitprogram')
-            GlobalState().terminal_text += "---------------BREAK - Print Process Stopped-----------------------\n"
+            GlobalState().terminal_text += "-----------BREAK - Print Process Stopped--------------\n"
             uf.cleanpose(self)
             time.sleep(3)
             break
@@ -101,30 +105,35 @@ def write_coordinates(coordinates, self):
             print(f'extrusion: {e}')
             #time.sleep(1)
             
-        
+        while(GlobalState().semaphore > 3):
+            time.sleep(0.2)
         #if x and y are not specified, move to current position with z offset
-        if (x == None and y == None):
+        if (x == None or y == None):
             #pose = get_pose()
             
             #print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_0+10}')
             uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180, self)
+            GlobalState().semaphore += 1
+            uf.WaitReachedPose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             
         elif z == None:
             
             #print(f'{x+x_offset}, {y+y_offset}, {non_none_z+z_0}')
             uf.commandPose(x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180, self)
+            GlobalState().semaphore += 1
+            uf.WaitReachedPose([x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180])
             
         #throw exception
         else:
             print("!-!-!-!-!Line skip error!-!-!-!-!")
             
-        #wait for the robot to finish the movement (be close to the target)
-        uf.WaitReachedPose([x,y,z,180,0,-180])
+       #GlobalState().msb.WaitIdle()
+        
         #self.WaitIdle()
         #time.sleep(0.05)
         #-------------------finished print -----------------------------
-    uf.endpose(self)
 
+    uf.endpose(self)
     return
 
 def modify_placement(coordinates):

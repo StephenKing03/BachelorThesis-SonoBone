@@ -155,7 +155,7 @@ def start_print_but():
     status_text.configure(text="Printing ...")
     GlobalState().msb.WaitIdle()
     #with GlobalState().msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
-    gt.write_coordinates(coordinates, GlobalState().msb)
+    #gt.write_coordinates(coordinates, GlobalState().msb)
     print_thread = threading.Thread(target=gt.write_coordinates, args=(coordinates, GlobalState().msb))
     print_thread.start()
     
@@ -201,7 +201,7 @@ def init_print_but():
     msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_lin_acc})')
     msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel_start})')
     msb.SendCustomCommand(f'SetCartAcc({RobotStats().max_acc}')
-    msb.SendCustomCommand('SetBlending(40)')
+    msb.SendCustomCommand('SetBlending(70)')
     #Set tooltip reference frame to 160 in front of the end of robot arm
     msb.SendCustomCommand(f'SetTrf({RobotStats().tooloffset_x},{RobotStats().tooloffset_y},{RobotStats().tooloffset_z},{RobotStats().tooloffset_alpha},{RobotStats().tooloffset_beta},{RobotStats().tooloffset_gamma})')
 
@@ -237,11 +237,12 @@ def init_print_but():
 def select_file():
     global status_text
     #with GlobalState().msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
+    '''
     GlobalState().msb.SendCustomCommand("MovePose(150, 0, -60, 180, 0, -180)")
     uf.WaitReachedPose([150,0,-60,180,0,-180])
         
     print("POSE REACHED___________________")
-
+    '''
     #get the file path
     file_path = filedialog.askopenfilename()
     print("Selected file:", file_path)

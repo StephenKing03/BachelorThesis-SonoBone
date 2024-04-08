@@ -1,0 +1,19 @@
+{
+    "robot_information": [
+        {
+            "model": "Meca500",
+            "revision": "3",
+            "version": "9.3.3.5809",
+            "serial_number": "GetRobotSerial",
+            "time_recorded": "2024-04-08-18-38-21",
+            "monitoring_interval": "0.001"
+        }
+    ],
+    "sent_commands": [],
+    "test_context": {
+        "testing_function_name": "",
+        "data_origin_files": [],
+        "data_columns_inspected": []
+    },
+    "test_results": {}
+}

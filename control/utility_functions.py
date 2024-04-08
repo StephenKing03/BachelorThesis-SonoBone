@@ -35,18 +35,30 @@ def ReachedPose(self = mdr.Robot(), target = [0,0,0,0,0,0]):
 
     pose = GetPose(self)
     #targetpose = GetTargetPose(self)
-    distance = ((pose[0]-target[0])**2 + (pose[1]-target[1])**2 + (pose[2]-target[2])**2) **0.5 
-    print(" DISTANCE = " + str(distance))
-    print("not reached:" + str(GetPose(GlobalState().msb)) + "  >>>>> " + str(target))
+    distance =  0
+    if (target[0] != None):
+        distance +=(pose[0]-target[0])**2
+    if (target[1] != None):
+        distance += (pose[1]-target[1])**2 
+    if (target[2] != None):
+         (pose[2]-target[2])**2
+
+    distance = distance**0.5
+
     if(distance < GlobalState().threshold):
         return True
     else:
+        print(" DISTANCE = " + str(distance))
+        print("not reached:" + str(GetPose(GlobalState().msb)) + "  >>>>> " + str(target))
         return False
+
 
 def WaitReachedPose(target = [0,0,0,0,0,0]):
     with GlobalState().msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
         while not ReachedPose(GlobalState().msb, target):
             time.sleep(0.1)
+            GlobalState().semaphore -=1
+    print("--------------------REACHED POSE-------------------")
     return
 
 #---get real time  joint position of the robot as an array [j1,j2,j3,j4,j5,j6]-------------------------------------------

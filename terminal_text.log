@@ -218,3 +218,63 @@
 2024-04-08 17:50:07,926 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
 2024-04-08 17:56:09,302 Connecting to robot 192.168.0.100:10000 (control mode)
 2024-04-08 17:56:09,415 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:07:42,629 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:07:42,745 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:08:14,104 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:08:14,222 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:09:26,774 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:09:26,886 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:10:55,338 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:10:55,454 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:12:44,480 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:12:44,594 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:16:07,172 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:16:07,284 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:16:45,630 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:16:45,743 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:18:09,550 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:18:09,664 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:19:04,711 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:19:04,828 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:21:23,655 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:21:23,771 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:24:27,235 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:24:27,354 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:26:31,043 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:26:31,156 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:27:49,702 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:27:49,818 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:29:28,258 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:29:28,373 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:39:00,878 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:39:00,995 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:41:31,182 Disconnecting from the robot.
+2024-04-08 18:41:40,287 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:41:40,400 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:41:40,668 Robot is activated.
+2024-04-08 18:41:46,706 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:41:47,321 Failed to connect: Connection error: Message with id=3001, data=Another user is already controlling the robot.
+2024-04-08 18:42:56,808 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:42:56,923 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:46:58,511 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:46:58,624 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:47:32,656 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:47:32,769 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:48:54,740 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:48:54,855 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:49:40,724 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:49:40,838 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:50:11,074 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:50:11,189 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:53:00,088 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:53:00,204 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:53:32,266 Disconnecting from the robot.
+2024-04-08 18:53:33,503 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:53:33,616 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:53:33,884 Robot is activated.
+2024-04-08 18:53:45,050 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:53:45,656 Failed to connect: Connection error: Message with id=3001, data=Another user is already controlling the robot.
+2024-04-08 18:54:14,147 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:54:14,260 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 18:55:05,912 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 18:55:06,026 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809

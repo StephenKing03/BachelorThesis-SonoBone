@@ -15,7 +15,7 @@ class GlobalState:
     user_z_offset_increment = 0.5
 
     #printspeed - RT variable for print speed tuning
-    printspeed = 10 #mm/s #adjust also RobotStats
+    printspeed = 5 #mm/s #adjust also RobotStats
     printspeed_increment = 1
     
     #filepath for the currently printed file
@@ -26,6 +26,7 @@ class GlobalState:
     status_text = " "
 
     threshold = 0.1
+    semaphore = 0
 
     #msb - Robot instance - for referencing the robot   
     msb = None
@@ -55,10 +56,10 @@ class RobotStats:
         self.tooloffset_beta = 0
         self.tooloffset_gamma = 0
         
-        self.joint_vel_limit = 10
-        self.max_linvel = 10
+        self.joint_vel_limit = 100
+        self.max_linvel = 5
         self.joint_vel_limit_start = 100
-        self.max_linvel_start = 30
+        self.max_linvel_start = 5
         self.max_lin_acc = 100  
         self.max_acc = 10
 
