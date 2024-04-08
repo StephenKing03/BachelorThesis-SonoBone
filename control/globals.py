@@ -25,6 +25,8 @@ class GlobalState:
     terminal_text = " "
     status_text = " "
 
+    threshold = 0.1
+
     #msb - Robot instance - for referencing the robot   
     msb = None
 

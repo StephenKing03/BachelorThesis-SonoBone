@@ -38,7 +38,16 @@ def GetTargetPose(self = mdr.Robot()):
 
 def ReachedPose(self = mdr.Robot()):
 
-    if(GetPose(self) == GetTargetPose(self)):
+    pose = GetPose(self)
+    targetpose = GetTargetPose(self)
+    distance = ((pose[0]-targetpose[0])**2 + (pose[1]-targetpose[1])**2 + (pose[2]-targetpose[2])**2) **0.5 
+
+    if(pose == targetpose):
+        return True
+    else:
+        return False
+
+    if(distance < GlobalState().threshold):
         return True
     else:
         return False
@@ -208,7 +217,7 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
     self.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')
     #self.WaitIdle()
     print(f'Pose reached: {x},{y},{z},{alpha},{beta},{gamma}')
-    GlobalState().terminal_text += "f'Pose reached: {x},{y},{z},{alpha},{beta},{gamma}' \n"
+    GlobalState().terminal_text += "Pose reached:" + str(x) + "," + str(y) + "," + str(z) + "," + str(alpha) + "," + str(beta) + ","  + str(gamma) + " \n"
     #time.sleep(0.3)
     
 

@@ -106,19 +106,21 @@ def write_coordinates(coordinates, self):
             #pose = get_pose()
             
             #print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_0+10}')
-            uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + ruf.GlobalState().user_z_offset, 180, 0, -180, self)
+            uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180, self)
             
         elif z == None:
             
             #print(f'{x+x_offset}, {y+y_offset}, {non_none_z+z_0}')
-            uf.commandPose(x+x_offset, y+y_offset, non_none_z + z_0 + ruf.GlobalState().user_z_offset, 180, 0, -180, self)
+            uf.commandPose(x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180, self)
             
         #throw exception
         else:
             print("!-!-!-!-!Line skip error!-!-!-!-!")
             
-
-        self.WaitIdle()
+        #wait for the robot to finish the movement (be close to the target)
+        while(uf.ReachedPose() != True):
+            time.sleep(0.1)
+        #self.WaitIdle()
         time.sleep(0.5)
     #-------------------finished print -----------------------------
     uf.endpose(self)

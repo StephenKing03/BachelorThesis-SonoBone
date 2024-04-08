@@ -1,8 +1,11 @@
-import customtkinter as tk
+import customtkinter as ctk
+import tkinter as tk
 import string
 import os
 import threading
 import time
+from datetime import datetime
+import mecademicpy.robot as mdr
 
 from tkinter import filedialog
 
@@ -23,20 +26,20 @@ global terminal_text
 
 def print_control(root, leftcol, rightcol, buttoncolor, rcol):
     #button to initialize the robot
-    init_button = tk.CTkButton(master=root, text="Initialize Robot", font=("Avenir Heavy",15), fg_color= buttoncolor, command=init_print_but)
-    init_button.place(relx=leftcol, rely=0.50, anchor=tk.NW)
+    init_button = ctk.CTkButton(master=root, text="Initialize Robot", font=("Avenir Heavy",15), fg_color= buttoncolor, command=init_print_but)
+    init_button.place(relx=leftcol, rely=0.35, anchor=ctk.NW)
 
     #button to set file path
-    file_button = tk.CTkButton(master=root, text="Select File", font=("Avenir Heavy",15),fg_color= '#089DC3', command=select_file)
-    file_button.place(relx=leftcol, rely=0.35, anchor=tk.NW)
+    file_button = ctk.CTkButton(master=root, text="Select File", font=("Avenir Heavy",15),fg_color= '#089DC3', command=select_file)
+    file_button.place(relx=leftcol, rely=0.50, anchor=ctk.NW)
 
     #button to start printing
-    start_button = tk.CTkButton(master=root, text="Start Printing", font=("Avenir Heavy",15),fg_color= buttoncolor, command=start_print_but)
-    start_button.place(relx=leftcol, rely=0.65, anchor=tk.NW)
+    start_button = ctk.CTkButton(master=root, text="Start Printing", font=("Avenir Heavy",15),fg_color= buttoncolor, command=start_print_but)
+    start_button.place(relx=leftcol, rely=0.65, anchor=ctk.NW)
 
     #button to stop printing
-    start_button = tk.CTkButton(master=root, text="Stop Printing", font=("Avenir Heavy",15), fg_color= '#DC0F24' ,command=stop_print_but)
-    start_button.place(relx=leftcol, rely=0.80, anchor=tk.NW)
+    start_button = ctk.CTkButton(master=root, text="Stop Printing", font=("Avenir Heavy",15), fg_color= '#DC0F24' ,command=stop_print_but)
+    start_button.place(relx=leftcol, rely=0.80, anchor=ctk.NW)
 
     return
 
@@ -45,30 +48,34 @@ def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
     global status_text
     global terminal_text
 
-    #status info
-    status_label = tk.CTkLabel(master=root, text="Status:", font=("Avenir Heavy", 15, 'bold'), width = 40, pady = 10, anchor = 'center')
-    status_label.place(relx=leftcol, rely=0.18, anchor=tk.NW)
+    #status infos
+    status_label = ctk.CTkLabel(master=root, text="Status:", font=("Avenir Heavy", 15, 'bold'), width = 40, pady = 10, anchor = 'center')
+    status_label.place(relx=leftcol, rely=0.18, anchor=ctk.NW)
 
-    status_text = tk.CTkLabel(master=root, text = " - ", font=("Avenir Heavy",12), height=4, width=450, anchor = tk.W)
-    status_text.place(relx=leftcol, rely=0.25, anchor=tk.NW)
+    status_text = ctk.CTkLabel(master=root, text = " - ", font=("Avenir Heavy",12), height=4, width=450, anchor = ctk.W)
+    status_text.place(relx=leftcol, rely=0.25, anchor=ctk.NW)
 
     status_text.configure(text = "waiting...")
 
     #terminal info
-    terminal_label = tk.CTkLabel(master=root, text="Print info", font=("Avenir Heavy", 15, 'bold'), width = 40, pady = 10, anchor = 'center')
-    terminal_label.place(relx=rightcol, rely=0.18, anchor=tk.NW)
+    terminal_label = ctk.CTkLabel(master=root, text="Print info", font=("Avenir Heavy", 15, 'bold'), width = 40, pady = 10, anchor = 'center')
+    terminal_label.place(relx=rightcol, rely=0.18, anchor=ctk.NW)
 
-    terminal_text = tk.CTkLabel(master=root, text = " - ", font=("Avenir",12), height=root.winfo_screenheight()*0.35, width=350,fg_color = '#1A0F10', anchor = tk.NW)
-    terminal_text.place(relx=rightcol, rely=0.25, anchor=tk.NW)
+    terminal_text = tk.Text(master=root, font=("Avenir",12), height=23, width=55, bg = '#1A0F10', fg = '#FFFFFF')
+    terminal_text.place(relx=rightcol, rely=0.25, anchor=ctk.NW)
 
-    terminal_text.configure(text = " ")
+    scrollbar = tk.Scrollbar(root, command=terminal_text.yview, background = 'blue')
+    scrollbar.place(relx=rcol -0.07, rely=0.25, anchor=ctk.NW, height=root.winfo_screenheight()*0.522)
+    terminal_text['yscrollcommand'] = scrollbar.set
+
+    terminal_text.insert(ctk.END, "**Terminal activated\n")
 
     return
 
 def cosmetics(root, leftcol, rightcol, buttoncolor, rcol):
     #title
 
-    info_title = tk.CTkLabel(master=root, text="SonoBone control interface", font=("Avenir Heavy", 25, 'bold'), fg_color= '#333332', width = root.winfo_screenwidth(), pady = 20, anchor = 'center')
+    info_title = ctk.CTkLabel(master=root, text="SonoBone control interface", font=("Avenir Heavy", 25, 'bold'), fg_color= '#333332', width = root.winfo_screenwidth(), pady = 20, anchor = 'center')
     info_title.place(relwidth = 1)
 
     return
@@ -80,33 +87,33 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
     global speed_textbox
 
     #set z offsetbutton up and down
-    z_offset_up_button = tk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= buttoncolor, command=z_up_but, width = 50, height = 25, anchor = 'center')
-    z_offset_up_button.place(relx=rcol, rely=0.25, anchor=tk.NW)
-    z_offset_down_button = tk.CTkButton(master=root, text="↓", font=("Avenir Heavy",15), fg_color= buttoncolor, command=z_down_but, width = 50, height = 25, anchor = 'center')
-    z_offset_down_button.place(relx=rcol, rely=0.45, anchor=tk.NW)
+    z_offset_up_button = ctk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= buttoncolor, command=z_up_but, width = 50, height = 25, anchor = 'center')
+    z_offset_up_button.place(relx=rcol, rely=0.25, anchor=ctk.NW)
+    z_offset_down_button = ctk.CTkButton(master=root, text="↓", font=("Avenir Heavy",15), fg_color= buttoncolor, command=z_down_but, width = 50, height = 25, anchor = 'center')
+    z_offset_down_button.place(relx=rcol, rely=0.45, anchor=ctk.NW)
 
     #z offset textbox
-    z_offset_textbox = tk.CTkEntry(master=root, font=("Avenir", 10), width=50)
-    z_offset_textbox.place(relx=rcol, rely=0.35, anchor=tk.NW)
+    z_offset_textbox = ctk.CTkEntry(master=root, font=("Avenir", 10), width=50)
+    z_offset_textbox.place(relx=rcol, rely=0.35, anchor=ctk.NW)
     # Set the text of z_offset_textbox
     z_offset_textbox.insert(0, GlobalState().user_z_offset)
 
-    z_offset_label= tk.CTkLabel(master=root, text="Z-offset", font=("Avenir Heavy", 15, 'bold'), width = 40, anchor = 'center')
-    z_offset_label.place(relx=rcol, rely=0.18, anchor=tk.NW)
+    z_offset_label= ctk.CTkLabel(master=root, text="Z-offset", font=("Avenir Heavy", 15, 'bold'), width = 40, anchor = 'center')
+    z_offset_label.place(relx=rcol, rely=0.18, anchor=ctk.NW)
 
     #set speed button up and down
-    speed_up_button = tk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= buttoncolor, command=speed_up_but, width = 50, height = 25)
-    speed_up_button.place(relx=rcol, rely=0.63, anchor=tk.NW)
-    speed_down_button = tk.CTkButton(master=root, text="↓", font=("Avenir Heavy",15), fg_color= buttoncolor, command=speed_down_but, width = 50, height = 25, anchor = 'center')
-    speed_down_button.place(relx=rcol, rely=0.83, anchor=tk.NW)
+    speed_up_button = ctk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= buttoncolor, command=speed_up_but, width = 50, height = 25)
+    speed_up_button.place(relx=rcol, rely=0.63, anchor=ctk.NW)
+    speed_down_button = ctk.CTkButton(master=root, text="↓", font=("Avenir Heavy",15), fg_color= buttoncolor, command=speed_down_but, width = 50, height = 25, anchor = 'center')
+    speed_down_button.place(relx=rcol, rely=0.83, anchor=ctk.NW)
 
     #speed textbox
-    speed_textbox = tk.CTkEntry(master=root, font=("Avenir", 10), width=50)
-    speed_textbox.place(relx=rcol, rely=0.73, anchor=tk.NW)
+    speed_textbox = ctk.CTkEntry(master=root, font=("Avenir", 10), width=50)
+    speed_textbox.place(relx=rcol, rely=0.73, anchor=ctk.NW)
     speed_textbox.insert(0, f'{GlobalState().printspeed}mm/s')
 
-    speed_label= tk.CTkLabel(master=root, text="Speed", font=("Avenir Heavy", 15, 'bold'), width = 40, anchor = 'center')
-    speed_label.place(relx=rcol, rely=0.56, anchor=tk.NW)
+    speed_label= ctk.CTkLabel(master=root, text="Speed", font=("Avenir Heavy", 15, 'bold'), width = 40, anchor = 'center')
+    speed_label.place(relx=rcol, rely=0.56, anchor=ctk.NW)
 
     return
 
@@ -141,7 +148,6 @@ def start_print_but():
     
     return
     
-
 def stop_print_but():
     global status_text
 
@@ -149,7 +155,6 @@ def stop_print_but():
     status_text.configure(text="print stopped")
     GlobalState().exit_program = True
     return
-
 
 def init_print_but():
     global status_text
@@ -164,20 +169,21 @@ def init_print_but():
     if GlobalState().msb == None:
         GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
         GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
-        GlobalState().ActivateRobot() #same as in the webinterface: activate Robot
-        GlobalState().Home() #Home the robot
+        GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
+        GlobalState().msb.Home() #Home the robot
     
-    
+    msb = GlobalState().msb
     #setup robot 
     msb.ClearMotion()
+    msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging
     msb.SendCustomCommand('ResetError()')
     msb.SendCustomCommand('ResumeMotion()')
-    msb.SendCustomCommand(f'SetJointVelLimit({RobotStats.joint_vel_limit_start})')
-    msb.SendCustomCommand(f'SetCartLinVel({RobotStats.max_lin_acc})')
-    msb.SendCustomCommand(f'SetCartLinVel({RobotStats.max_linvel_start})')
+    msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit_start})')
+    msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_lin_acc})')
+    msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel_start})')
     msb.SendCustomCommand('SetBlending(40)')
     #Set tooltip reference frame to 160 in front of the end of robot arm
-    msb.SendCustomCommand(f'SetTrf({RobotStats.tooloffset_x},{RobotStats.tooloffset_y},{RobotStats.tooloffset_z},{RobotStats.tooloffset_alpha},{RobotStats.tooloffset_beta},{RobotStats.tooloffset_gamma})')
+    msb.SendCustomCommand(f'SetTrf({RobotStats().tooloffset_x},{RobotStats().tooloffset_y},{RobotStats().tooloffset_z},{RobotStats().tooloffset_alpha},{RobotStats().tooloffset_beta},{RobotStats().tooloffset_gamma})')
 
     
     #setpayload!!!!!--------------------------------
@@ -203,7 +209,6 @@ def init_print_but():
     GlobalState().terminal_text += "Robot activated and ready to go\n"
 
     return
-
 
 def reset():
     global status_text
@@ -240,7 +245,7 @@ def z_up_but():
     global z_offset_textbox
     GlobalState().user_z_offset += GlobalState().user_z_offset_increment
     GlobalState().user_z_offset = round(GlobalState().user_z_offset, 2)
-    z_offset_textbox.delete(0, tk.END)
+    z_offset_textbox.delete(0, ctk.END)
 
     # Insert the new text
     z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
@@ -251,17 +256,16 @@ def z_down_but():
     global z_offset_textbox
     GlobalState().user_z_offset -= GlobalState().user_z_offset_increment
     GlobalState().user_z_offset = round(GlobalState().user_z_offset, 2)
-    z_offset_textbox.delete(0, tk.END)
+    z_offset_textbox.delete(0, ctk.END)
     # Insert the new text
     z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
     print(GlobalState().user_z_offset)
     return
 
-
 def speed_up_but():
     global speed_textbox
     GlobalState().printspeed += GlobalState().printspeed_increment
-    speed_textbox.delete(0, tk.END)
+    speed_textbox.delete(0, ctk.END)
     # Insert the new text
     speed_textbox.insert(0, f'{GlobalState().printspeed}mm/s')
     return
@@ -269,7 +273,7 @@ def speed_up_but():
 def speed_down_but():
     global speed_textbox
     GlobalState().printspeed -= GlobalState().printspeed_increment
-    speed_textbox.delete(0, tk.END)
+    speed_textbox.delete(0, ctk.END)
     # Insert the new text
     speed_textbox.insert(0, f'{GlobalState().printspeed}mm/s')
     return
@@ -278,12 +282,19 @@ def speed_down_but():
 # ------------------ GUI ------------------
 
 def terminal_update():
+    global terminal_text
     text = GlobalState().terminal_text
     while True:
         if GlobalState().terminal_text != text:
-            terminal_text.configure(text=GlobalState().terminal_text)
+            current_time = datetime.now().time()
+            current_time_string = current_time.strftime("%H:%M:%S")
+            lines = GlobalState().terminal_text.split('\n')
+            last_line = lines[len(lines)-2]
+            terminal_text.insert(ctk.END, current_time_string + ": " + last_line + "\r\n")
             text = GlobalState().terminal_text
-        time.sleep(0.5)
+            print(last_line)
+            time.sleep(0.6)
+        time.sleep(0.1)
     return
 
 def speed_update():
@@ -306,6 +317,7 @@ def status_update():
         time.sleep(0.5)
     return
 
+#main gui function
 def init_gui():
     
     #define soime parameters
@@ -314,12 +326,13 @@ def init_gui():
     rcol = 0.88
     buttoncolor = '#0859C3'
 
-    tk.set_appearance_mode("System")  # Modes: system (default), light, dark
-    tk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
+    ctk.set_appearance_mode("System")  # Modes: system (default), light, dark
+    ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
-    root = tk.CTk()  # create CTk window like you do with the Tk window
+    root = ctk.CTk()  # create CTk window like you do with the Tk window
     root.geometry("700x420")
     root.title("SonoBone control interface")
+    root.iconbitmap(r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\SonoBone_icon.ico")
 
 
     #initialize all the gui parts
@@ -332,8 +345,7 @@ def init_gui():
     update_terminal_thread = threading.Thread(target=terminal_update)
     update_terminal_thread.start()
 
-    
-
+    #start gui
     root.mainloop()
 
     print("tests")
