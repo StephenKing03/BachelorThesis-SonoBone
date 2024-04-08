@@ -118,3 +118,103 @@
 2024-04-08 15:54:20,456 Robot is activated.
 2024-04-08 16:02:42,756 Connecting to robot 192.168.0.100:10000 (control mode)
 2024-04-08 16:02:42,874 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 16:23:58,839 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 16:23:59,451 Failed to connect: Connection error: Message with id=3001, data=Another user is already controlling the robot.
+2024-04-08 16:30:15,997 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 16:30:16,611 Failed to connect: Connection error: Message with id=3001, data=Another user is already controlling the robot.
+2024-04-08 16:57:44,951 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 16:57:45,073 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 16:59:34,239 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 16:59:34,357 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:01:25,737 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:01:25,851 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:01:52,936 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:01:53,050 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:02:55,485 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:02:55,597 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:03:25,549 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:03:25,664 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:04:29,872 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:04:29,985 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:09:07,414 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:09:07,532 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:10:01,401 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:10:01,515 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:10:23,781 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:10:23,894 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:10:51,418 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:10:51,536 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:11:24,554 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:11:24,670 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:12:52,817 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:12:52,934 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:12:58,112 Received robot error 1016 (MX_ST_OUT_OF_REACH): Destination pose out of reach for any configuration. Command: 'MovePose(150.000,-80.000,250.000,180.000,0.000,-180.000)'
+2024-04-08 17:13:24,297 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:13:24,413 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:14:06,847 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:14:06,963 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:14:26,074 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:14:26,188 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:14:29,552 Received robot error 1016 (MX_ST_OUT_OF_REACH): Destination pose out of reach for any configuration. Command: 'MovePose(150.000,-80.000,250.000,180.000,0.000,-180.000)'
+2024-04-08 17:15:02,220 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:15:02,335 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:15:10,936 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:15:11,049 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:15:14,487 Received robot error 1016 (MX_ST_OUT_OF_REACH): Destination pose out of reach for any configuration. Command: 'MovePose(150.000,-80.000,250.000,180.000,0.000,-180.000)'
+2024-04-08 17:17:22,913 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:17:23,028 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:17:28,780 Received robot error 1016 (MX_ST_OUT_OF_REACH): Destination pose out of reach for any configuration. Command: 'MovePose(150.000,-80.000,250.000,180.000,0.000,-180.000)'
+2024-04-08 17:18:28,949 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:18:29,559 Failed to connect: Connection error: Message with id=3001, data=Another user is already controlling the robot.
+2024-04-08 17:18:44,886 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:18:45,001 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:18:49,641 Received robot error 1016 (MX_ST_OUT_OF_REACH): Destination pose out of reach for any configuration. Command: 'MovePose(200.000,-80.000,150.000,180.000,0.000,-180.000)'
+2024-04-08 17:20:16,638 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:20:16,752 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:21:06,636 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:21:06,750 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:25:05,444 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:25:05,560 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:25:54,095 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:25:54,207 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:27:00,744 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:27:00,862 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:27:59,946 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:28:00,059 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:28:36,403 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:28:36,516 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:31:27,465 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:31:27,580 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:32:25,385 Received robot error 1003 (MX_ST_ARG_ERR): Argument error. Command: 'MovePose({130},{-90},{-44.48},{180},{0},{-180})'
+2024-04-08 17:33:12,323 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:33:12,436 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:33:15,867 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:33:15,978 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:33:48,396 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:33:48,510 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:34:16,562 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:34:16,676 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:34:32,074 Received robot error 1003 (MX_ST_ARG_ERR): Argument error. Command: 'MovePose({130},{-90},{-44.48},{180},{0},{-180})'
+2024-04-08 17:37:55,293 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:37:55,408 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:37:57,333 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:37:57,448 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:38:17,890 Received robot error 1003 (MX_ST_ARG_ERR): Argument error. Command: 'MovePose({130},{-90},{-44.48},{180},{0},{-180})'
+2024-04-08 17:40:44,286 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:40:44,401 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:40:45,769 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:40:45,882 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:42:00,861 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:42:00,974 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:43:13,143 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:43:13,258 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:45:04,735 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:45:04,851 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:49:02,107 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:49:02,219 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:49:30,211 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:49:30,325 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:50:07,813 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:50:07,926 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-08 17:56:09,302 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-08 17:56:09,415 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809

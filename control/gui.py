@@ -136,6 +136,7 @@ def start_print_but():
     GlobalState().exit_program = False
 
     #check if file path is set:
+    
     if GlobalState().filepath == " ":
         terminal_text.configure(text="Error: No file selected")
         return False
@@ -146,9 +147,15 @@ def start_print_but():
     coordinates = gt.extract_coordinates(GlobalState().filepath)
     GlobalState().terminal_text += "--done\n"
     
+    #set starting position
+    uf.startpose(GlobalState().msb)
+
     #start printing with thread so that gui still works
     GlobalState().printing_state = 2 #2 = printing
     status_text.configure(text="Printing ...")
+    GlobalState().msb.WaitIdle()
+    #with GlobalState().msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
+    gt.write_coordinates(coordinates, GlobalState().msb)
     print_thread = threading.Thread(target=gt.write_coordinates, args=(coordinates, GlobalState().msb))
     print_thread.start()
     
@@ -173,13 +180,14 @@ def init_print_but():
     #set states and info text
     GlobalState().printing_state = 0 #0 = not printing
     status_text.configure(text="Initializing robot...")
+
     
     #--from utility function - activation sequence()--
 
     #connect to robot if the robot is not connected already (e.g. from reset)
     
     GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
-    GlobalState().msb.Connect(address='192.168.0.100',enable_synchronous_mode=True) #using IP address of the robot and Port 10000 to control
+    GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
     GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
     GlobalState().msb.Home() #Home the robot
     
@@ -222,14 +230,17 @@ def init_print_but():
     GlobalState().printing_state = 1 #1 = ready to print
     status_text.configure(text="Ready to print")
     GlobalState().terminal_text += "Robot activated and ready to go\n"
-    print(uf.GetPose(msb))
 
     return
 
 
-
 def select_file():
     global status_text
+    #with GlobalState().msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
+    GlobalState().msb.SendCustomCommand("MovePose(150, 0, -60, 180, 0, -180)")
+    uf.WaitReachedPose([150,0,-60,180,0,-180])
+        
+    print("POSE REACHED___________________")
 
     #get the file path
     file_path = filedialog.askopenfilename()

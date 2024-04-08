@@ -14,17 +14,15 @@ def adjust_speed(speed, self = mdr.Robot()):
 #---get real time cartesian position of the robot as an array [x,y,z,alpha,beta,gamma]-------------------------------------------
 def GetPose(self = mdr.Robot()):
 
-    print("Hello \n")
-    rtdata = self.GetRobotRtData(synchronous_update = True, timeout = 10)
-    print("World \n")
+    rtdata = self.GetRobotRtData()
     print(rtdata)
     pose = rtdata.rt_cart_pos.data
     print(f'Pos:{pose}\n')
     
-    #manipulate so that pose is an array
+    
     return pose
 
-
+#probably does not work?
 def GetTargetPose(self = mdr.Robot()):
     
 
@@ -33,22 +31,23 @@ def GetTargetPose(self = mdr.Robot()):
 
     return targetpose
 
-def ReachedPose(self = mdr.Robot()):
+def ReachedPose(self = mdr.Robot(), target = [0,0,0,0,0,0]):
 
     pose = GetPose(self)
-    targetpose = GetTargetPose(self)
-    distance = ((pose[0]-targetpose[0])**2 + (pose[1]-targetpose[1])**2 + (pose[2]-targetpose[2])**2) **0.5 
-
-    if(pose == targetpose):
-        return True
-    else:
-        return False
-
+    #targetpose = GetTargetPose(self)
+    distance = ((pose[0]-target[0])**2 + (pose[1]-target[1])**2 + (pose[2]-target[2])**2) **0.5 
+    print(" DISTANCE = " + str(distance))
+    print("not reached:" + str(GetPose(GlobalState().msb)) + "  >>>>> " + str(target))
     if(distance < GlobalState().threshold):
         return True
     else:
         return False
 
+def WaitReachedPose(target = [0,0,0,0,0,0]):
+    with GlobalState().msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
+        while not ReachedPose(GlobalState().msb, target):
+            time.sleep(0.1)
+    return
 
 #---get real time  joint position of the robot as an array [j1,j2,j3,j4,j5,j6]-------------------------------------------
 def GetJoints(self = mdr.Robot()):
@@ -226,7 +225,8 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
         print(f'alpha out of bounds for {alpha}')       
         alpha = -180+20
     '''
-    self.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')
+    GlobalState().msb.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')
+    #self.MovePose({x},{y},{z},{alpha},{beta},{gamma})
     #self.WaitIdle()
     print(f'Pose reached: {x},{y},{z},{alpha},{beta},{gamma}')
     GlobalState().terminal_text += "Pose reached:" + str(round(x,4)) + "," + str(round(y,4)) + "," + str(round(z,4)) + "," + str(round(alpha,4)) + "," + str(round(beta,4)) + ","  + str(round(gamma,4)) + " \n"

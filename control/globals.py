@@ -12,7 +12,7 @@ class GlobalState:
 
     #user_z_offset - RT variable for z offset tuning
     user_z_offset = 0
-    user_z_offset_increment = 0.05
+    user_z_offset_increment = 0.5
 
     #printspeed - RT variable for print speed tuning
     printspeed = 10 #mm/s #adjust also RobotStats

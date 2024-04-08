@@ -23,8 +23,9 @@ def init_logger():
     return
 
 #logging test
+'''
 GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
-GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
+GlobalState().msb.Connect(address='192.168.0.100', enable_synchronous_mode = False) #using IP address of the robot and Port 10000 to control
 GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
 GlobalState().msb.Home() #Home the robot
 GlobalState().msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging position
@@ -37,6 +38,8 @@ with GlobalState().msb.FileLogger(0.001, fields =['CartPos']):
     GlobalState().msb.MoveJoints(0, 0, 0, 0, 0, 0)
     GlobalState().msb.WaitIdle()
 
+print("-----------------------------------------STARTING PROGRAMs-----------------------------------------")
+'''
 #custom logging thread:
 logging.basicConfig(filename='terminal_text.log', level=logging.INFO, format='%(asctime)s %(message)s')
 logging_thread = threading.Thread(target=init_logger)
@@ -44,4 +47,5 @@ logging_thread = threading.Thread(target=init_logger)
 #logging_thread.start()
 
 #main program
+
 gui.init_gui()

@@ -60,8 +60,6 @@ def write_coordinates(coordinates, self):
     non_none_y = 0
     i = 0
 
-    #set starting position
-    uf.startpose(self)
     
     for x, y, z, e, er in coordinates:
         
@@ -80,7 +78,7 @@ def write_coordinates(coordinates, self):
             uf.cleanpose(self)
             time.sleep(3)
             break
-        i += 1
+        i += 1 #index
         #blank line -> skip
         if(x == None and y == None and z == None):
             continue
@@ -121,8 +119,7 @@ def write_coordinates(coordinates, self):
             print("!-!-!-!-!Line skip error!-!-!-!-!")
             
         #wait for the robot to finish the movement (be close to the target)
-        while(uf.ReachedPose() != True):
-            time.sleep(0.1)
+        uf.WaitReachedPose([x,y,z,180,0,-180])
         #self.WaitIdle()
         #time.sleep(0.05)
         #-------------------finished print -----------------------------
