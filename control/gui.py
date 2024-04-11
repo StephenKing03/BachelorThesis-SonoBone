@@ -31,7 +31,7 @@ def print_control(root, leftcol, rightcol, buttoncolor, rcol):
     init_button.place(relx=leftcol, rely=0.35, anchor=ctk.NW)
 
     #button to set file path
-    file_button = ctk.CTkButton(master=root, text="Select File", font=("Avenir Heavy",15),fg_color= '#089DC3', command=select_file)
+    file_button = ctk.CTkButton(master=root, text="Select File", font=("Avenir Heavy",15),fg_color= '#089DC3', command=select_file_but)
     file_button.place(relx=leftcol, rely=0.45, anchor=ctk.NW)
 
     #button to start printing
@@ -44,7 +44,7 @@ def print_control(root, leftcol, rightcol, buttoncolor, rcol):
 
     #button to pause and resume printing
     global pause_button
-    pause_button = ctk.CTkButton(master=root, text="Pause Printing", font=("Avenir Heavy",15), fg_color= buttoncolor, command=pause_print)
+    pause_button = ctk.CTkButton(master=root, text="Pause Printing", font=("Avenir Heavy",15), fg_color= buttoncolor, command=pause_print_but)
     pause_button.place(relx=leftcol, rely=0.9, anchor=ctk.NW)
 
     #button to callibrate the robot
@@ -65,7 +65,8 @@ def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
     status_text = ctk.CTkLabel(master=root, text = " - ", font=("Avenir Heavy",12), height=4, width=450, anchor = ctk.W)
     status_text.place(relx=leftcol, rely=0.25, anchor=ctk.NW)
 
-    status_text.configure(text = "Deactivated")
+    status_update("Deactivated")
+    #status_text.configure(text = "Deactivated")
 
     #terminal info
     terminal_label = ctk.CTkLabel(master=root, text="Print info", font=("Avenir Heavy", 15, 'bold'), width = 40, pady = 10, anchor = 'center')
@@ -78,7 +79,7 @@ def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
     scrollbar.place(relx=rcol -0.07, rely=0.25, anchor=ctk.NW, height=root.winfo_screenheight()*0.522)
     terminal_text['yscrollcommand'] = scrollbar.set
 
-    terminal_text.insert(ctk.END, "**Terminal activated\n")
+    terminal_text.insert(ctk.END, "")
 
     return
 
@@ -89,7 +90,6 @@ def cosmetics(root, leftcol, rightcol, buttoncolor, rcol):
     info_title.place(relwidth = 1)
 
     return
-
 
 def tuning(root, leftcol, rightcol, buttoncolor, rcol):
 
@@ -130,66 +130,60 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
 #------------------ Button functions ------------------
 
 def start_print_but():
-    global status_text
-
-    #in case of restart - make it not shut down again
+    
+    #in case of restart - make sure it does not shut down again
     GlobalState().exit_program = False
 
     #check if file path is set:
-    
     if GlobalState().filepath == " ":
-        terminal_text.configure(text="Error: No file selected")
-        return False
+        GlobalState().terminal_text +="Error: No file selected \n"
+        return 
     
     #Extract coordinates
-    status_text.configure(text="Extracting cordinates ...")
-    GlobalState().terminal_text += "Extracting coordinates from file"
+    status_update("Extracting cordinates ...")
+    GlobalState().terminal_text += "Extracting coordinates from file...  "
     coordinates = gt.extract_coordinates(GlobalState().filepath)
-    GlobalState().terminal_text += "--done\n"
+    time.sleep(0.5)
+    GlobalState().terminal_text += " --done!\n"
     
     #set starting position
     uf.startpose(GlobalState().msb)
 
     #start printing with thread so that gui still works
     GlobalState().printing_state = 2 #2 = printing
-    status_text.configure(text="Printing ...")
+    filename = os.path.basename(GlobalState().filepath)
+    status_update("Printing ...  \nFile: " + str(filename))
     GlobalState().msb.WaitIdle()
-    #with GlobalState().msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
+    
     #gt.write_coordinates(coordinates, GlobalState().msb)
     print_thread = threading.Thread(target=gt.write_coordinates, args=(coordinates, GlobalState().msb))
     print_thread.start()
     
-    #printing finished
-    GlobalState().terminal_text += "--done\n"
-    status_text.configure(text="Finished printing!")
-    
+    #wait for program to finish to update the text
+    finished_thread = threading.Thread(target=uf.wait_for_printing)
+    finished_thread.start()
+
     return
     
 def stop_print_but():
-    global status_text
-
+    
     GlobalState().printing_state = 0 #0 = not printing
-    status_text.configure(text="print stopped")
+    status_update(text="Print stopped")
     GlobalState().exit_program = True #leads to writecoordinates 
     deactivate()
     return
 
 def init_print_but():
-    global status_text
-    
+   
     #set states and info text
     GlobalState().printing_state = 0 #0 = not printing
-    status_text.configure(text="Initializing robot...")
-
-    
-    #--from utility function - activation sequence()--
 
     #connect to robot if the robot is not connected already (e.g. from reset)
-    
-    GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
-    GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
-    GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
-    GlobalState().msb.Home() #Home the robot
+    if(GlobalState().msb == None):
+        GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
+        GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
+        GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
+        GlobalState().msb.Home() #Home the robot
     
     msb = GlobalState().msb
     #setup robot 
@@ -219,48 +213,42 @@ def init_print_but():
     #start the terminal thread
     terminal_thread = threading.Thread(target=terminal_update)
     terminal_thread.start()
-    GlobalState().terminal_text += "Terminal activated \n"
+
+    #show that terminal is activated
+    #GlobalState().terminal_text += "Terminal activated \n"
+
+    #wait for the initialization to finish
     GlobalState().msb.WaitIdle()
 
     #set the robot to cleanpose
-    status_text.configure(text="Robot initialized")
     uf.cleanpose(GlobalState().msb)
     GlobalState().msb.WaitIdle()
 
     GlobalState().printing_state = 1 #1 = ready to print
-    status_text.configure(text="Ready to print")
-    GlobalState().terminal_text += "Robot activated and ready to go\n"
+    status_update("Ready to print")
+    GlobalState().terminal_text += "Robot activated and ready to go!\n"
 
     return
 
-
-def select_file():
-    global status_text
-    #with GlobalState().msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
-    '''
-    GlobalState().msb.SendCustomCommand("MovePose(150, 0, -60, 180, 0, -180)")
-    uf.WaitReachedPose([150,0,-60,180,0,-180])
-        
-    print("POSE REACHED___________________")
-    '''
+def select_file_but():
+    
     #get the file path
     file_path = filedialog.askopenfilename()
-    print("Selected file:", file_path)
+    #print("Selected file:", file_path)
 
     # save the file path into GlobalState().filepath for later use
     GlobalState().filepath = file_path
     filename = os.path.basename(file_path)
-    status_text.configure(text="File selected: \n"  + filename)
-    GlobalState().terminal_text += f"File selected: {filename}\r\n"
+    status_update("File selected:\n'"  + filename + "'")
+    GlobalState().terminal_text += f"File selected: '{filename}'\r\n"
 
     return
 
-def pause_print():
-    global status_text
+def pause_print_but():
     global pause_button
     if(GlobalState().printing_state == 2):
 
-        status_text.configure(text="Printing paused")
+        status_update("Printing paused")
         GlobalState().printing_state = 3 #3 = paused
         GlobalState().terminal_text += "Printing paused\n"
 
@@ -268,7 +256,7 @@ def pause_print():
         pause_button.configure(text="Resume Printing")
 
     else:
-        status_text.configure(text="Printing...")
+        status_update("Printing...")
         GlobalState().printing_state = 2 #2 = printing
         GlobalState().terminal_text += "Printing resumed\n"
 
@@ -279,13 +267,11 @@ def pause_print():
 
 def calibration_but():
 
-    global status_text
-    status_text.configure(text="Calibrating")
+    
+    status_update("Calibrating")
     uf.callibrationpose(GlobalState().msb)
 
     return
-
-        
 
 #----- tuning buttons -----
 
@@ -328,9 +314,9 @@ def speed_down_but():
 
 #-------------------Helper functions-------------------
 def deactivate():
-    global status_text
+    
     global terminal_text
-    status_text.configure(text="Deactivating ...")
+    status_update("Deactivating ...")
     GlobalState().terminal_text += "Deacticating\n"
     GlobalState().printing_state = 0 #0 = not printing
 
@@ -339,10 +325,20 @@ def deactivate():
     GlobalState().msb.DeactivateRobot()
     GlobalState().msb.Disconnect()
     GlobalState().terminal_text += "Deactivated Robot\n"
-    status_text.configure(text="Deactivated")
+    status_update("Deactivated")
     
 
     return
+
+def wait_for_printing():
+    while GlobalState().printing_state != 3:
+        time.sleep(0.1)
+    GlobalState().terminal_text += "-------------------PRINT FINISHED-------------\n"
+    
+    status_update("Finished printing!\n - ready to print again")
+    
+    return
+
 # ------------------ GUI ------------------
 
 
@@ -350,21 +346,34 @@ def terminal_update():
     global terminal_text
     last_text = " "
     text = GlobalState().terminal_text
+    last_index = 0
+    i = 0
     while True:
-        if GlobalState().terminal_text != text:
-            #if last_text == text:
-                #time.sleep(0.05)
-                #continue
+        i += 1
+        if GlobalState().terminal_text != "-" and last_index <=i+2:
+            #get timestamp
             current_time = datetime.now().time()
             current_time_string = current_time.strftime("%H:%M:%S")
-            lines = GlobalState().terminal_text.split('\n')
-            last_line = lines[len(lines)-2]
-            terminal_text.insert(ctk.END, current_time_string + ": " + last_line + "\r\n")
-            last_text = text
-            text = GlobalState().terminal_text
+
+            #print line with timestamp
+            last_line = GlobalState().terminal_text
+            
+            #print only the stuff that does not already exist
+            terminal_text.insert(ctk.END, current_time_string + ": " + last_line)
+            
+            #remove the last line
+            GlobalState().terminal_text = "-"
+
+            #scroll to the end
             terminal_text.see(tk.END)
-            print(last_line)
-        time.sleep(0.01)
+            print(GlobalState().terminal_text)
+            print( f"---------{i}--------")
+            last_index = i
+        time.sleep(0.005)
+
+        #compare current text with previous text line by line
+        #if different, add the new line to the terminal_text
+        
             
     return
 
@@ -379,14 +388,11 @@ def speed_update():
     return False
     return
 
-def status_update():
-    text = GlobalState().status_text
-    while True:
-        if GlobalState().status_text != text:
-            status_text.configure(text=GlobalState().status_text)
-            text = GlobalState().status_text
-        time.sleep(0.5)
-    return
+def status_update(new_status = " ? "):
+    global status_text
+
+    status_text.configure(text= new_status)
+    time.sleep(0.2)
 
 #main gui function
 def init_gui():

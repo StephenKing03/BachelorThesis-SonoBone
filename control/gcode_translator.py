@@ -134,7 +134,10 @@ def write_coordinates(coordinates, self):
         #-------------------finished print -----------------------------
 
     uf.endpose(self)
+    #print finished
+    GlobalState().printing_state = 3
     return
+
 
 def modify_placement(coordinates):
 

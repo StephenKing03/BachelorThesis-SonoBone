@@ -19,11 +19,11 @@ class GlobalState:
     printspeed_increment = 1
     
     #filepath for the currently printed file
-    filepath = " "
+    filepath = ""
     
     #terminal_text - RT variable for terminal output, gets added on top
-    terminal_text = " "
-    status_text = " "
+    terminal_text = "-"
+    status_text = ""
 
     threshold = 0.1
     semaphore = 0
@@ -61,7 +61,7 @@ class RobotStats:
         self.joint_vel_limit_start = 100
         self.max_linvel_start = 5
         self.max_lin_acc = 100  
-        self.max_acc = 10
+        self.max_acc = 1
 
         self.print_offset_x = 0
         self.print_offset_y = 0
