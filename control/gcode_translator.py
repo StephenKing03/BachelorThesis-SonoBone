@@ -70,19 +70,17 @@ def write_coordinates(coordinates, self):
         print(f'--{i}--')
         GlobalState().terminal_text += f'--{i}--'
 
-        while(GlobalState().printing_state == 3):
+        while(GlobalState().printing_state == 3): #print paused
+            if GlobalState().exit_program:
+                break
             time.sleep(0.1)
-        
         
         # Check exit_program.value instead of exit_program
         if GlobalState().exit_program:  
-            
-            print('BREAK - exitprogram')
-            GlobalState().terminal_text += "-----------BREAK - Print Process Stopped--------------\n"
-            uf.cleanpose(self)
-            time.sleep(3)
+            uf.exit_print()
             break
         i += 1 #index
+
         #blank line -> skip
         if(x == None and y == None and z == None):
             continue
@@ -105,32 +103,39 @@ def write_coordinates(coordinates, self):
             print(f'extrusion: {e}')
             #time.sleep(1)
             
-        while(GlobalState().semaphore > 3):
+        while(GlobalState().semaphore > RobotStats().max_semaphores):
+            if(GlobalState().exit_program):
+                uf.exit_print()
+                break
             time.sleep(0.2)
+
+        '''temp structure'''
+        while(GlobalState().semaphore != 0): #print paused
+            if GlobalState().exit_program:
+                break
+            time.sleep(0.1)
         #if x and y are not specified, move to current position with z offset
         if (x == None or y == None):
-            #pose = get_pose()
             
             #print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_0+10}')
             uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180, self)
-            GlobalState().semaphore += 1
             uf.WaitReachedPose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
+            GlobalState().semaphore += 1
+            #uf.add_target_pose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             
         elif z == None:
             
-            #print(f'{x+x_offset}, {y+y_offset}, {non_none_z+z_0}')
             uf.commandPose(x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180, self)
+            uf.WaitReachedPose([x+x_offset, y + y_offset, non_none_z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             GlobalState().semaphore += 1
-            uf.WaitReachedPose([x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180])
+            ''' removed in command pose to wait'''
+            #uf.add_target_pose([x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180])
             
         #throw exception
         else:
             print("!-!-!-!-!Line skip error!-!-!-!-!")
-            
-       #GlobalState().msb.WaitIdle()
+            GlobalState().terminal_text += "Line skip error \n"
         
-        #self.WaitIdle()
-        #time.sleep(0.05)
         #-------------------finished print -----------------------------
 
     uf.endpose(self)

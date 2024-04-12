@@ -22,10 +22,13 @@ class GlobalState:
     filepath = ""
     
     #terminal_text - RT variable for terminal output, gets added on top
-    terminal_text = "-"
+    terminal_text = "Terminal activated \n"
     status_text = ""
 
     threshold = 0.1
+
+    #check position reached
+    target_positions = None
     semaphore = 0
 
     #msb - Robot instance - for referencing the robot   
@@ -58,13 +61,14 @@ class RobotStats:
         
         self.joint_vel_limit = 100
         self.max_linvel = 5
-        self.joint_vel_limit_start = 100
         self.max_linvel_start = 5
-        self.max_lin_acc = 100  
-        self.max_acc = 1
+        self.max_lin_acc = 0.1
+        self.max_acc = 0.1
 
         self.print_offset_x = 0
         self.print_offset_y = 0
+
+        self.max_semaphores = 3
     
 
     

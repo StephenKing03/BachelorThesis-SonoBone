@@ -6,6 +6,7 @@ import threading
 import time
 from datetime import datetime
 import mecademicpy.robot as mdr
+from PIL import Image, ImageTk
 
 from tkinter import filedialog
 
@@ -72,11 +73,11 @@ def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
     terminal_label = ctk.CTkLabel(master=root, text="Print info", font=("Avenir Heavy", 15, 'bold'), width = 40, pady = 10, anchor = 'center')
     terminal_label.place(relx=rightcol, rely=0.18, anchor=ctk.NW)
 
-    terminal_text = tk.Text(master=root, font=("Avenir",12), height=23, width=55, bg = '#1A0F10', fg = '#FFFFFF')
+    terminal_text = tk.Text(master=root, font=("Avenir",12), height=26, width=57, bg = '#1A0F10', fg = '#FFFFFF')
     terminal_text.place(relx=rightcol, rely=0.25, anchor=ctk.NW)
 
     scrollbar = tk.Scrollbar(root, command=terminal_text.yview, background = 'blue')
-    scrollbar.place(relx=rcol -0.07, rely=0.25, anchor=ctk.NW, height=root.winfo_screenheight()*0.522)
+    scrollbar.place(relx=rcol -0.07, rely=0.25, anchor=ctk.NW, height=root.winfo_screenheight()*0.59)
     terminal_text['yscrollcommand'] = scrollbar.set
 
     terminal_text.insert(ctk.END, "")
@@ -84,10 +85,17 @@ def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
     return
 
 def cosmetics(root, leftcol, rightcol, buttoncolor, rcol):
-    #title
 
-    info_title = ctk.CTkLabel(master=root, text="SonoBone control interface", font=("Avenir Heavy", 25, 'bold'), fg_color= '#333332', width = root.winfo_screenwidth(), pady = 20, anchor = 'center')
+    #title
+    info_title = ctk.CTkLabel(master=root, text="SonoBone control interface", font=("Avenir Heavy", 31, 'bold'), fg_color= '#333332', width = root.winfo_screenwidth(), pady = 5, anchor = 'center')
     info_title.place(relwidth = 1)
+
+    #cool icon
+    image = Image.open(r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\cool_robot_icon.png")
+    image  = image.resize((70,70))
+    photo = ImageTk.PhotoImage(image)
+    icon_label = ctk.CTkLabel(master=root, image=photo,fg_color= '#333332', text = "")
+    icon_label.place(relx=0.12, rely=0.015, anchor=ctk.NW)
 
     return
 
@@ -141,9 +149,9 @@ def start_print_but():
     
     #Extract coordinates
     status_update("Extracting cordinates ...")
-    GlobalState().terminal_text += "Extracting coordinates from file...  "
+    GlobalState().terminal_text += "Extracting coordinates from file...  \n"
     coordinates = gt.extract_coordinates(GlobalState().filepath)
-    time.sleep(0.5)
+    time.sleep(2)
     GlobalState().terminal_text += " --done!\n"
     
     #set starting position
@@ -154,13 +162,15 @@ def start_print_but():
     filename = os.path.basename(GlobalState().filepath)
     status_update("Printing ...  \nFile: " + str(filename))
     GlobalState().msb.WaitIdle()
-    
-    #gt.write_coordinates(coordinates, GlobalState().msb)
     print_thread = threading.Thread(target=gt.write_coordinates, args=(coordinates, GlobalState().msb))
     print_thread.start()
+
+    #start position checking thread
+    check_thread = threading.Thread(target=uf.check_target_pose)
+    check_thread.start()
     
     #wait for program to finish to update the text
-    finished_thread = threading.Thread(target=uf.wait_for_printing)
+    finished_thread = threading.Thread(target=wait_for_printing)
     finished_thread.start()
 
     return
@@ -169,7 +179,7 @@ def stop_print_but():
     
     GlobalState().printing_state = 0 #0 = not printing
     status_update(text="Print stopped")
-    GlobalState().exit_program = True #leads to writecoordinates 
+    GlobalState().exit_program = True #leads to writecoordinates and the exit condition
     deactivate()
     return
 
@@ -191,9 +201,8 @@ def init_print_but():
     msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging position
     msb.SendCustomCommand('ResetError()')
     msb.SendCustomCommand('ResumeMotion()')
-    msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit_start})')
-    msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_lin_acc})')
-    msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel_start})')
+    msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
+    msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel})')
     msb.SendCustomCommand(f'SetCartAcc({RobotStats().max_acc}')
     msb.SendCustomCommand('SetBlending(70)')
     #Set tooltip reference frame to 160 in front of the end of robot arm
@@ -207,7 +216,6 @@ def init_print_but():
 
     #send info text
     msb.WaitIdle()
-    print('Robot activated and ready to go!')
     time.sleep(1)
 
     #start the terminal thread
@@ -252,7 +260,7 @@ def pause_print_but():
         GlobalState().printing_state = 3 #3 = paused
         GlobalState().terminal_text += "Printing paused\n"
 
-        time.sleep(5)
+        time.sleep(2)
         pause_button.configure(text="Resume Printing")
 
     else:
@@ -268,7 +276,7 @@ def pause_print_but():
 def calibration_but():
 
     
-    status_update("Calibrating")
+    status_update("Calibrating...")
     uf.callibrationpose(GlobalState().msb)
 
     return
@@ -299,6 +307,7 @@ def z_down_but():
 def speed_up_but():
     global speed_textbox
     GlobalState().printspeed += GlobalState().printspeed_increment
+    uf.adjust_speed(GlobalState().printspeed, GlobalState().msb)
     speed_textbox.delete(0, ctk.END)
     # Insert the new text
     speed_textbox.insert(0, f'{GlobalState().printspeed}mm/s')
@@ -307,6 +316,7 @@ def speed_up_but():
 def speed_down_but():
     global speed_textbox
     GlobalState().printspeed -= GlobalState().printspeed_increment
+    uf.adjust_speed(GlobalState().printspeed, GlobalState().msb)
     speed_textbox.delete(0, ctk.END)
     # Insert the new text
     speed_textbox.insert(0, f'{GlobalState().printspeed}mm/s')
@@ -340,34 +350,37 @@ def wait_for_printing():
     return
 
 # ------------------ GUI ------------------
-
-
 def terminal_update():
     global terminal_text
-    last_text = " "
+    
     text = GlobalState().terminal_text
+    last_text = "  -"
     last_index = 0
     i = 0
     while True:
         i += 1
-        if GlobalState().terminal_text != "-" and last_index <=i+2:
+
+        if(GlobalState().terminal_text == last_text):
+            continue
+        if GlobalState().terminal_text != "":
             #get timestamp
             current_time = datetime.now().time()
             current_time_string = current_time.strftime("%H:%M:%S")
 
             #print line with timestamp
-            last_line = GlobalState().terminal_text
+            text = GlobalState().terminal_text
+
+            #remove the text
+            GlobalState().terminal_text = ""
             
             #print only the stuff that does not already exist
-            terminal_text.insert(ctk.END, current_time_string + ": " + last_line)
+            terminal_text.insert(ctk.END, "[" + current_time_string + "]  " + text)
             
-            #remove the last line
-            GlobalState().terminal_text = "-"
+            last_text = text
 
             #scroll to the end
             terminal_text.see(tk.END)
             print(GlobalState().terminal_text)
-            print( f"---------{i}--------")
             last_index = i
         time.sleep(0.005)
 
@@ -377,16 +390,6 @@ def terminal_update():
             
     return
 
-def speed_update():
-   
-    speed = GlobalState().printspeed
-    while True:
-        if speed != GlobalState().printspeed:
-            speed = GlobalState().printspeed_increment
-            uf.adjust_speed(GlobalState().printspeed, GlobalState().msb)
-
-    return False
-    return
 
 def status_update(new_status = " ? "):
     global status_text
@@ -399,7 +402,7 @@ def init_gui():
     
     #define soime parameters
     leftcol = 0.05
-    rightcol = 0.35
+    rightcol = 0.32
     rcol = 0.88
     buttoncolor = '#0859C3'
 
@@ -421,6 +424,7 @@ def init_gui():
     #start the terminal update thread
     update_terminal_thread = threading.Thread(target=terminal_update)
     update_terminal_thread.start()
+
 
     #start gui
     root.mainloop()

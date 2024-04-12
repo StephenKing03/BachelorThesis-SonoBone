@@ -340,3 +340,48 @@
 2024-04-11 12:23:43,346 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
 2024-04-11 12:26:23,808 Connecting to robot 192.168.0.100:10000 (control mode)
 2024-04-11 12:26:23,923 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 14:57:55,627 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 14:57:55,741 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 14:58:06,487 Robot is activated.
+2024-04-11 15:08:48,431 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 15:08:49,039 Failed to connect: Connection error: Message with id=3001, data=Another user is already controlling the robot.
+2024-04-11 15:09:09,648 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 15:09:09,760 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 15:09:46,550 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 15:09:46,664 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 15:10:05,785 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 15:10:05,900 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 16:03:10,657 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 16:03:10,775 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 16:06:40,863 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 16:06:40,977 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 16:09:07,944 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 16:09:08,060 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 16:10:52,049 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 16:10:52,164 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 16:18:15,893 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 16:18:16,007 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 16:40:22,006 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 16:40:22,118 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 16:43:00,831 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 16:43:00,948 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 16:58:28,497 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 16:58:28,611 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 17:11:29,156 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 17:11:29,269 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 17:16:23,521 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 17:16:23,635 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 17:19:27,537 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 17:19:27,650 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 17:22:59,239 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 17:22:59,351 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 17:53:45,801 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 17:53:45,914 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 17:55:45,574 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 17:55:45,688 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 17:58:33,075 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 17:58:33,190 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 17:59:48,075 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 17:59:48,189 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
+2024-04-11 18:07:56,486 Connecting to robot 192.168.0.100:10000 (control mode)
+2024-04-11 18:07:56,600 Connected to 192.168.0.100: Meca500 R3 GetRobotSerial v9.3.3.5809
