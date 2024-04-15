@@ -12,8 +12,8 @@ class GlobalState:
     user_z_offset_increment = 0.5
 
     #printspeed - RT variable for print speed tuning
-    printspeed = 5 #mm/s #adjust also RobotStats
-    printspeed_increment = 1
+    printspeed_modifier = 50 #% 
+    printspeed_increment = 5
     
     #filepath for the currently printed file
     filepath = ""
@@ -55,12 +55,13 @@ class RobotStats:
         self.tooloffset_beta = 0
         self.tooloffset_gamma = 0
         
-        self.joint_vel_limit = 100
-        self.max_linvel = 5
-        self.max_linvel_start = 5
-        self.max_lin_acc = 0.1
-        self.max_acc = 0.1
-
+        self.joint_vel_limit = 30 #starts to have effect from 50 % or below
+        self.start_joint_vel_limit = 100
+        
+        self.max_linvel = 5 #this does not seem to do anything, even if directly sent to robot ...
+        
+        self.max_lin_acc = 0.01
+        self.max_acc = 0.01
         self.print_offset_x = 0
         self.print_offset_y = 0
 

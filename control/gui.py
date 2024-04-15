@@ -128,7 +128,7 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
     #speed textbox
     speed_textbox = ctk.CTkEntry(master=root, font=("Avenir", 10), width=50)
     speed_textbox.place(relx=rcol, rely=0.73, anchor=ctk.NW)
-    speed_textbox.insert(0, f'{GlobalState().printspeed}mm/s')
+    speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
 
     speed_label= ctk.CTkLabel(master=root, text="Speed", font=("Avenir Heavy", 15, 'bold'), width = 40, anchor = 'center')
     speed_label.place(relx=rcol, rely=0.56, anchor=ctk.NW)
@@ -207,7 +207,9 @@ def init_print_but():
     msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging position
     msb.SendCustomCommand('ResetError()')
     msb.SendCustomCommand('ResumeMotion()')
-    msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
+    msb.WaitIdle()
+    msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')
+    msb.WaitIdle()
     msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel})')
     msb.SendCustomCommand(f'SetCartAcc({RobotStats().max_acc}')
     msb.SendCustomCommand('SetBlending(70)')
@@ -286,7 +288,7 @@ def pause_print_but():
     return
 
 def calibration_but():
-    GlobalState().terminal_text += " --- Ready for callibration - 10mm above the bed --- "
+    GlobalState().terminal_text += " ---Ready for callibration - 10mm above the bed--- "
     previous_state = GlobalState().printing_state
     GlobalState().printing_state = 6 #6 = calibration
     status_update("Calibrating...")
@@ -323,20 +325,22 @@ def z_down_but():
 
 def speed_up_but():
     global speed_textbox
-    GlobalState().printspeed += GlobalState().printspeed_increment
-    uf.adjust_speed(GlobalState().printspeed, GlobalState().msb)
+    GlobalState().printspeed_modifier += GlobalState().printspeed_increment
+    time.sleep(0.01)
+    uf.adjust_speed(GlobalState().printspeed_modifier, GlobalState().msb)
     speed_textbox.delete(0, ctk.END)
     # Insert the new text
-    speed_textbox.insert(0, f'{GlobalState().printspeed}mm/s')
+    speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
     return
 
 def speed_down_but():
     global speed_textbox
-    GlobalState().printspeed -= GlobalState().printspeed_increment
-    uf.adjust_speed(GlobalState().printspeed, GlobalState().msb)
+    GlobalState().printspeed_modifier -= GlobalState().printspeed_increment
+    time.sleep(0.01)
+    uf.adjust_speed(GlobalState().printspeed_modifier, GlobalState().msb)
     speed_textbox.delete(0, ctk.END)
     # Insert the new text
-    speed_textbox.insert(0, f'{GlobalState().printspeed}mm/s')
+    speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
     return
 
 #-------------------Helper functions-------------------

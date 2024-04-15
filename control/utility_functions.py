@@ -7,9 +7,9 @@ import threading
 
 
 #---set the speed of the robot in mm/s---------------------------------------------------------
-def adjust_speed(speed, self = mdr.Robot()):
-    self.SendCustomCommand(f'SetCartLinVel({speed})')
-    print(f'LinVel set to {speed} mm/s')
+def adjust_speed(speed_p, self = mdr.Robot()):
+    self.SendCustomCommand(f'SetJointVelLimit({speed_p * RobotStats().max_linvel/100})')
+    print(f'LinVel set to {speed_p} %')
     return
 
 #---get real time cartesian position of the robot as an array [x,y,z,alpha,beta,gamma]-------------------------------------------
@@ -54,7 +54,7 @@ def ReachedPose(self = mdr.Robot(), target = [0,0,0,0,0,0]):
 
 def WaitReachedPose(target = [0,0,0,0,0,0]):
     #with GlobalState().msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
-    while not ReachedPose(GlobalState().msb, target):
+    while (not ReachedPose(GlobalState().msb, target) and GlobalState().printing_state != 5):
         time.sleep(0.1)
     GlobalState().semaphore -=1
     #print("--------------------REACHED POSE-------------------")
@@ -88,7 +88,7 @@ def check_target_pose():
     pause_time_start = 0
     while True:
 
-            if(GlobalState().exit_program): #exit program
+            if(GlobalState().printing_state == 5): #exit program
                 break
 
             while(GlobalState().semaphore == 0): #wait for new target
@@ -97,7 +97,7 @@ def check_target_pose():
 
             start_time = time.time() #reset timer
             while( not ReachedPose(GlobalState().msb, GlobalState().target_positions[RobotStats().max_semaphores-1])):
-                if(GlobalState().exit_program): #exit program
+                if(GlobalState().printing_state == 5): #exit program
                     break
                 if (GlobalState().printing_state == 3): #paused
                     pause_time_start = time.time()
@@ -246,6 +246,7 @@ def clean_motion(self = mdr.Robot()):
     self.sendCustomCommand("ClearMotion()")
     GlobalState().terminal_text += "Cleared motion queue "
 
+'''depracated'''
 def exit_print():
 
     print('BREAK - exitprogram')

@@ -50,6 +50,8 @@ def write_coordinates(coordinates, self):
     #self.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
     #self.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel})')
 
+    GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
+
 
     #coordinates consist of [x, y, z, e, er]        
     z_0 = RobotStats().min_z 
@@ -139,6 +141,8 @@ def write_coordinates(coordinates, self):
         
         #-------------------finished print -----------------------------
 
+    #set speed higher again
+    GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')
     uf.endpose(self)
     #print finished
     GlobalState().printing_state = 4
