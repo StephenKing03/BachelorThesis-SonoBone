@@ -55,30 +55,32 @@ def write_coordinates(coordinates, self):
     z_0 = RobotStats().min_z 
     x_offset = RobotStats().min_x + RobotStats().print_offset_x
     y_offset = RobotStats().min_y + RobotStats().print_offset_y
+
+    #offset from modify placement
+    x_offset, y_offset = modify_placement(coordinates)
     non_none_z = 0
     non_none_x = 0
     non_none_y = 0
     i = 0
-    '''
-    print("-.now in the gt loop")
-    uf.commandPose(150, 60, -50, 180,0,-180)
-    uf.WaitReachedPose([150, 60, -50, 180,0,-180])
-'''
 
     for x, y, z, e, er in coordinates:
         
         print(f'--{i}--')
         GlobalState().terminal_text += f'--{i}--'
 
-        while(GlobalState().printing_state == 3): #print paused
-            if GlobalState().exit_program:
-                break
+        #wait in this position when the print is paused
+        while(GlobalState().printing_state == 3): #print paused 
+            if GlobalState().printing_state == 5: #as precaution
+                print("exit path 1")
+                print(GlobalState().printing_state)
+                return
             time.sleep(0.1)
         
-        # Check exit_program.value instead of exit_program
-        if GlobalState().exit_program:  
-            uf.exit_print()
-            break
+        # Check printing_state if the print is stopped
+        if GlobalState().printing_state == 5:  
+            print("exit path 2")
+            print(GlobalState().printing_state)
+            return
         i += 1 #index
 
         #blank line -> skip
@@ -92,7 +94,7 @@ def write_coordinates(coordinates, self):
         if(y != None):
             non_none_y = y  
         
-
+        ''' waiting for future implementation
         #if er = True, continue with the next line
         if(er == True):
             print('Error was TRUE -> continued')
@@ -102,18 +104,17 @@ def write_coordinates(coordinates, self):
         if(e != None):
             print(f'extrusion: {e}')
             #time.sleep(1)
-            
-        while(GlobalState().semaphore > RobotStats().max_semaphores):
-            if(GlobalState().exit_program):
-                uf.exit_print()
-                break
-            time.sleep(0.2)
 
-        '''temp structure'''
-        while(GlobalState().semaphore != 0): #print paused
-            if GlobalState().exit_program:
-                break
+        '''
+
+        #wait for the last position to be nearly reached
+        while(GlobalState().semaphore != 0): 
+            if GlobalState().printing_state == 5:
+                print("exit path 3")
+                print(GlobalState().printing_state)
+                return
             time.sleep(0.1)
+        
         #if x and y are not specified, move to current position with z offset
         if (x == None or y == None):
             
@@ -134,18 +135,54 @@ def write_coordinates(coordinates, self):
         #throw exception
         else:
             print("!-!-!-!-!Line skip error!-!-!-!-!")
-            GlobalState().terminal_text += "Line skip error \n"
+            GlobalState().terminal_text += "Line skip error"
         
         #-------------------finished print -----------------------------
 
     uf.endpose(self)
     #print finished
-    GlobalState().printing_state = 3
+    GlobalState().printing_state = 4
     return
 
 
 def modify_placement(coordinates):
 
+    min_x = coordinates[0][0]
+    max_x = coordinates[0][0]
+    max_y = coordinates[0][1]
+    min_y = coordinates[0][1]
+
+    #get max and min x and y
+    for x, y, z, e, er in coordinates:
+        if x != None:
+            if x > max_x:
+                max_x = x
+            elif x < min_x:
+                min_x = x
+        if y != None:
+            if y > max_y:
+                max_y = y
+            elif y < min_y:
+                min_y = y
+    print(max_x, min_x, max_y, min_y)
+
+    #check if dimensions are feasible
+    if (max_x - min_x) > (RobotStats().max_x - RobotStats().min_x):
+        print("X-dimension too large")
+        GlobalState().terminal_text += "X-dimension too large"
+        time.sleep(2)
+    if (max_y - min_y) > (RobotStats().max_y - RobotStats().min_y):
+        print("Y-dimension too large")
+        GlobalState().terminal_text += "Y-dimension too large"
+        time.sleep(2)
+        
+    
+    
+    #calculate offset so that the print is centered
+    '''         (align to the lower edge)      + (half the distance left if evenly spaced)     '''
+    x_offset = (-min_x + RobotStats().min_x) + ((RobotStats().max_x - RobotStats().min_x) - (max_x - min_x)) /2
+    '''         (align to the left edge)      + (half the distance left if evenly spaced)      '''
+    y_offset = (-min_y + RobotStats().min_y) + ((RobotStats().max_y - RobotStats().min_y) - (max_y - min_y )) /2
 
 
-    return True
+    return x_offset, y_offset

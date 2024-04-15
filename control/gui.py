@@ -41,16 +41,16 @@ def print_control(root, leftcol, rightcol, buttoncolor, rcol):
 
     #button to stop printing
     start_button = ctk.CTkButton(master=root, text="Stop Printing", font=("Avenir Heavy",15), fg_color= '#DC0F24' ,command=stop_print_but)
-    start_button.place(relx=leftcol, rely=0.65, anchor=ctk.NW)
+    start_button.place(relx=leftcol, rely=0.75, anchor=ctk.NW)
 
     #button to pause and resume printing
     global pause_button
     pause_button = ctk.CTkButton(master=root, text="Pause Printing", font=("Avenir Heavy",15), fg_color= buttoncolor, command=pause_print_but)
-    pause_button.place(relx=leftcol, rely=0.9, anchor=ctk.NW)
+    pause_button.place(relx=leftcol, rely=0.65, anchor=ctk.NW)
 
     #button to callibrate the robot
     calibrate_button = ctk.CTkButton(master=root, text="Calibrate", font=("Avenir Heavy",15), fg_color= buttoncolor, command=calibration_but)
-    calibrate_button.place(relx=leftcol, rely=0.75, anchor=ctk.NW)
+    calibrate_button.place(relx=leftcol, rely=0.9, anchor=ctk.NW)
 
     return
 
@@ -140,19 +140,19 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
 def start_print_but():
     
     #in case of restart - make sure it does not shut down again
-    GlobalState().exit_program = False
+    GlobalState().printing_state = 0
 
     #check if file path is set:
     if GlobalState().filepath == " ":
-        GlobalState().terminal_text +="Error: No file selected \n"
+        GlobalState().terminal_text +="Error: No file selected"
         return 
     
     #Extract coordinates
     status_update("Extracting cordinates ...")
-    GlobalState().terminal_text += "Extracting coordinates from file...  \n"
+    GlobalState().terminal_text += "Extracting coordinates from file..."
     coordinates = gt.extract_coordinates(GlobalState().filepath)
     time.sleep(2)
-    GlobalState().terminal_text += " --done!\n"
+    GlobalState().terminal_text += " --done!"
     
     #set starting position
     uf.startpose(GlobalState().msb)
@@ -165,9 +165,12 @@ def start_print_but():
     print_thread = threading.Thread(target=gt.write_coordinates, args=(coordinates, GlobalState().msb))
     print_thread.start()
 
+    ''' out of use at the moment - for the multiple chaining
     #start position checking thread
     check_thread = threading.Thread(target=uf.check_target_pose)
     check_thread.start()
+
+    '''
     
     #wait for program to finish to update the text
     finished_thread = threading.Thread(target=wait_for_printing)
@@ -177,10 +180,13 @@ def start_print_but():
     
 def stop_print_but():
     
-    GlobalState().printing_state = 0 #0 = not printing
-    status_update(text="Print stopped")
-    GlobalState().exit_program = True #leads to writecoordinates and the exit condition
-    deactivate()
+    GlobalState().printing_state = 5 #5 = stopped
+    GlobalState().msb.WaitIdle()
+    GlobalState().terminal_text = " ---PRINT STOPPED---"
+    status_update("Print stopped")
+    
+    
+    #deactivate() optional to deactivate the robot
     return
 
 def init_print_but():
@@ -234,12 +240,13 @@ def init_print_but():
 
     GlobalState().printing_state = 1 #1 = ready to print
     status_update("Ready to print")
-    GlobalState().terminal_text += "Robot activated and ready to go!\n"
+    GlobalState().terminal_text += "Robot activated and ready to go!"
 
     return
 
 def select_file_but():
     
+    GlobalState().printing_state = 0 #0 = not printing
     #get the file path
     file_path = filedialog.askopenfilename()
     #print("Selected file:", file_path)
@@ -247,8 +254,8 @@ def select_file_but():
     # save the file path into GlobalState().filepath for later use
     GlobalState().filepath = file_path
     filename = os.path.basename(file_path)
-    status_update("File selected:\n'"  + filename + "'")
-    GlobalState().terminal_text += f"File selected: '{filename}'\r\n"
+    #status_update("File selected:\n'"  + filename + "'")
+    GlobalState().terminal_text += f"File selected: '{filename}'"
 
     return
 
@@ -258,26 +265,36 @@ def pause_print_but():
 
         status_update("Printing paused")
         GlobalState().printing_state = 3 #3 = paused
-        GlobalState().terminal_text += "Printing paused\n"
+        time.sleep(0.2)
+        GlobalState().msb.WaitIdle()
+        GlobalState().terminal_text = ""
+        GlobalState().terminal_text += "---Printing paused---"
 
         time.sleep(2)
         pause_button.configure(text="Resume Printing")
 
-    else:
-        status_update("Printing...")
+    elif(GlobalState().printing_state == 3):
+        filename = os.path.basename(GlobalState().filepath)
+        status_update("Printing ...  \nFile: " + str(filename))
         GlobalState().printing_state = 2 #2 = printing
-        GlobalState().terminal_text += "Printing resumed\n"
+        GlobalState().terminal_text += "---Printing resumed---"
 
         time.sleep(0.1)
         pause_button.configure(text="Pause Printing")
-
+    else:
+        GlobalState().terminal_text += "no print in process - nothing done"
     return
 
 def calibration_but():
-
-    
+    GlobalState().terminal_text += " --- Ready for callibration - 10mm above the bed --- "
+    previous_state = GlobalState().printing_state
+    GlobalState().printing_state = 6 #6 = calibration
     status_update("Calibrating...")
     uf.callibrationpose(GlobalState().msb)
+
+    #thread to update callibration pose
+    callibration_thread = threading.Thread(target=wait_for_callibration)
+    callibration_thread.start()
 
     return
 
@@ -326,28 +343,36 @@ def speed_down_but():
 def deactivate():
     
     global terminal_text
-    status_update("Deactivating ...")
-    GlobalState().terminal_text += "Deacticating\n"
+    GlobalState().terminal_text += "Deactivating..."
     GlobalState().printing_state = 0 #0 = not printing
 
     #Deactivate Robot
     GlobalState().msb.WaitIdle()
     GlobalState().msb.DeactivateRobot()
     GlobalState().msb.Disconnect()
-    GlobalState().terminal_text += "Deactivated Robot\n"
+    GlobalState().msb = None
+    GlobalState().terminal_text += "Deactivated Robot"
     status_update("Deactivated")
     
 
     return
 
 def wait_for_printing():
-    while GlobalState().printing_state != 3:
+    while GlobalState().printing_state != 4:
         time.sleep(0.1)
-    GlobalState().terminal_text += "-------------------PRINT FINISHED-------------\n"
+    GlobalState().msb.WaitIdle()
+    GlobalState().terminal_text += "-------------------PRINT FINISHED!-------------"
+    uf.cleanpose(GlobalState().msb)
+    time.sleep(3)
     
-    status_update("Finished printing!\n - ready to print again")
+    status_update("Finished printing!\nready to print again")
     
     return
+
+def wait_for_callibration():
+    while GlobalState().printing_state == 6:
+        uf.callibrationpose(GlobalState().msb)
+        time.sleep(0.2)
 
 # ------------------ GUI ------------------
 def terminal_update():
@@ -374,7 +399,7 @@ def terminal_update():
             GlobalState().terminal_text = ""
             
             #print only the stuff that does not already exist
-            terminal_text.insert(ctk.END, "[" + current_time_string + "]  " + text)
+            terminal_text.insert(ctk.END, "[" + current_time_string + "]  " + text + "\n")
             
             last_text = text
 

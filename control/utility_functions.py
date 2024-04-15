@@ -35,7 +35,6 @@ def GetTargetPose(self = mdr.Robot()):
 def ReachedPose(self = mdr.Robot(), target = [0,0,0,0,0,0]):
 
     pose = GetPose(self)
-    #targetpose = GetTargetPose(self)
     distance =  0
     if (target[0] != None):
         distance +=(pose[0]-target[0])**2
@@ -49,20 +48,20 @@ def ReachedPose(self = mdr.Robot(), target = [0,0,0,0,0,0]):
     if(distance < GlobalState().threshold):
         return True
     else:
-        print(" DISTANCE = " + str(distance))
-        print("not reached:" + str(GetPose(GlobalState().msb)) + "  >>>>> " + str(target))
+        #print(" DISTANCE = " + str(distance))
+        #print("not reached:" + str(GetPose(GlobalState().msb)) + "  >>>>> " + str(target))
         return False
 
-#depracated for gcode translate
 def WaitReachedPose(target = [0,0,0,0,0,0]):
-    with GlobalState().msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
-        while not ReachedPose(GlobalState().msb, target):
-            time.sleep(0.1)
-        GlobalState().semaphore -=1
-    print("--------------------REACHED POSE-------------------")
+    #with GlobalState().msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
+    while not ReachedPose(GlobalState().msb, target):
+        time.sleep(0.1)
+    GlobalState().semaphore -=1
+    #print("--------------------REACHED POSE-------------------")
     return
 
 #adds target positions to the stack
+'''NOT USED AT THE MOMENT'''
 def add_target_pose(target = [0,0,0,0,0,0]):
 
     GlobalState().semaphore += 1
@@ -79,13 +78,10 @@ def add_target_pose(target = [0,0,0,0,0,0]):
 
     else:
         GlobalState().terminal_text += "!!!!!!!!!!!!!!!!!! DIFFERENT target stack error!!!!!!!!!!!!\n"
-
-    
-        
-
     return
 
 #continuously running thread that checks the current target pose of the robot to reduce semaphores
+'''NOT USED AT THE MOMENT'''
 def check_target_pose():
     start_time = time.time()
     paused_time = 0
@@ -148,26 +144,26 @@ def checklimits(x, y, z, self = mdr.Robot()):
     #check x limits
     if(x > RobotStats().max_x): 
         print(f'x out of bounds for {x}')
-        GlobalState().terminal_text += f'x out of bounds for x = {x}\n'
+        GlobalState().terminal_text += f'x out of bounds for x = {x}'
         self.WaitIdle()
         #time.sleep(2)
         return 1
     elif(x < RobotStats().min_x):
         print(f'x out of bounds for {x}')
-        GlobalState().terminal_text += f'x out of bounds for x = {x}\n'
+        GlobalState().terminal_text += f'x out of bounds for x = {x}'
         self.WaitIdle()
         #time.sleep(2)
         return -1
     #check y limits
     if(y > RobotStats().max_y): 
         print(f'y out of bounds for {y}')
-        GlobalState().terminal_text += f'y out of bounds for y = {y}\n'
+        GlobalState().terminal_text += f'y out of bounds for y = {y}'
         self.WaitIdle()
         #time.sleep(2)
         return 2
     elif(y < RobotStats().min_y):
         print(f'y out of bounds for {y}')
-        GlobalState().terminal_text += f'y out of bounds for y = {y}\n'
+        GlobalState().terminal_text += f'y out of bounds for y = {y}'
         self.WaitIdle()
         #time.sleep(2)
         return -2
@@ -175,13 +171,13 @@ def checklimits(x, y, z, self = mdr.Robot()):
     #check z limits
     if(z > RobotStats().max_z + GlobalState().user_z_offset ): 
         print(f'z out of bounds for {z}')
-        GlobalState().terminal_text += f'z out of bounds for z = {z}\n'
+        GlobalState().terminal_text += f'z out of bounds for z = {z}'
         self.WaitIdle()
         #time.sleep(2)
         return 3
     elif(z < RobotStats().min_z+ GlobalState().user_z_offset):
         print(f'z out of bounds for {z}')
-        GlobalState().terminal_text += f'z out of bounds for z = {z}\n'
+        GlobalState().terminal_text += f'z out of bounds for z = {z}'
         self.WaitIdle()
         #time.sleep(2)
         return -3
@@ -227,12 +223,13 @@ def startpose(self = mdr.Robot()):
 def callibrationpose(self = mdr.Robot()):
 
     self.WaitIdle()
-    commandPose((RobotStats().min_x + RobotStats().max_x)/2, 0, RobotStats().min_z, 180, 0, -180)
-    self.SendCustomCommand(f'MovePose({(RobotStats().min_x + RobotStats().max_x)/2}, 0, {RobotStats().min_z}, 180, 0, -180)')
-    GlobalState().terminal_text += " --- Ready for callibration - 10mm above the bed --- \n"
+
+    #commandPose((RobotStats().min_x + RobotStats().max_x)/2, 0, RobotStats().min_z + GlobalState().user_z_offset + 10, 180, 0, -180)
+    self.SendCustomCommand(f'MovePose({(RobotStats().min_x + RobotStats().max_x)/2}, 0, {RobotStats().min_z + GlobalState().user_z_offset + 10}, 180, 0, -180)')
+    
     print("calibrationpose reached")
 
-    time.sleep(1.5)
+    
 
     return
 
@@ -247,12 +244,12 @@ def deactivationsequence(self = mdr.Robot()):
 def clean_motion(self = mdr.Robot()):
 
     self.sendCustomCommand("ClearMotion()")
-    GlobalState().terminal_text += "Cleared motion queue \n"
+    GlobalState().terminal_text += "Cleared motion queue "
 
 def exit_print():
 
     print('BREAK - exitprogram')
-    GlobalState().terminal_text += "-----------BREAK - Print Process Stopped--------------\n"
+    GlobalState().terminal_text += "-----------BREAK - Print Process Stopped--------------"
     uf.cleanpose(self)
     time.sleep(3)
     return
@@ -305,7 +302,7 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
     #self.MovePose({x},{y},{z},{alpha},{beta},{gamma})
     #self.WaitIdle()
     print(f'Pose entered: {x},{y},{z},{alpha},{beta},{gamma}')
-    GlobalState().terminal_text += "Pose:" + str(round(x,4)) + "," + str(round(y,4)) + "," + str(round(z,4)) + "," + str(round(alpha,4)) + "," + str(round(beta,4)) + ","  + str(round(gamma,4)) + " \n"
+    GlobalState().terminal_text += "Pose:" + str(round(x,4)) + "," + str(round(y,4)) + "," + str(round(z,4)) + "," + str(round(alpha,4)) + "," + str(round(beta,4)) + ","  + str(round(gamma,4)) + ""
     #time.sleep(0.3)
     
 

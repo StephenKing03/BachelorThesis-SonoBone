@@ -3,12 +3,9 @@
 class GlobalState:
     #singeleton class
     _instance = None
-
-    #exit_program - RT variable to stop the printing
-    exit_program = False
-    
+  
     #printing_state - RT variable for print status information
-    printing_state = 0 #0: not printing, 1:ready 2:printing, 3: paused 3: finished 4: error 5: stopped
+    printing_state = 0 #0: not printing, 1:ready 2:printing, 3: paused 4: finished  5: stopped 6: calibration
 
     #user_z_offset - RT variable for z offset tuning
     user_z_offset = 0
@@ -22,7 +19,7 @@ class GlobalState:
     filepath = ""
     
     #terminal_text - RT variable for terminal output, gets added on top
-    terminal_text = "Terminal activated \n"
+    terminal_text = "Terminal activated "
     status_text = ""
 
     threshold = 0.1
@@ -33,7 +30,6 @@ class GlobalState:
 
     #msb - Robot instance - for referencing the robot   
     msb = None
-
 
     #singeleton class
     def __new__(cls, *args, **kwargs):
@@ -50,7 +46,7 @@ class RobotStats:
         self.min_x = 130
         self.max_x = 210
         self.min_y = -90
-        self.max_y = 70
+        self.max_y = 90
 
         self.tooloffset_x = 0
         self.tooloffset_y = 0

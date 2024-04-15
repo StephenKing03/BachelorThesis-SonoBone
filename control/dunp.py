@@ -27,5 +27,12 @@ msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel_start})')
 msb.SendCustomCommand(f'SetCartAcc({RobotStats().max_acc}')
 msb.SendCustomCommand('SetBlending(40)')
 
+uf.commandPose(150,0,-30,180,0,-180,msb)
+uf.commandPose(150,-80,-30,180,0,-180,msb)
+uf.commandPose(200,80,-30,180,0,-180,msb)
+uf.commandPose(200,-80,-30,180,0,-180,msb)
+uf.commandPose(150,-80,-30,180,0,-180,msb)
+uf.commandPose(150,80,-30,180,0,-180,msb)
+
 with msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
     gt.write_coordinates(gt.extract_coordinates(file_path), mdr.Robot())

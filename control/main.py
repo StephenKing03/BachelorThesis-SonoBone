@@ -11,41 +11,40 @@ def init_logger():
 
     old_terminal_text = GlobalState().terminal_text
     while True:
-        if GlobalState().terminal_text != old_terminal_text:
-            lines = GlobalState().terminal_text.split('\n')
-            last_line = lines[len(lines)-2]
+
+
+        if(GlobalState().terminal_text == last_text):
+            continue
+        if GlobalState().terminal_text != "":
+            #get timestamp
             current_time = datetime.now().time()
             current_time_string = current_time.strftime("%H:%M:%S")
-            # If terminal_text has changed, log the new value
-            logging.info(current_time_string + ": " + last_line + "\n")
-            old_terminal_text = GlobalState().terminal_text
-            time.sleep(0.5)
+
+            #print line with timestamp
+            text = GlobalState().terminal_text
+
+            #remove the text
+            GlobalState().terminal_text = ""
+            
+            #print only the stuff that does not already exist
+            logging.info(current_time_string + ": " + text + "\n")
+            
+            last_text = text
+
+            #scroll to the end
+            last_index = i
+        time.sleep(0.005)
+ 
     return
 
 #logging test
-'''
-GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
-GlobalState().msb.Connect(address='192.168.0.100', enable_synchronous_mode = False) #using IP address of the robot and Port 10000 to control
-GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
-GlobalState().msb.Home() #Home the robot
-GlobalState().msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging position
-GlobalState().msb.WaitIdle()
-with GlobalState().msb.FileLogger(0.001, fields =['CartPos']):
-    GlobalState().msb.MoveJoints(30, -60, 60, 0, 0, 0)
-    GlobalState().msb.MoveJoints(0, -60, 60, 0, 0, 0)
-    GlobalState().msb.MovePose(150, 0, 65, 180, 0, -180)
-    print(uf.GetPose(GlobalState().msb))
-    GlobalState().msb.MoveJoints(0, 0, 0, 0, 0, 0)
-    GlobalState().msb.WaitIdle()
 
-print("-----------------------------------------STARTING PROGRAMs-----------------------------------------")
-'''
 #custom logging thread:
 logging.basicConfig(filename='terminal_text.log', level=logging.INFO, format='%(asctime)s %(message)s')
 logging_thread = threading.Thread(target=init_logger)
 # - en or disable the logging
 #logging_thread.start()
-
 #main program
 
+#---------------main program start------------
 gui.init_gui()
