@@ -1,6 +1,5 @@
 {
-    "sketch": "sketch.ino",
-    "output": "build",
     "board": "arduino:avr:uno",
-    "port": "COM22"
+    "port": "COM18",
+    "sketch": "control\\extra_components\\basic_stepper.ino"
 }
