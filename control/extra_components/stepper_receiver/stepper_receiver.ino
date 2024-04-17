@@ -1,27 +1,36 @@
-#include <Stepper.h>
+#define dirPin 5
+#define stepPin 2
+#define motorInterfaceType 1
+#include "AccelStepper.h"
 
-// Define the number of steps per revolution
-const int stepsPerRevolution = 200;
-
-// Create a Stepper object
-Stepper myStepper(stepsPerRevolution, 8, 9, 10, 11);
+// Create a new instance of the AccelStepper class:
+AccelStepper stepper = AccelStepper(motorInterfaceType, stepPin, dirPin);
 
 void setup() {
-  // Initialize the serial communication
-  Serial.begin(9600);
+    pinMode(A2, INPUT);
+    Serial.begin(9600);
+    
+
+    
+
+    stepper.setMaxSpeed(1000);
 }
 
 void loop() {
-  // Check if there is any data available to read from the serial port
-  if (Serial.available() > 0) {
-    // Read the incoming value as an integer
-    int speed = Serial.parseInt();
-    speed = 1000;
+    int speed = 1000;
+    if (Serial.available()) {
+        String command = Serial.readStringUntil('\n');
+        command.trim();
 
-    // Set the motor speed
-    myStepper.setSpeed(speed);
-
-    // Rotate the motor continuously
-    myStepper.step(stepsPerRevolution);
-  }
+        if (command.startsWith("speed")) {
+            speed = command.substring(6).toInt();
+            stepper.setSpeed(speed);
+            // Step the motor with a constant speed as set by setSpeed():
+            
+            Serial.println("Speed set to " + String(speed));
+        } else {
+            Serial.println("Invalid command");
+        }
+    }
+    stepper.runSpeed();
 }
