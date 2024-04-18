@@ -13,13 +13,13 @@ def command_speed():
 def send_speed(value):
 
     # Convert value to message
-    message = "s" + str(value)
+    message = "sp" + str(value)
 
     # Convert message to bytes - for sending
     message_bytes = message.encode()
 
     # Send the bytes over serial
-    port.write(message_bytes)
+    GlobalState().arduino_port.write(message_bytes)
 
     return
 
@@ -30,25 +30,38 @@ def send_position(value):
 
     '''test with constant extrusion'''
     if(value >= 0):
-        send_speed(100)
+        send_speed(extrusion_speed)
 
     if(value < 0):
-        send_speed(-100)
+        send_speed(-extrusion_speed)
     '''end test with constant extrusion'''
 
     return
+
     # Convert value to message
-    message = "p" + str(value)
+    message = "p" + str(value) + ";s" + str(extrusion_speed)
 
     # Convert message to bytes - for sending
     message_bytes = message.encode()
 
     # Send the bytes over serial
-    port.write(message_bytes)
+    GlobalState().arduino_port.write(message_bytes)
 
-def retract():
+def retract(direction = -1):
 
-    #placeholder
+    if direction > 0:
+        value = 10
+    else:
+        value = -10
+        
+    # Convert value to message
+    message = "p" + str(value) + ";s" + str(extrusion_speed)
+
+    # Convert message to bytes - for sending
+    message_bytes = message.encode()
+
+    # Send the bytes over serial
+    GlobalState().arduino_port.write(message_bytes)
 
     return
 
@@ -60,15 +73,33 @@ def start_steppers():
     #initialization sequence
     message = "init"
     message_bytes = message.encode()
-    port.write(message_bytes)
+    GlobalState().arduino_port.write(message_bytes)
     
     return
 
+def read_steppers():
+
+    while True:
+        #read from serial port
+        message = GlobalState().arduino_port.readline()
+        print(message)
+
+    return
+
+def wait_ack():
+    
+        while True:
+            #read from serial port
+            message = GlobalState().arduino_port.readline()
+            if message == "ack":
+                break
+    
+        return
 
 def stop_steppers():
 
     # Close the serial port when done
-    GlobalState().port.close()
+    GlobalState().GlobalState().arduino_portclose()
     return
 
 

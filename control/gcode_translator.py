@@ -87,6 +87,7 @@ def write_coordinates(coordinates, self):
             print(GlobalState().printing_state)
             return
         i += 1 #index
+        GlobalState().current_line = i
 
         #blank line -> skip
         if(x == None and y == None and z == None):
@@ -127,21 +128,28 @@ def write_coordinates(coordinates, self):
             
             #print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_0+10}')
             uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180, self)
-            if(e != None & e != last_e):
+            if(e != None):
                 sc.send_position(e - last_e)
                 last_e = e
+            
+            #wait for position to be almost reached
             uf.WaitReachedPose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
+            
+            sc.sendspeed(0)
             GlobalState().semaphore += 1
             #uf.add_target_pose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             
         elif z == None:
             
             uf.commandPose(x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180, self)
-            if(e != None & e != last_e):
+            if(e != None ):
                 sc.send_position(e - last_e)
                 last_e = e
+
+            #wait for position to be almost reached
             uf.WaitReachedPose([x+x_offset, y + y_offset, non_none_z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             GlobalState().semaphore += 1
+            sc.send_speed(0)
             ''' removed in command pose to wait'''
             #uf.add_target_pose([x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180])
             
@@ -201,3 +209,19 @@ def modify_placement(coordinates):
 
 
     return x_offset, y_offset
+
+
+def progress_update(coordinates):
+
+    progress = 0
+    total_size = len(coordinates)
+    while(progress != 100):
+        if(current_progress != progress):
+            print(f'Progress: {progress}%')
+            progress = current_progress
+        current_progress = GlobalState().current_line / total_size * 100
+        current_progress = math.round(current_progress, 0)
+        
+        time.sleep(0.5)
+
+    

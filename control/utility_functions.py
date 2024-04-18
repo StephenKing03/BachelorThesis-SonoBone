@@ -303,7 +303,9 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
     #self.MovePose({x},{y},{z},{alpha},{beta},{gamma})
     #self.WaitIdle()
     print(f'Pose entered: {x},{y},{z},{alpha},{beta},{gamma}')
-    GlobalState().terminal_text += "Pose:" + str(round(x,4)) + "," + str(round(y,4)) + "," + str(round(z,4)) + "," + str(round(alpha,4)) + "," + str(round(beta,4)) + ","  + str(round(gamma,4)) + ""
+
+    #GlobalState().terminal_text += "Pose:" + str(round(x,4)) + "," + str(round(y,4)) + "," + str(round(z,4)) + "," + str(round(alpha,4)) + "," + str(round(beta,4)) + ","  + str(round(gamma,4)) + ""
+    
     #time.sleep(0.3)
     
 

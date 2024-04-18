@@ -43,3 +43,10 @@ with msb.FileLogger(0.001, fields =['CartPos', 'TargetCartPos']):
     gt.write_coordinates(gt.extract_coordinates(file_path), mdr.Robot())
     '''
 
+
+
+    string = "p{position};s{speed}"
+    position = string.split(";")[0].split("{")[1]
+    speed = string.split(";")[1].split("{")[1]
+    position = position.substr(0, position.find("}"));
+    speed = speed.substr(0, speed.find("}"));

@@ -32,9 +32,12 @@ class GlobalState:
     target_positions = None
     semaphore = 0
 
+    #progress
+    current_line = 0
+
     #msb - Robot instance - for referencing the robot   
     msb = None
-    port = None
+    arduino_port = None
 
     #singeleton class
     def __new__(cls, *args, **kwargs):
@@ -72,7 +75,7 @@ class RobotStats:
 
         self.max_semaphores = 3 #not used 
     
-        self.arduino_port = 'COM18'
+        self.port = 'COM20'
 
         self.extrusion_speed = 100
 

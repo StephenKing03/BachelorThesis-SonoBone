@@ -6,44 +6,64 @@
 // Create a new instance of the AccelStepper class:
 AccelStepper stepper = AccelStepper(motorInterfaceType, stepPin, dirPin);
 
-int input;
-
 void setup() {
-  pinMode(A2, INPUT);
-  Serial.begin(9600);
-
-   // Set the speed in steps per second:
-  
-// Set the speed in steps per second:
-
-// Calculate the number of steps required to move 10mm
-float distanceInMM = 100.0;
-float stepsPerMM = 100.0; // Adjust this value based on your stepper motor specifications
-int steps = distanceInMM * stepsPerMM;
-
-// Set the desired speed in steps per second
-float speedInMMPerSec = 5.0; // Adjust this value to set the speed
-float speedInStepsPerSec = speedInMMPerSec * stepsPerMM;
-stepper.setSpeed(speedInStepsPerSec);
-  stepper.setMaxSpeed(10000);
-
-// Move the stepper motor by the specified number of steps
-//stepper.moveTo(steps);
-
-stepper.setSpeed(1000);
-stepper.setAcceleration(50000);
-stepper.moveTo(2048);
-  
-
-  // Set the maximum speed in steps per second:
-
+    pinMode(A2, INPUT);
+    Serial.begin(9600);
+    
+    stepper.setMaxSpeed(10000);
 }
 
 void loop() {
- 
-stepper.run();
-if(stepper.distanceToGo() == 0){
-Serial.println("Hurray");
-}
+    int speed = 1000;
+    int basespeed = 300;
+    int f_factor = 1;
+    if (Serial.available()) {
 
+        //read icoming text and transform it
+        char buffer[32]; // Buffer to hold incoming data
+        Serial.setTimeout(10);
+        int length = Serial.readBytesUntil('\n', buffer, sizeof(buffer) - 1);
+        buffer[length] = '\0'; // Null-terminate the string
+        stepper.runSpeed();
+        String command = String(buffer);
+        stepper.runSpeed();
+
+        if(command.startsWith("sp")) {
+            stepper.setMaxSpeed(10000);
+            speed = command.substring(2).toInt();
+            stepper.setSpeed(speed);
+            // Step the motor with a constant speed as set by setSpeed():
+            Serial.println("Speed set to " + String(speed));
+
+
+        }else if(command.startsWith("init")){
+
+            Serial.println("Initializing stepper");
+            stepper.setMaxSpeed(10000);
+            stepper.setSpeed(3000);
+            unsigned long startTime = millis();
+            unsigned long duration = 1000; // 3 seconds
+            while (millis() - startTime < duration) {
+                stepper.runSpeed();
+            }
+            stepper.setSpeed(-3000);
+            startTime = millis();
+            duration = 1000; // 3 seconds
+            while (millis() - startTime < duration) {
+                stepper.runSpeed();
+            }
+            stepper.setSpeed(0);
+            Serial.println("Stepper initialized");
+
+        }else {
+
+            Serial.println("Invalid command");
+        }
+        stepper.runSpeed();
+    }
+
+    stepper.runSpeed();
+        
+
+    
 }

@@ -40,8 +40,8 @@ def init_logger():
 #logging test
 
 #custom logging thread:
-logging.basicConfig(filename='terminal_text.log', level=logging.INFO, format='%(asctime)s %(message)s')
-logging_thread = threading.Thread(target=init_logger)
+#logging.basicConfig(filename='terminal_text.log', level=logging.INFO, format='%(asctime)s %(message)s')
+#logging_thread = threading.Thread(target=init_logger)
 # - en or disable the logging
 #logging_thread.start()
 #main program
