@@ -77,7 +77,7 @@ class RobotStats:
     
         self.port = 'COM20'
 
-        self.extrusion_speed = 100
+        self.extrusion_speed = 1000
 
 
 

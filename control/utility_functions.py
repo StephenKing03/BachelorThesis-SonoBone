@@ -16,9 +16,9 @@ def adjust_speed(speed_p, self = mdr.Robot()):
 def GetPose(self = mdr.Robot()):
 
     rtdata = self.GetRobotRtData()
-    print(rtdata)
+    #print(rtdata)
     pose = rtdata.rt_cart_pos.data
-    print(f'Pos:{pose}\n')
+    #print(f'Pos:{pose}\n')
     
     
     return pose

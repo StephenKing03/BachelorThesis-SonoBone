@@ -29,10 +29,11 @@ def send_position(value):
     extrusion_speed = RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100
 
     '''test with constant extrusion'''
-    if(value >= 0):
+    if(value == 0):
+        send_speed(0)
+    elif(value > 0):
         send_speed(extrusion_speed)
-
-    if(value < 0):
+    elif(value < 0):
         send_speed(-extrusion_speed)
     '''end test with constant extrusion'''
 

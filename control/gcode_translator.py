@@ -71,7 +71,7 @@ def write_coordinates(coordinates, self):
     for x, y, z, e, er in coordinates:
         
         print(f'--{i}--')
-        GlobalState().terminal_text += f'--{i}--'
+        #GlobalState().terminal_text += f'--{i}--'
 
         #wait in this position when the print is paused
         while(GlobalState().printing_state == 3): #print paused 
@@ -135,7 +135,7 @@ def write_coordinates(coordinates, self):
             #wait for position to be almost reached
             uf.WaitReachedPose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             
-            sc.sendspeed(0)
+            sc.send_speed(0)
             GlobalState().semaphore += 1
             #uf.add_target_pose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             
@@ -159,7 +159,8 @@ def write_coordinates(coordinates, self):
             GlobalState().terminal_text += "Line skip error"
         
         #-------------------finished print -----------------------------
-
+    
+    sc.send_speed(0)
     #set speed higher again
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')
     uf.endpose(self)
@@ -219,8 +220,11 @@ def progress_update(coordinates):
         if(current_progress != progress):
             print(f'Progress: {progress}%')
             progress = current_progress
+            GlobalState().terminal_text += f'Progress: {progress}%'
+            
         current_progress = GlobalState().current_line / total_size * 100
         current_progress = math.round(current_progress, 0)
+        
         
         time.sleep(0.5)
 

@@ -182,6 +182,9 @@ def start_print_but():
     print_thread = threading.Thread(target=gt.write_coordinates, args=(coordinates, GlobalState().msb))
     print_thread.start()
 
+    progress_thread = threading.Thread(target=gt.progress_update)
+    progress_thread.start()
+
     ''' out of use at the moment - for the multiple chaining
     #start position checking thread
     check_thread = threading.Thread(target=uf.check_target_pose)
