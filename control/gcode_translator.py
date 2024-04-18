@@ -68,26 +68,30 @@ def write_coordinates(coordinates, self):
     last_e = 0
     i = 0
 
+    length = len(coordinates)
     for x, y, z, e, er in coordinates:
         
         print(f'--{i}--')
+        if(i % 100 == 0):
+            time.sleep(0.5)
         #GlobalState().terminal_text += f'--{i}--'
 
         #wait in this position when the print is paused
-        while(GlobalState().printing_state == 3): #print paused 
-            if GlobalState().printing_state == 5: #as precaution
-                print("exit path 1")
-                print(GlobalState().printing_state)
-                return
-            time.sleep(0.1)
+            while(GlobalState().printing_state == 3): #print paused 
+                if GlobalState().printing_state == 5: #as precaution
+                    print("exit path 1")
+                    print(GlobalState().printing_state)
+                    return
+                time.sleep(0.1)
         
         # Check printing_state if the print is stopped
-        if GlobalState().printing_state == 5:  
-            print("exit path 2")
-            print(GlobalState().printing_state)
-            return
+            if GlobalState().printing_state == 5:  
+                print("exit path 2")
+                print(GlobalState().printing_state)
+                return
         i += 1 #index
         GlobalState().current_line = i
+        GlobalState().terminal_text += f'{i} / {length}'
 
         #blank line -> skip
         if(x == None and y == None and z == None):
@@ -115,6 +119,7 @@ def write_coordinates(coordinates, self):
             #time.sleep(1)
         '''
 
+        '''
         #wait for the last position to be nearly reached
         while(GlobalState().semaphore != 0): 
             if GlobalState().printing_state == 5:
@@ -122,6 +127,7 @@ def write_coordinates(coordinates, self):
                 print(GlobalState().printing_state)
                 return
             time.sleep(0.1)
+        '''
         
         #if x and y are not specified, move to current position with z offset
         if (x == None or y == None):
@@ -133,9 +139,9 @@ def write_coordinates(coordinates, self):
                 last_e = e
             
             #wait for position to be almost reached
-            uf.WaitReachedPose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
-            
-            sc.send_speed(0)
+            #uf.WaitReachedPose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
+            #uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180, self)
+            #sc.send_speed(0)
             GlobalState().semaphore += 1
             #uf.add_target_pose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             
@@ -143,20 +149,22 @@ def write_coordinates(coordinates, self):
             
             uf.commandPose(x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180, self)
             if(e != None ):
-                sc.send_position(e - last_e)
+                #sc.send_position(e - last_e)
                 last_e = e
 
             #wait for position to be almost reached
-            uf.WaitReachedPose([x+x_offset, y + y_offset, non_none_z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
+            #uf.WaitReachedPose([x+x_offset, y + y_offset, non_none_z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             GlobalState().semaphore += 1
-            sc.send_speed(0)
+            #sc.send_speed(0)
             ''' removed in command pose to wait'''
             #uf.add_target_pose([x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180])
             
         #throw exception
         else:
             print("!-!-!-!-!Line skip error!-!-!-!-!")
-            GlobalState().terminal_text += "Line skip error"
+            #GlobalState().terminal_text += "Line skip error"
+
+        time.sleep(0.01)
         
         #-------------------finished print -----------------------------
     
@@ -212,20 +220,5 @@ def modify_placement(coordinates):
     return x_offset, y_offset
 
 
-def progress_update(coordinates):
-
-    progress = 0
-    total_size = len(coordinates)
-    while(progress != 100):
-        if(current_progress != progress):
-            print(f'Progress: {progress}%')
-            progress = current_progress
-            GlobalState().terminal_text += f'Progress: {progress}%'
-            
-        current_progress = GlobalState().current_line / total_size * 100
-        current_progress = math.round(current_progress, 0)
-        
-        
-        time.sleep(0.5)
 
     

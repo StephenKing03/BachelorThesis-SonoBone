@@ -156,6 +156,11 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
 
 def start_print_but():
     
+    if(GlobalState().msb == None):
+        GlobalState().terminal_text += "Error: Robot not initialized - initializing now..."
+        init_print_but()
+        
+    
     #in case of restart - make sure it does not shut down again
     GlobalState().printing_state = 0
 
@@ -179,11 +184,14 @@ def start_print_but():
     filename = os.path.basename(GlobalState().filepath)
     status_update("Printing ...  \nFile: " + str(filename))
     GlobalState().msb.WaitIdle()
+
+    #progress_thread = threading.Thread(target=progress_update, args = (coordinates))
+    #progress_thread.start()
+
     print_thread = threading.Thread(target=gt.write_coordinates, args=(coordinates, GlobalState().msb))
     print_thread.start()
 
-    progress_thread = threading.Thread(target=gt.progress_update)
-    progress_thread.start()
+    
 
     ''' out of use at the moment - for the multiple chaining
     #start position checking thread
@@ -200,10 +208,13 @@ def start_print_but():
     
 def stop_print_but():
     
-    GlobalState().printing_state = 5 #5 = stopped
-    GlobalState().msb.WaitIdle()
-    GlobalState().terminal_text = " ---PRINT STOPPED---"
-    status_update("Print stopped")
+    if(GlobalState().printing_state == 2):
+        GlobalState().printing_state = 5 #5 = stopped
+        GlobalState().msb.WaitIdle()
+        GlobalState().terminal_text = " ---PRINT STOPPED---"
+        status_update("Print stopped")
+    else:
+        GlobalState().terminal_text += "no print in process - nothing done"
     
     
     #deactivate() optional to deactivate the robot
@@ -244,7 +255,7 @@ def init_print_but():
     #msb.StartLogging(0.001)
 
     #activate steppers
-    sc.start_steppers()
+    sc.init_steppers()
 
     #send info text
     msb.WaitIdle()
@@ -308,15 +319,22 @@ def pause_print_but():
     return
 
 def calibration_but():
-    GlobalState().terminal_text += " ---Ready for callibration - 10mm above the bed--- "
-    previous_state = GlobalState().printing_state
-    GlobalState().printing_state = 6 #6 = calibration
-    status_update("Calibrating...")
-    uf.callibrationpose(GlobalState().msb)
+    
+    if(GlobalState().msb == None):
+        GlobalState().terminal_text += "Error: Robot not initialized"
+        return
+    if(GlobalState().printing_state != 2):
+        GlobalState().terminal_text += " ---Ready for callibration - 10mm above the bed--- "
+        previous_state = GlobalState().printing_state
+        GlobalState().printing_state = 6 #6 = calibration
+        status_update("Calibrating...")
+        uf.callibrationpose(GlobalState().msb)
 
-    #thread to update callibration pose
-    callibration_thread = threading.Thread(target=wait_for_callibration)
-    callibration_thread.start()
+        #thread to update callibration pose
+        callibration_thread = threading.Thread(target=wait_for_callibration)
+        callibration_thread.start()
+    else:
+        GlobalState().terminal_text += "print in process - continued printing"
 
     return
 
@@ -411,7 +429,7 @@ def wait_for_printing():
     uf.cleanpose(GlobalState().msb)
     time.sleep(3)
     
-    status_update("Finished printing!\nready to print again")
+    status_update("Finished printing!\n  ready to print again")
     
     return
 
@@ -453,7 +471,7 @@ def terminal_update():
             terminal_text.see(tk.END)
             print(GlobalState().terminal_text)
             last_index = i
-        time.sleep(0.005)
+        time.sleep(0.0005)
 
         #compare current text with previous text line by line
         #if different, add the new line to the terminal_text
@@ -467,6 +485,25 @@ def status_update(new_status = " ? "):
 
     status_text.configure(text= new_status)
     time.sleep(0.2)
+
+
+def progress_update(coordinates):
+
+    progress = 0
+    current_progress = -1
+    total_size = len(coordinates)
+    while(True):
+        if(current_progress != progress):
+            print(f'Progress: {progress}%')
+            progress = current_progress
+            GlobalState().terminal_text += f'Progress: {progress}% '
+
+        current_progress = GlobalState().current_line / total_size * 100
+        current_progress = math.round(current_progress, 0)
+        GlobalState.terminal_text += f'Progress: {current_progress}% '
+    
+        time.sleep(0.5)
+
 
 #main gui function
 def init_gui():
@@ -499,8 +536,6 @@ def init_gui():
 
     #start gui
     root.mainloop()
-
-    print("tests")
     
 
     

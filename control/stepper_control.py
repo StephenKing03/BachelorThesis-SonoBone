@@ -29,11 +29,12 @@ def send_position(value):
     extrusion_speed = RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100
 
     '''test with constant extrusion'''
-    if(value == 0):
+
+    if(GlobalState().extrusion_direction != 0 and value == 0):
         send_speed(0)
-    elif(value > 0):
+    elif(GlobalState().extrusion_direction != 1 and value > 0):
         send_speed(extrusion_speed)
-    elif(value < 0):
+    elif(GlobalState().extrusion_direction != -1 and value < 0):
         send_speed(-extrusion_speed)
     '''end test with constant extrusion'''
 
@@ -66,7 +67,7 @@ def retract(direction = -1):
 
     return
 
-def start_steppers():
+def init_steppers():
     
     #setup port for arduino communication
     GlobalState().arduino_port = serial.Serial(RobotStats().port, 9600)
@@ -102,6 +103,16 @@ def stop_steppers():
     # Close the serial port when done
     GlobalState().GlobalState().arduino_portclose()
     return
+
+def monitor_stepper():
+    previous_text = ""
+    text = " "
+    while True:
+        text = GlobalState().arduino_port.readline()
+        if previous_text != text:
+            GlobalState().terminal_text += text
+            previous_text = text
+        time.sleep(0.1)
 
 
 

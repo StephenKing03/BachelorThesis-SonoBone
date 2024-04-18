@@ -18,15 +18,18 @@ class GlobalState:
     #extrusion speed modifier
     extrusion_speed_modifier = 100 #%
     extrusion_speed_increment = 5
+
+    #extrusion direction
+    extrusion_direction = 1
     
     #filepath for the currently printed file
-    filepath = ""
+    filepath = " "
     
     #terminal_text - RT variable for terminal output, gets added on top
     terminal_text = "Terminal activated "
     status_text = ""
 
-    threshold = 0.1
+    threshold = 0.3
 
     #check position reached
     target_positions = None
@@ -68,8 +71,8 @@ class RobotStats:
         
         self.max_linvel = 5 #this does not seem to do anything, even if directly sent to robot ...
         
-        self.max_lin_acc = 0.01
-        self.max_acc = 0.01
+        self.max_lin_acc = 500
+        self.max_acc = 500
         self.print_offset_x = 0
         self.print_offset_y = 0
 
