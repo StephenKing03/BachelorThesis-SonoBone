@@ -8,7 +8,7 @@ import threading
 
 #---set the speed of the robot in mm/s---------------------------------------------------------
 def adjust_speed(speed_p, self = mdr.Robot()):
-    self.SendCustomCommand(f'SetJointVelLimit({speed_p * RobotStats().max_linvel/100})')
+    self.SendCustomCommand(f'SetJointVelLimit({speed_p * RobotStats().max_linvel/100/2})')
     print(f'LinVel set to {speed_p} %')
     return
 

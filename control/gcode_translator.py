@@ -1,6 +1,7 @@
 import math
 import time #for time.sleep()
 import utility_functions as uf #import utility functions
+import stepper_control as sc
 from globals import GlobalState
 from globals import RobotStats
 
@@ -63,6 +64,8 @@ def write_coordinates(coordinates, self):
     non_none_z = 0
     non_none_x = 0
     non_none_y = 0
+    non_none_e = 0
+    last_e = 0
     i = 0
 
     for x, y, z, e, er in coordinates:
@@ -95,6 +98,9 @@ def write_coordinates(coordinates, self):
             non_none_x = x
         if(y != None):
             non_none_y = y  
+        if(e != None):
+            non_none_e = e
+
         
         ''' waiting for future implementation
         #if er = True, continue with the next line
@@ -106,7 +112,6 @@ def write_coordinates(coordinates, self):
         if(e != None):
             print(f'extrusion: {e}')
             #time.sleep(1)
-
         '''
 
         #wait for the last position to be nearly reached
@@ -122,6 +127,9 @@ def write_coordinates(coordinates, self):
             
             #print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_0+10}')
             uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180, self)
+            if(e != None & e != last_e):
+                sc.send_position(e - last_e)
+                last_e = e
             uf.WaitReachedPose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             GlobalState().semaphore += 1
             #uf.add_target_pose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
@@ -129,6 +137,9 @@ def write_coordinates(coordinates, self):
         elif z == None:
             
             uf.commandPose(x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180, self)
+            if(e != None & e != last_e):
+                sc.send_position(e - last_e)
+                last_e = e
             uf.WaitReachedPose([x+x_offset, y + y_offset, non_none_z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             GlobalState().semaphore += 1
             ''' removed in command pose to wait'''

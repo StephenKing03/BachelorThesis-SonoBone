@@ -12,6 +12,7 @@ from tkinter import filedialog
 
 import utility_functions as uf  # import utility functions
 import gcode_translator as gt  # import gcode translator
+import stepper_control as sc  # import stepper control
 
 from globals import GlobalState
 from globals import RobotStats
@@ -25,6 +26,7 @@ global z_offset_textbox
 global speed_textbox
 global terminal_text
 global pause_button
+global e_speed_textbox
 
 def print_control(root, leftcol, rightcol, buttoncolor, rcol):
     #button to initialize the robot
@@ -77,7 +79,7 @@ def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
     terminal_text.place(relx=rightcol, rely=0.25, anchor=ctk.NW)
 
     scrollbar = tk.Scrollbar(root, command=terminal_text.yview, background = 'blue')
-    scrollbar.place(relx=rcol -0.07, rely=0.25, anchor=ctk.NW, height=root.winfo_screenheight()*0.59)
+    scrollbar.place(relx=rightcol+0.43, rely=0.25, anchor=ctk.NW, height=root.winfo_screenheight()*0.59)
     terminal_text['yscrollcommand'] = scrollbar.set
 
     terminal_text.insert(ctk.END, "")
@@ -103,6 +105,7 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
 
     global z_offset_textbox
     global speed_textbox
+    global e_speed_textbox
 
     #set z offsetbutton up and down
     z_offset_up_button = ctk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= buttoncolor, command=z_up_but, width = 50, height = 25, anchor = 'center')
@@ -132,6 +135,20 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
 
     speed_label= ctk.CTkLabel(master=root, text="Speed", font=("Avenir Heavy", 15, 'bold'), width = 40, anchor = 'center')
     speed_label.place(relx=rcol, rely=0.56, anchor=ctk.NW)
+
+    #set extrusion speed button up and down
+    e_speed_up_button = ctk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= buttoncolor, command=e_speed_up_but, width = 50, height = 25)
+    e_speed_up_button.place(relx=rcol+0.08, rely=0.63, anchor=ctk.NW)
+    e_speed_down_button = ctk.CTkButton(master=root, text="↓", font=("Avenir Heavy",15), fg_color= buttoncolor, command=e_speed_down_but, width = 50, height = 25, anchor = 'center')
+    e_speed_down_button.place(relx=rcol+0.08, rely=0.83, anchor=ctk.NW)
+
+    #extrusion speed textbox
+    e_speed_textbox = ctk.CTkEntry(master=root, font=("Avenir", 10), width=50)
+    e_speed_textbox.place(relx=rcol+0.08, rely=0.73, anchor=ctk.NW)
+    e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
+
+    e_speed_label= ctk.CTkLabel(master=root, text="Extrusion", font=("Avenir Heavy", 15, 'bold'), width = 40, anchor = 'center')
+    e_speed_label.place(relx=rcol+0.08, rely=0.56, anchor=ctk.NW)
 
     return
 
@@ -190,6 +207,10 @@ def stop_print_but():
     return
 
 def init_print_but():
+
+    #start the terminal thread
+    terminal_thread = threading.Thread(target=terminal_update)
+    terminal_thread.start()
    
     #set states and info text
     GlobalState().printing_state = 0 #0 = not printing
@@ -202,7 +223,7 @@ def init_print_but():
         GlobalState().msb.Home() #Home the robot
     
     msb = GlobalState().msb
-    #setup robot 
+    #setup robot arm
     msb.ClearMotion()
     msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging position
     msb.SendCustomCommand('ResetError()')
@@ -215,20 +236,16 @@ def init_print_but():
     msb.SendCustomCommand('SetBlending(70)')
     #Set tooltip reference frame to 160 in front of the end of robot arm
     msb.SendCustomCommand(f'SetTrf({RobotStats().tooloffset_x},{RobotStats().tooloffset_y},{RobotStats().tooloffset_z},{RobotStats().tooloffset_alpha},{RobotStats().tooloffset_beta},{RobotStats().tooloffset_gamma})')
-
-    
     #setpayload!!!!!--------------------------------
-
     msb.WaitIdle()
     #msb.StartLogging(0.001)
+
+    #activate steppers
+    sc.start_steppers()
 
     #send info text
     msb.WaitIdle()
     time.sleep(1)
-
-    #start the terminal thread
-    terminal_thread = threading.Thread(target=terminal_update)
-    terminal_thread.start()
 
     #show that terminal is activated
     #GlobalState().terminal_text += "Terminal activated \n"
@@ -321,6 +338,28 @@ def z_down_but():
     # Insert the new text
     z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
     print(GlobalState().user_z_offset)
+    return
+
+def e_speed_up_but():
+    global e_speed_textbox
+    GlobalState().extrusion_speed_modifier += GlobalState().extrusion_speed_increment
+    GlobalState().extrusion_speed_modifier = round(GlobalState().extrusion_speed_modifier, 2)
+    e_speed_textbox.delete(0, ctk.END)
+
+    # Insert the new text
+    e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
+    print(GlobalState().extrusion_speed_modifier)
+    return
+
+def e_speed_down_but():
+    global e_speed_textbox
+    GlobalState().extrusion_speed_modifier -= GlobalState().extrusion_speed_increment
+    GlobalState().extrusion_speed_modifier = round(GlobalState().extrusion_speed_modifier, 2)
+    e_speed_textbox.delete(0, ctk.END)
+
+    # Insert the new text
+    e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
+    print(GlobalState().extrusion_speed_modifier)
     return
 
 def speed_up_but():
@@ -431,15 +470,15 @@ def init_gui():
     
     #define soime parameters
     leftcol = 0.05
-    rightcol = 0.32
-    rcol = 0.88
+    rightcol = 0.28
+    rcol = 0.78
     buttoncolor = '#0859C3'
 
     ctk.set_appearance_mode("System")  # Modes: system (default), light, dark
     ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
     root = ctk.CTk()  # create CTk window like you do with the Tk window
-    root.geometry("700x450")
+    root.geometry("800x450")
     root.title("SonoBone control interface")
     root.iconbitmap(r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\SonoBone_icon.ico")
 

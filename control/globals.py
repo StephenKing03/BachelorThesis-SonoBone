@@ -12,8 +12,12 @@ class GlobalState:
     user_z_offset_increment = 0.5
 
     #printspeed - RT variable for print speed tuning
-    printspeed_modifier = 50 #% 
+    printspeed_modifier = 100 #% 
     printspeed_increment = 5
+
+    #extrusion speed modifier
+    extrusion_speed_modifier = 100 #%
+    extrusion_speed_increment = 5
     
     #filepath for the currently printed file
     filepath = ""
@@ -30,6 +34,7 @@ class GlobalState:
 
     #msb - Robot instance - for referencing the robot   
     msb = None
+    port = None
 
     #singeleton class
     def __new__(cls, *args, **kwargs):
@@ -65,8 +70,13 @@ class RobotStats:
         self.print_offset_x = 0
         self.print_offset_y = 0
 
-        self.max_semaphores = 3
+        self.max_semaphores = 3 #not used 
     
+        self.arduino_port = 'COM18'
+
+        self.extrusion_speed = 100
+
+
 
     
 

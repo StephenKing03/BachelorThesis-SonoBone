@@ -11,23 +11,39 @@ int input;
 void setup() {
   pinMode(A2, INPUT);
   Serial.begin(9600);
+
+   // Set the speed in steps per second:
   
-  input = 0;
+// Set the speed in steps per second:
+
+// Calculate the number of steps required to move 10mm
+float distanceInMM = 100.0;
+float stepsPerMM = 100.0; // Adjust this value based on your stepper motor specifications
+int steps = distanceInMM * stepsPerMM;
+
+// Set the desired speed in steps per second
+float speedInMMPerSec = 5.0; // Adjust this value to set the speed
+float speedInStepsPerSec = speedInMMPerSec * stepsPerMM;
+stepper.setSpeed(speedInStepsPerSec);
+  stepper.setMaxSpeed(10000);
+
+// Move the stepper motor by the specified number of steps
+//stepper.moveTo(steps);
+
+stepper.setSpeed(1000);
+stepper.setAcceleration(50000);
+stepper.moveTo(2048);
+  
 
   // Set the maximum speed in steps per second:
-  stepper.setMaxSpeed(1000);
+
 }
 
 void loop() {
-  // Set the speed in steps per second:
-  
-// Set the speed in steps per second:
-  stepper.setSpeed(1000);
-  // Step the motor with a constant speed as set by setSpeed():
-  stepper.runSpeed();
-  
-  // wait for 1 second:
-  
+ 
+stepper.run();
+if(stepper.distanceToGo() == 0){
+Serial.println("Hurray");
+}
 
-  
 }

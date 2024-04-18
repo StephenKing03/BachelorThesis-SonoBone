@@ -1,4 +1,5 @@
 {
     "board": "arduino:avr:uno",
-    "port": "COM18"
+    "port": "COM18",
+    "sketch": "control\\extra_components\\stepper_receiver\\stepper_receiver.ino"
 }
