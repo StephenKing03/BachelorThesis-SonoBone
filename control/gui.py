@@ -30,7 +30,8 @@ global pause_button
 global e_speed_textbox
 global progress_text
 global calibrate_button
-global threads_activated 
+
+
 
 def print_control(root, leftcol, rightcol, buttoncolor, rcol):
     #button to initialize the robot
@@ -122,7 +123,7 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
     z_offset_textbox = ctk.CTkEntry(master=root, font=("Avenir", 10), width=50)
     z_offset_textbox.place(relx=rcol, rely=0.35, anchor=ctk.NW)
     # Set the text of z_offset_textbox
-    z_offset_textbox.insert(0, GlobalState().user_z_offset)
+    z_offset_textbox.insert(0, str(GlobalState().user_z_offset) + "mm")
 
     z_offset_label= ctk.CTkLabel(master=root, text="Z-offset", font=("Avenir Heavy", 15, 'bold'), width = 40, anchor = 'center')
     z_offset_label.place(relx=rcol, rely=0.18, anchor=ctk.NW)
@@ -189,34 +190,23 @@ def start_print_but():
 
     GlobalState().confirmed = True
 
+    GlobalState().current_progress = 0
     GlobalState().printing_state = 2 #2 = printing
     #start print
     filename = os.path.basename(GlobalState().filepath)
     status_update("Printing ...  \nFile: " + str(filename))
 
+    '''
     #start modification threads
-    p_speed_thread = threading.Thread(target=check_speed)
-    e_speed_thread = threading.Thread(target=check_extrusionspeed)
-    z_offset_thread = threading.Thread(target=check_z_offset)
-
-    p_speed_thread.start()
-    e_speed_thread.start()
-    z_offset_thread.start()
+    RT_operation_thread = threading.Thread(target=check_rts)
+    RT_operation_thread.start()
+    '''
 
     progress_thread = threading.Thread(target=progress_update)
     progress_thread.start()
 
     print_thread = threading.Thread(target=gt.start_print)
     print_thread.start()
-
-    
-
-    ''' out of use at the moment - for the multiple chaining
-    #start position checking thread
-    check_thread = threading.Thread(target=uf.check_target_pose)
-    check_thread.start()
-
-    '''
     
     #wait for program to finish to update the text
     finished_thread = threading.Thread(target=wait_for_printing)
@@ -250,8 +240,6 @@ def stop_print_but():
         stop_thread = threading.Thread(target=stop)
         stop_thread.start()
 
-        confirmation_thread = threading.Thread(target=wait_for_confirmation)
-        confirmation_thread.start()
     else:
         GlobalState().terminal_text += "no print in process - nothing done"
     
@@ -262,6 +250,7 @@ def stop_print_but():
 def stop():
 
     uf.cleanpose(GlobalState().msb)
+    GlobalState().msb.WaitIdle()
     GlobalState().confirmed = True
     GlobalState().printing_state = 1
     GlobalState().filepath = " "
@@ -292,12 +281,15 @@ def init_print_but():
     init_thread = threading.Thread(target=init)
     init_thread.start()
 
+
+
     status_update("Ready to print")
     
 
     return
 
 def init():
+
 
     uf.init_sequence()
     GlobalState().confirmed = True
@@ -345,10 +337,6 @@ def pause_print_but():
         pause_thread = threading.Thread(target=pause)
         pause_thread.start()
         
-
-        
-
-        
     elif(GlobalState().printing_state == 3):
         
         status_update("resuming print...")
@@ -380,7 +368,7 @@ def resume():
     global pause_button
     #resume position
     #GlobalState().msb.WaitIdle()
-    time.sleep(2)
+    GlobalState().terminal_text += "resuming"
     uf.commandPose(GlobalState().last_pose[0], GlobalState().last_pose[1], GlobalState().last_pose[2], GlobalState().last_pose[3], GlobalState().last_pose[4], GlobalState().last_pose[5], GlobalState().msb)
     GlobalState().msb.WaitIdle()
     #reset all states so that printing can continue
@@ -583,11 +571,37 @@ def progress_update():
     
         time.sleep(0.1)
 
-def check_speed():
+    return
+'''
+def check_rts():
 
     global speed_textbox
+    global e_speed_textbox
+    global z_offset_textbox
+
+    progress = 0
+    current_progress = 0
+    filename = os.path.basename(GlobalState().filepath)
+
+
     while True:
-        while(GlobalState().printing_state == 2):
+
+        #progress update
+        if(GlobalState().printing_state == 2 or GlobalState().printing_state == 3 or True):
+            if(GlobalState().current_progress != progress):
+                progress = current_progress
+                #GlobalState().terminal_text += f'Progress: {progress}%'
+                
+                status_update("Printing: " + str(GlobalState().current_progress) + "%\nFile: " + str(filename))
+
+    
+        time.sleep(0.1)
+
+
+
+        if(GlobalState().printing_state == 2):
+
+            # check printspeed ---------
             textspeed = speed_textbox.get()
             valuespeed = int(textspeed.rstrip('%'))
             if(GlobalState().printspeed_modifier != valuespeed):
@@ -604,16 +618,8 @@ def check_speed():
                 # Insert the new text
                 speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
                 print("MANUAL CHANGE")
-
-            time.sleep(0.11)
-    return
-
-def check_extrusionspeed():
-
-    global e_speed_textbox
-
-    while True:
-        while(GlobalState().printing_state == 2):
+            
+            #check extrusion speed ---------
             textspeed = e_speed_textbox.get()
             valuespeed = int(textspeed.rstrip('%'))
             if(GlobalState().printspeed_modifier != valuespeed):
@@ -624,20 +630,13 @@ def check_extrusionspeed():
 
                     # Insert the new text
                     e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
-                    return
+                    continue
                 
                 GlobalState().printspeed_modifier = valuespeed
                 uf.adjust_speed(GlobalState().printspeed_modifier, GlobalState().msb)
                 print("MANUAL CHANGE")
 
-            time.sleep(0.1)
-    return
-
-def check_z_offset():   
-    global z_offset_textbox
-
-    while True:
-        while(GlobalState().printing_state == 2):
+            #check z offset ---------
             textspeed = z_offset_textbox.get()
             valuespeed = int(textspeed.rstrip('mm'))
             if(GlobalState().user_z_offset != valuespeed):
@@ -646,11 +645,64 @@ def check_z_offset():
                 z_offset_textbox.delete(0, ctk.END)
                 # Insert the new text
                 z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
-            
-            time.sleep(0.1)
+
+
+            time.sleep(0.11)
+    return
+'''
+def on_z_offset_textbox_return(event):
+    global z_offset_textbox
+    # Get the current value of the textbox
+    value = z_offset_textbox.get()
+    value = float(value.rstrip('mm'))
+    GlobalState().user_z_offset = value
+    z_offset_textbox.delete(0, ctk.END)
+    # Insert the new text
+    z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
+    print(f"Z offset textbox value: {value}")
 
     return
 
+
+def on_e_speed_textbox_return(event):
+    global e_speed_textbox
+    # Get the current value of the textbox
+    value = e_speed_textbox.get()
+    value = float(value.rstrip('%'))
+    if(value < 1):
+        GlobalState().terminal_text += "Extrusion Speed may not reach 0!"
+        e_speed_textbox.delete(0, ctk.END)
+        # Insert the new text
+        e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
+        return
+    GlobalState().extrusion_speed_modifier = value
+    e_speed_textbox.delete(0, ctk.END)
+    # Insert the new text
+    e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
+    print(f"e_speed_value: {value}")
+
+    return
+
+def on_speed_textbox_return(event):
+    global speed_textbox
+    # Get the current value of the textbox
+    value = speed_textbox.get()
+    value = float(value.rstrip('%'))
+    
+    if(value < 1):
+        GlobalState().terminal_text += "Speed may not reach 0!"
+        speed_textbox.delete(0, ctk.END)
+        # Insert the new text
+        speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
+        return
+    GlobalState().printspeed_modifier = value
+    speed_textbox.delete(0, ctk.END)
+    # Insert the new text
+    speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
+    uf.adjust_speed(GlobalState().printspeed_modifier, GlobalState().msb)
+    print(f"speed_value: {value}")
+
+    return
 
 #main gui function
 def init_gui():
@@ -680,7 +732,12 @@ def init_gui():
     update_terminal_thread = threading.Thread(target=terminal_update)
     update_terminal_thread.start()
 
-    global threads_activated 
+    
+    # Bind the function to the <Return> event for the e_speed_textbox
+    e_speed_textbox.bind('<Return>', on_e_speed_textbox_return)
+    z_offset_textbox.bind('<Return>', on_z_offset_textbox_return)
+    speed_textbox.bind('<Return>', on_speed_textbox_return)
+
     threads_activated = False
 
 

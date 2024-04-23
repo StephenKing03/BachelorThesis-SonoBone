@@ -102,6 +102,7 @@ def stop_steppers():
 
     # Close the serial port when done
     GlobalState().GlobalState().arduino_portclose()
+    
     return
 
 def monitor_stepper():

@@ -14,7 +14,7 @@ class GlobalState:
     user_z_offset_increment = 0.5
 
     #printspeed - RT variable for print speed tuning
-    printspeed_modifier = 100 #% 
+    printspeed_modifier = 20 #% 
     printspeed_increment = 5
 
     #extrusion speed modifier
