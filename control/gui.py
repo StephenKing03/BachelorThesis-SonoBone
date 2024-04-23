@@ -230,7 +230,13 @@ def wait_for_printing():
 
 def stop_print_but():
     
+    if(GlobalState().confirmed == False):
+        print("OCCUPIED")
+        return
+    GlobalState().confirmed = False
+
     if(GlobalState().printing_state == 2):
+
         GlobalState().printing_state = 5 #5 = stopped
         GlobalState().msb.WaitIdle()
         GlobalState().confirmed = True
@@ -242,13 +248,14 @@ def stop_print_but():
 
     else:
         GlobalState().terminal_text += "no print in process - nothing done"
+        GlobalState().confirmed = True
     
     
     #deactivate() optional to deactivate the robot
     return
 
 def stop():
-
+    GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
     uf.cleanpose(GlobalState().msb)
     GlobalState().msb.WaitIdle()
     GlobalState().confirmed = True
@@ -353,7 +360,8 @@ def pause():
     #set cleanpose for adjustments
     #GlobalState().msb.WaitIdle()
     GlobalState().printing_state = 3 #3 = paused
-
+    GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
+    GlobalState().msb.WaitIdle()
     uf.cleanpose(GlobalState().msb)
     GlobalState().msb.WaitIdle()
     GlobalState().confirmed = True
@@ -371,6 +379,7 @@ def resume():
     GlobalState().terminal_text += "resuming"
     uf.commandPose(GlobalState().last_pose[0], GlobalState().last_pose[1], GlobalState().last_pose[2], GlobalState().last_pose[3], GlobalState().last_pose[4], GlobalState().last_pose[5], GlobalState().msb)
     GlobalState().msb.WaitIdle()
+    GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
     #reset all states so that printing can continue
     GlobalState().confirmed = True
     GlobalState().printing_state = 2 #2 = printing

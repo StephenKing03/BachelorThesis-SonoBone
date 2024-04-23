@@ -9,7 +9,7 @@ import threading
 
 #---set the speed of the robot in mm/s---------------------------------------------------------
 def adjust_speed(speed_p, self = mdr.Robot()):
-    self.SendCustomCommand(f'SetJointVelLimit({speed_p * RobotStats().max_linvel/100/2})')
+    self.SendCustomCommand(f'SetJointVelLimit({speed_p * RobotStats().joint_vel_limit/100/2})')
     print(f'LinVel set to {speed_p} %')
     return
 
@@ -61,60 +61,9 @@ def WaitReachedPose(target = [0,0,0,0,0,0]):
     #print("--------------------REACHED POSE-------------------")
     return
 
-#adds target positions to the stack
-'''NOT USED AT THE MOMENT'''
-def add_target_pose(target = [0,0,0,0,0,0]):
-
-    GlobalState().semaphore += 1
-    
-    if(GlobalState().target_positions == None):
-        GlobalState().target_positions = [target]
-        return
-    
-    elif(len(GlobalState().target_positions) < RobotStats().max_semaphores):
-        GlobalState().target_positions.insert(0, target)
-
-    elif(len(GlobalState().target_positions) == RobotStats().max_semaphores):
-        GlobalState().terminal_text += "!!!!!!!!!!!!!!!!!! target stack full!!!!!!!!!!!!\n"
-
-    else:
-        GlobalState().terminal_text += "!!!!!!!!!!!!!!!!!! DIFFERENT target stack error!!!!!!!!!!!!\n"
-    return
-
-#continuously running thread that checks the current target pose of the robot to reduce semaphores
-'''NOT USED AT THE MOMENT'''
-def check_target_pose():
-    start_time = time.time()
-    paused_time = 0
-    pause_time_start = 0
-    while True:
-
-            if(GlobalState().printing_state == 5): #exit program
-                break
-
-            while(GlobalState().semaphore == 0): #wait for new target
-                time.sleep(0.01)
 
 
-            start_time = time.time() #reset timer
-            while( not ReachedPose(GlobalState().msb, GlobalState().target_positions[RobotStats().max_semaphores-1])):
-                if(GlobalState().printing_state == 5): #exit program
-                    break
-                if (GlobalState().printing_state == 3): #paused
-                    pause_time_start = time.time()
-                    while(GlobalState().printing_state == 3):
-                        time.sleep(0.1)
-                    paused_time += time.time() - pause_time_start
 
-                if(time.time() - start_time - paused_time > 5): #timeout
-                    GlobalState().terminal_text += "!!!!!!!!!!!!!!!!!!Semaphore reduced - timeout!!!!!!!!!!!!\n"
-                    break
-                time.sleep(0.01)
-            GlobalState().target_positions.pop()
-            GlobalState().semaphore -= 1
-        
-
-    return
 #---get real time  joint position of the robot as an array [j1,j2,j3,j4,j5,j6]-------------------------------------------
 def GetJoints(self = mdr.Robot()):
     j = [None] * 5
@@ -268,6 +217,7 @@ def init_sequence():
     msb = GlobalState().msb
     #setup robot arm
     msb.ClearMotion()
+    msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().max_linvel})')
     msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging position
     msb.SendCustomCommand('ResetError()')
     msb.SendCustomCommand('ResumeMotion()')
@@ -340,35 +290,9 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
             z = RobotStats().min_z+ GlobalState().user_z_offset
     
 
-    #print(f'alpha: {alpha}, beta: {beta}, gamma: {gamma}')
-   
     
-    '''
-    alpha += alpha +180
-
-    if(alpha >180):
-        alpha -= 360
-
-     #----------disclaimer ------
-    
-    if(alpha <180-20):
-        print(f'alpha out of bounds for {alpha}')
-        alpha = 180-20
-        
-    if(alpha >-180+20):
-        print(f'alpha out of bounds for {alpha}')       
-        alpha = -180+20
-    '''
     GlobalState().msb.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')
-    #add_target_pose([x,y,z,alpha,beta,gamma])
-    #self.MovePose({x},{y},{z},{alpha},{beta},{gamma})
-    #self.WaitIdle()
-    '''print(f'Pose entered: {x},{y},{z},{alpha},{beta},{gamma}')'''
 
-    #GlobalState().terminal_text += "Pose:" + str(round(x,4)) + "," + str(round(y,4)) + "," + str(round(z,4)) + "," + str(round(alpha,4)) + "," + str(round(beta,4)) + ","  + str(round(gamma,4)) + ""
-    
-    #time.sleep(0.3)
-    
 
     return
     

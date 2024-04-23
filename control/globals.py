@@ -14,7 +14,7 @@ class GlobalState:
     user_z_offset_increment = 0.5
 
     #printspeed - RT variable for print speed tuning
-    printspeed_modifier = 20 #% 
+    printspeed_modifier = 50 #% 
     printspeed_increment = 5
 
     #extrusion speed modifier
@@ -34,9 +34,11 @@ class GlobalState:
 
     threshold = 0.3
 
-    #check position reached
+    #target position stack for smooth printing
     target_positions = None
     semaphore = 0
+
+    
     last_pose = [130, 0, 100, 180, 0, -180]
     previous_state = 0
 

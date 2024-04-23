@@ -47,28 +47,23 @@ def extract_coordinates(file_path):
 
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
 def write_coordinates(coordinates, self, x_offset, y_offset):
-    
-    #set printing speed
-    #self.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
-    #self.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel})')
 
-    GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
+    self.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
 
     #coordinates consist of [x, y, z, e, er]        
     z_0 = RobotStats().min_z 
 
     #offset from modify placement
-    
     non_none_z = 0
     non_none_x = 0
     non_none_y = 0
     previous_percent = 0
-    
     non_none_e = 0
     last_e = 0
     i = 0
-
     length = len(coordinates)
+
+    #main printing loop
     for x, y, z, e, er in coordinates:
         
         print(f'--{i}--')
@@ -92,10 +87,6 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
         
         GlobalState().current_progress = round(float(i)/float(length) * 100, 1)
         
-        
-        
-
-        #GlobalState().terminal_text += f'{i} / {length}'
 
         #blank line -> skip
         if(x == None and y == None and z == None):
@@ -109,18 +100,6 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
             non_none_y = y  
         if(e != None):
             non_none_e = e
-
-        ''' waiting for future implementation
-        #if er = True, continue with the next line
-        if(er == True):
-            print('Error was TRUE -> continued')
-            continue
-
-        #extrusion information
-        if(e != None):
-            print(f'extrusion: {e}')
-            #time.sleep(1)
-        '''
 
         '''
         #wait for the last position to be nearly reached
@@ -226,7 +205,7 @@ def modify_placement(coordinates):
 
     return x_offset, y_offset
 
-
+#main printing function - refers to the other functions in this file
 def start_print():
 
     x_offset = 0
@@ -278,5 +257,63 @@ def start_print():
     return
 
 
+'''
+def print_queue_control():
+
+
+    start_time = time.time()
+    paused_time = 0
+    pause_time_start = 0
+    while GlobalState().printing_state == 2 or GobalState().printing_state == 3: #exit program
+
+            if(GlobalState().printing_state == 5): #exit program
+                break
+
+
+            while(GlobalState().semaphore == 0): #wait for new target
+                time.sleep(0.01)
+
+
+            start_time = time.time() #reset timer
+            while( not ReachedPose(GlobalState().msb, GlobalState().target_positions[RobotStats().max_semaphores-1])):
+                if(GlobalState().printing_state == 5): #exit program
+                    break
+                if (GlobalState().printing_state == 3): #paused
+                    pause_time_start = time.time()
+                    while(GlobalState().printing_state == 3):
+                        time.sleep(0.1)
+                    paused_time += time.time() - pause_time_start
+
+                if(time.time() - start_time - paused_time > 5): #timeout
+                    GlobalState().terminal_text += "!!!!!!!!!!!!!!!!!!Semaphore reduced - timeout!!!!!!!!!!!!\n"
+                    break
+                time.sleep(0.01)
+            GlobalState().target_positions.pop()
+            GlobalState().semaphore -= 1
+        
+
+    return
+
+#adds target positions to the stack
+def add_target_pose(target = [0,0,0,0,0,0]):
+
+    GlobalState().semaphore += 1
+    if(len(GlobalState().target_positions) <= RobotStats().max_semaphores):
+        print("MORE THAN MAX SEMAPHORES")
 
     
+    if(GlobalState().target_positions == None):
+        GlobalState().target_positions = [target]
+        return
+    
+    elif(len(GlobalState().target_positions) < RobotStats().max_semaphores):
+        
+        GlobalState().target_positions.insert(0, target)
+
+    elif(len(GlobalState().target_positions) == RobotStats().max_semaphores):
+        GlobalState().terminal_text += "!!!!!!!!!!!!!!!!!! target stack full!!!!!!!!!!!!\n"
+
+    else:
+        GlobalState().terminal_text += "!!!!!!!!!!!!!!!!!! DIFFERENT target stack error!!!!!!!!!!!!\n"
+    return
+'''
