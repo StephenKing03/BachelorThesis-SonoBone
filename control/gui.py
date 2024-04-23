@@ -13,6 +13,7 @@ from tkinter import filedialog
 import utility_functions as uf  # import utility functions
 import gcode_translator as gt  # import gcode translator
 import stepper_control as sc  # import stepper control
+import d5_gcode_translator as d5 #5d test file
 
 from globals import GlobalState
 from globals import RobotStats
@@ -27,6 +28,9 @@ global speed_textbox
 global terminal_text
 global pause_button
 global e_speed_textbox
+global progress_text
+global calibrate_button
+global threads_activated 
 
 def print_control(root, leftcol, rightcol, buttoncolor, rcol):
     #button to initialize the robot
@@ -51,6 +55,7 @@ def print_control(root, leftcol, rightcol, buttoncolor, rcol):
     pause_button.place(relx=leftcol, rely=0.65, anchor=ctk.NW)
 
     #button to callibrate the robot
+    global calibrate_button
     calibrate_button = ctk.CTkButton(master=root, text="Calibrate", font=("Avenir Heavy",15), fg_color= buttoncolor, command=calibration_but)
     calibrate_button.place(relx=leftcol, rely=0.9, anchor=ctk.NW)
 
@@ -60,6 +65,7 @@ def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
 
     global status_text
     global terminal_text
+    
 
     #status infos
     status_label = ctk.CTkLabel(master=root, text="Status:", font=("Avenir Heavy", 15, 'bold'), width = 40, pady = 10, anchor = 'center')
@@ -69,7 +75,6 @@ def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
     status_text.place(relx=leftcol, rely=0.25, anchor=ctk.NW)
 
     status_update("Deactivated")
-    #status_text.configure(text = "Deactivated")
 
     #terminal info
     terminal_label = ctk.CTkLabel(master=root, text="Print info", font=("Avenir Heavy", 15, 'bold'), width = 40, pady = 10, anchor = 'center')
@@ -155,40 +160,53 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
 #------------------ Button functions ------------------
 
 def start_print_but():
-    
-    if(GlobalState().msb == None):
-        GlobalState().terminal_text += "Error: Robot not initialized - initializing now..."
-        init_print_but()
-        
-    
-    #in case of restart - make sure it does not shut down again
-    GlobalState().printing_state = 0
+
+    #if other button active don't do anything
+    if GlobalState().confirmed == False:
+        print("OCCUPIED")
+        return
+    GlobalState().confirmed = False
+
+    if(GlobalState().printing_state != 1 and GlobalState().printing_state != 0):
+        GlobalState().terminal_text += "Not ready for printing"
+        GlobalState().confirmed = True
+        return
+
+    if(GlobalState().printing_state == 2 or GlobalState().printing_state == 3):
+        GlobalState().terminal_text += "print already in progress - stop first"
+        GlobalState().confirmed = True
 
     #check if file path is set:
-    if GlobalState().filepath == " ":
+    if (GlobalState().filepath == " " or GlobalState().filepath == ''):
         GlobalState().terminal_text +="Error: No file selected"
+        GlobalState().confirmed = True
         return 
-    
-    #Extract coordinates
-    status_update("Extracting cordinates ...")
-    GlobalState().terminal_text += "Extracting coordinates from file..."
-    coordinates = gt.extract_coordinates(GlobalState().filepath)
-    time.sleep(2)
-    GlobalState().terminal_text += " --done!"
-    
-    #set starting position
-    uf.startpose(GlobalState().msb)
 
-    #start printing with thread so that gui still works
+    if(GlobalState().msb == None):
+        GlobalState().terminal_text += "Error: Robot not initialized - initializing now..."
+        GlobalState().confirmed = True
+        init_print_but()
+
+    GlobalState().confirmed = True
+
     GlobalState().printing_state = 2 #2 = printing
+    #start print
     filename = os.path.basename(GlobalState().filepath)
     status_update("Printing ...  \nFile: " + str(filename))
-    GlobalState().msb.WaitIdle()
 
-    #progress_thread = threading.Thread(target=progress_update, args = (coordinates))
-    #progress_thread.start()
+    #start modification threads
+    p_speed_thread = threading.Thread(target=check_speed)
+    e_speed_thread = threading.Thread(target=check_extrusionspeed)
+    z_offset_thread = threading.Thread(target=check_z_offset)
 
-    print_thread = threading.Thread(target=gt.write_coordinates, args=(coordinates, GlobalState().msb))
+    p_speed_thread.start()
+    e_speed_thread.start()
+    z_offset_thread.start()
+
+    progress_thread = threading.Thread(target=progress_update)
+    progress_thread.start()
+
+    print_thread = threading.Thread(target=gt.start_print)
     print_thread.start()
 
     
@@ -205,14 +223,35 @@ def start_print_but():
     finished_thread.start()
 
     return
+
+
+def wait_for_printing():
+    while GlobalState().printing_state != 4:
+        time.sleep(0.1)
+    GlobalState().msb.WaitIdle()
+    GlobalState().terminal_text += "-------------------PRINT FINISHED!-------------"
+    uf.cleanpose(GlobalState().msb)
+    time.sleep(3)
     
+    status_update("Finished printing!\n  ready to print again")
+    GlobalState.confirmd = True
+    
+    return
+
 def stop_print_but():
     
     if(GlobalState().printing_state == 2):
         GlobalState().printing_state = 5 #5 = stopped
         GlobalState().msb.WaitIdle()
+        GlobalState().confirmed = True
         GlobalState().terminal_text = " ---PRINT STOPPED---"
         status_update("Print stopped")
+
+        stop_thread = threading.Thread(target=stop)
+        stop_thread.start()
+
+        confirmation_thread = threading.Thread(target=wait_for_confirmation)
+        confirmation_thread.start()
     else:
         GlobalState().terminal_text += "no print in process - nothing done"
     
@@ -220,8 +259,29 @@ def stop_print_but():
     #deactivate() optional to deactivate the robot
     return
 
+def stop():
+
+    uf.cleanpose(GlobalState().msb)
+    GlobalState().confirmed = True
+    GlobalState().printing_state = 1
+    GlobalState().filepath = " "
+    status_update("stopped - ready to print again")
+    return
+
 def init_print_but():
 
+    #if other button active don't do anything
+    if GlobalState().confirmed == False:
+        print("OCCUPIED")
+        return
+    GlobalState().confirmed = False
+
+    if(GlobalState().msb != None):
+        GlobalState().terminal_text += "Already Initialized"
+        GlobalState().confirmed = True
+        return
+
+    
     #start the terminal thread
     terminal_thread = threading.Thread(target=terminal_update)
     terminal_thread.start()
@@ -229,55 +289,30 @@ def init_print_but():
     #set states and info text
     GlobalState().printing_state = 0 #0 = not printing
 
-    #connect to robot if the robot is not connected already (e.g. from reset)
-    if(GlobalState().msb == None):
-        GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
-        GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
-        GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
-        GlobalState().msb.Home() #Home the robot
-    
-    msb = GlobalState().msb
-    #setup robot arm
-    msb.ClearMotion()
-    msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging position
-    msb.SendCustomCommand('ResetError()')
-    msb.SendCustomCommand('ResumeMotion()')
-    msb.WaitIdle()
-    msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')
-    msb.WaitIdle()
-    msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel})')
-    msb.SendCustomCommand(f'SetCartAcc({RobotStats().max_acc}')
-    msb.SendCustomCommand('SetBlending(70)')
-    #Set tooltip reference frame to 160 in front of the end of robot arm
-    msb.SendCustomCommand(f'SetTrf({RobotStats().tooloffset_x},{RobotStats().tooloffset_y},{RobotStats().tooloffset_z},{RobotStats().tooloffset_alpha},{RobotStats().tooloffset_beta},{RobotStats().tooloffset_gamma})')
-    #setpayload!!!!!--------------------------------
-    msb.WaitIdle()
-    #msb.StartLogging(0.001)
+    init_thread = threading.Thread(target=init)
+    init_thread.start()
 
-    #activate steppers
-    sc.init_steppers()
-
-    #send info text
-    msb.WaitIdle()
-    time.sleep(1)
-
-    #show that terminal is activated
-    #GlobalState().terminal_text += "Terminal activated \n"
-
-    #wait for the initialization to finish
-    GlobalState().msb.WaitIdle()
-
-    #set the robot to cleanpose
-    uf.cleanpose(GlobalState().msb)
-    GlobalState().msb.WaitIdle()
-
-    GlobalState().printing_state = 1 #1 = ready to print
     status_update("Ready to print")
-    GlobalState().terminal_text += "Robot activated and ready to go!"
+    
+
+    return
+
+def init():
+
+    uf.init_sequence()
+    GlobalState().confirmed = True
 
     return
 
 def select_file_but():
+
+    if(GlobalState().printing_state == 2 or GlobalState().printing_state == 3 ):
+        GlobalState().terminal_text += "Please stop printing before selecting a new file!"
+        return
+
+    if(GlobalState().printing_state == 6):
+        GlobalState().terminal_text += "Please stop calibration before selecting a new file!"
+        return
     
     GlobalState().printing_state = 0 #0 = not printing
     #get the file path
@@ -290,42 +325,83 @@ def select_file_but():
     #status_update("File selected:\n'"  + filename + "'")
     GlobalState().terminal_text += f"File selected: '{filename}'"
 
+    GlobalState().confirmed = True
+
     return
 
 def pause_print_but():
     global pause_button
+
+    if(GlobalState().confirmed == False):
+        print("OCCUPIED")
+        return
+    GlobalState().confirmed == False
+    
     if(GlobalState().printing_state == 2):
 
         status_update("Printing paused")
-        GlobalState().printing_state = 3 #3 = paused
-        time.sleep(0.2)
-        GlobalState().msb.WaitIdle()
-        GlobalState().terminal_text = ""
-        GlobalState().terminal_text += "---Printing paused---"
+        GlobalState().terminal_text = "---Printing paused---"
 
-        time.sleep(2)
-        pause_button.configure(text="Resume Printing")
+        pause_thread = threading.Thread(target=pause)
+        pause_thread.start()
+        
 
+        
+
+        
     elif(GlobalState().printing_state == 3):
-        filename = os.path.basename(GlobalState().filepath)
-        status_update("Printing ...  \nFile: " + str(filename))
-        GlobalState().printing_state = 2 #2 = printing
-        GlobalState().terminal_text += "---Printing resumed---"
-
-        time.sleep(0.1)
-        pause_button.configure(text="Pause Printing")
+        
+        status_update("resuming print...")
+        resume_thread = threading.Thread(target=resume)
+        resume_thread.start()
     else:
         GlobalState().terminal_text += "no print in process - nothing done"
+
+    return
+
+def pause():    
+    global pause_button
+    
+    #set cleanpose for adjustments
+    #GlobalState().msb.WaitIdle()
+    GlobalState().printing_state = 3 #3 = paused
+
+    uf.cleanpose(GlobalState().msb)
+    GlobalState().msb.WaitIdle()
+    GlobalState().confirmed = True
+
+    #set all states for pausing
+    
+    pause_button.configure(text="Resume Printing")
+
+    return
+
+def resume():
+    global pause_button
+    #resume position
+    #GlobalState().msb.WaitIdle()
+    time.sleep(2)
+    uf.commandPose(GlobalState().last_pose[0], GlobalState().last_pose[1], GlobalState().last_pose[2], GlobalState().last_pose[3], GlobalState().last_pose[4], GlobalState().last_pose[5], GlobalState().msb)
+    GlobalState().msb.WaitIdle()
+    #reset all states so that printing can continue
+    GlobalState().confirmed = True
+    GlobalState().printing_state = 2 #2 = printing
+    filename = os.path.basename(GlobalState().filepath)
+    status_update("Printing ...  \nFile: " + str(filename))
+    GlobalState().terminal_text += "---Printing resumed---"
+    pause_button.configure(text="Pause Printing")
     return
 
 def calibration_but():
-    
+    global calibrate_button
     if(GlobalState().msb == None):
         GlobalState().terminal_text += "Error: Robot not initialized"
         return
-    if(GlobalState().printing_state != 2):
+    if(GlobalState().printing_state != 2 and GlobalState().printing_state != 3 and GlobalState().printing_state != 6):
+
+        calibrate_button.configure(text="Stop Calibration")
         GlobalState().terminal_text += " ---Ready for callibration - 10mm above the bed--- "
-        previous_state = GlobalState().printing_state
+        GlobalState().previous_state = GlobalState().printing_state
         GlobalState().printing_state = 6 #6 = calibration
         status_update("Calibrating...")
         uf.callibrationpose(GlobalState().msb)
@@ -333,8 +409,26 @@ def calibration_but():
         #thread to update callibration pose
         callibration_thread = threading.Thread(target=wait_for_callibration)
         callibration_thread.start()
+
+    elif(GlobalState().printing_state == 6):
+    
+        GlobalState().printing_state = GlobalState().previous_state
+        uncallibration_thread = threading.Thread(target=uncallibrate)
+        calibrate_button.configure(text="Calibrate")
+
     else:
         GlobalState().terminal_text += "print in process - continued printing"
+
+    return
+
+def wait_for_callibration():
+    while GlobalState().printing_state == 6:
+        uf.callibrationpose(GlobalState().msb)
+        time.sleep(0.2)
+
+def uncallibrate():
+
+    #uf.commandPose(GlobalState().last_pose)
 
     return
 
@@ -374,6 +468,12 @@ def e_speed_up_but():
 
 def e_speed_down_but():
     global e_speed_textbox
+    
+    #check that speed does not reach 0
+    if round(GlobalState().extrusion_speed_modifier - GlobalState().extrusion_speed_increment, 2) < 1:
+        GlobalState().terminal_text += " Extrusion Speed may not reach 0!"
+        return
+
     GlobalState().extrusion_speed_modifier -= GlobalState().extrusion_speed_increment
     GlobalState().extrusion_speed_modifier = round(GlobalState().extrusion_speed_modifier, 2)
     e_speed_textbox.delete(0, ctk.END)
@@ -395,6 +495,12 @@ def speed_up_but():
 
 def speed_down_but():
     global speed_textbox
+
+    #check that speed does not reach 0
+    if round(GlobalState().printspeed_modifier - GlobalState().printspeed_increment, 2) < 1:
+        GlobalState().terminal_text += "Speed may not reach 0!"
+        return
+
     GlobalState().printspeed_modifier -= GlobalState().printspeed_increment
     time.sleep(0.01)
     uf.adjust_speed(GlobalState().printspeed_modifier, GlobalState().msb)
@@ -418,25 +524,8 @@ def deactivate():
     GlobalState().terminal_text += "Deactivated Robot"
     status_update("Deactivated")
     
-
     return
-
-def wait_for_printing():
-    while GlobalState().printing_state != 4:
-        time.sleep(0.1)
-    GlobalState().msb.WaitIdle()
-    GlobalState().terminal_text += "-------------------PRINT FINISHED!-------------"
-    uf.cleanpose(GlobalState().msb)
-    time.sleep(3)
-    
-    status_update("Finished printing!\n  ready to print again")
-    
-    return
-
-def wait_for_callibration():
-    while GlobalState().printing_state == 6:
-        uf.callibrationpose(GlobalState().msb)
-        time.sleep(0.2)
+  
 
 # ------------------ GUI ------------------
 def terminal_update():
@@ -472,37 +561,95 @@ def terminal_update():
             print(GlobalState().terminal_text)
             last_index = i
         time.sleep(0.0005)
-
-        #compare current text with previous text line by line
-        #if different, add the new line to the terminal_text
-        
-            
     return
-
 
 def status_update(new_status = " ? "):
     global status_text
 
     status_text.configure(text= new_status)
-    time.sleep(0.2)
 
-
-def progress_update(coordinates):
+def progress_update():
 
     progress = 0
-    current_progress = -1
-    total_size = len(coordinates)
-    while(True):
-        if(current_progress != progress):
-            print(f'Progress: {progress}%')
+    current_progress = 0
+    filename = os.path.basename(GlobalState().filepath)
+    while(GlobalState().printing_state == 2 or GlobalState().printing_state == 3 or True):
+        if(GlobalState().current_progress != progress):
             progress = current_progress
-            GlobalState().terminal_text += f'Progress: {progress}% '
+            #GlobalState().terminal_text += f'Progress: {progress}%'
+            
+            status_update("Printing: " + str(GlobalState().current_progress) + "%\nFile: " + str(filename))
 
-        current_progress = GlobalState().current_line / total_size * 100
-        current_progress = math.round(current_progress, 0)
-        GlobalState.terminal_text += f'Progress: {current_progress}% '
     
-        time.sleep(0.5)
+        time.sleep(0.1)
+
+def check_speed():
+
+    global speed_textbox
+    while True:
+        while(GlobalState().printing_state == 2):
+            textspeed = speed_textbox.get()
+            valuespeed = int(textspeed.rstrip('%'))
+            if(GlobalState().printspeed_modifier != valuespeed):
+                if round(GlobalState().printspeed_modifier - GlobalState().printspeed_increment, 2) < 1:
+                    GlobalState().terminal_text += "Speed may not reach 0!"
+                    speed_textbox.delete(0, ctk.END)
+                    # Insert the new text
+                    speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
+                    continue
+                GlobalState().printspeed_modifier = valuespeed
+                uf.adjust_speed(GlobalState().printspeed_modifier, GlobalState().msb)
+
+                speed_textbox.delete(0, ctk.END)
+                # Insert the new text
+                speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
+                print("MANUAL CHANGE")
+
+            time.sleep(0.11)
+    return
+
+def check_extrusionspeed():
+
+    global e_speed_textbox
+
+    while True:
+        while(GlobalState().printing_state == 2):
+            textspeed = e_speed_textbox.get()
+            valuespeed = int(textspeed.rstrip('%'))
+            if(GlobalState().printspeed_modifier != valuespeed):
+
+                if round(GlobalState().extrusion_speed_modifier - GlobalState().extrusion_speed_increment, 2) < 1:
+                    GlobalState().terminal_text += " Extrusion Speed may not reach 0!"
+                    e_speed_textbox.delete(0, ctk.END)
+
+                    # Insert the new text
+                    e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
+                    return
+                
+                GlobalState().printspeed_modifier = valuespeed
+                uf.adjust_speed(GlobalState().printspeed_modifier, GlobalState().msb)
+                print("MANUAL CHANGE")
+
+            time.sleep(0.1)
+    return
+
+def check_z_offset():   
+    global z_offset_textbox
+
+    while True:
+        while(GlobalState().printing_state == 2):
+            textspeed = z_offset_textbox.get()
+            valuespeed = int(textspeed.rstrip('mm'))
+            if(GlobalState().user_z_offset != valuespeed):
+                GlobalState().user_z_offset = valuespeed
+                print("MANUAL CHANGE")
+                z_offset_textbox.delete(0, ctk.END)
+                # Insert the new text
+                z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
+            
+            time.sleep(0.1)
+
+    return
 
 
 #main gui function
@@ -532,6 +679,9 @@ def init_gui():
     #start the terminal update thread
     update_terminal_thread = threading.Thread(target=terminal_update)
     update_terminal_thread.start()
+
+    global threads_activated 
+    threads_activated = False
 
 
     #start gui

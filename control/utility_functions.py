@@ -2,6 +2,7 @@ import mecademicpy.robot as mdr #mechademicpy API import (see Github documentati
 import time #for time.sleep()
 from globals import RobotStats
 from globals import GlobalState
+import stepper_control as sc
 
 import threading
 
@@ -122,6 +123,16 @@ def GetJoints(self = mdr.Robot()):
     joints = rtdata.rt_joint_pos.data
 
     return joints
+def pause_motion(self = mdr.Robot()):
+
+    return
+
+def resume_motion(self = mdr.Robot()):
+
+
+    return
+
+
 
 #---move the robot in z direction by hop value at current (up=1: up, up=-1: down), hop in [mm] ---------------------------------------------------------
 def z_hop(up=-1, hop=10, self = mdr.Robot()):
@@ -234,10 +245,60 @@ def callibrationpose(self = mdr.Robot()):
     return
 
 #---single command to deactivate the robot and disconnect it--------------------------------------------------------
-def deactivationsequence(self = mdr.Robot()):
+def deactivation_sequence(self = mdr.Robot()):
 
     #ToDo: add deactivation sequence
     
+
+    return
+
+
+def init_sequence():
+
+    #connect to robot if the robot is not connected already (e.g. from reset)
+    if(GlobalState().msb == None):
+        GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
+        GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
+        GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
+        GlobalState().msb.Home() #Home the robot
+
+        #activate steppers
+        sc.init_steppers()
+    
+    msb = GlobalState().msb
+    #setup robot arm
+    msb.ClearMotion()
+    msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging position
+    msb.SendCustomCommand('ResetError()')
+    msb.SendCustomCommand('ResumeMotion()')
+    msb.WaitIdle()
+    msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')
+    msb.WaitIdle()
+    msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel})')
+    msb.SendCustomCommand(f'SetCartAcc({RobotStats().max_acc}')
+    msb.SendCustomCommand('SetBlending(70)')
+    #Set tooltip reference frame to 160 in front of the end of robot arm
+    msb.SendCustomCommand(f'SetTrf({RobotStats().tooloffset_x},{RobotStats().tooloffset_y},{RobotStats().tooloffset_z},{RobotStats().tooloffset_alpha},{RobotStats().tooloffset_beta},{RobotStats().tooloffset_gamma})')
+    #setpayload!!!!!--------------------------------
+    msb.WaitIdle()
+
+      
+  
+
+    #send info text
+    GlobalState().msb.WaitIdle()
+    time.sleep(1)
+    #wait for the initialization to finish
+    GlobalState().msb.WaitIdle()
+
+    #set the robot to cleanpose
+    cleanpose(GlobalState().msb)
+    GlobalState().msb.WaitIdle()
+
+    GlobalState().printing_state = 1 #1 = ready to print
+    GlobalState().confirmed = True
+
+    GlobalState().terminal_text += "Robot activated and ready to go!"
 
     return
 
@@ -302,7 +363,7 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
     #add_target_pose([x,y,z,alpha,beta,gamma])
     #self.MovePose({x},{y},{z},{alpha},{beta},{gamma})
     #self.WaitIdle()
-    print(f'Pose entered: {x},{y},{z},{alpha},{beta},{gamma}')
+    '''print(f'Pose entered: {x},{y},{z},{alpha},{beta},{gamma}')'''
 
     #GlobalState().terminal_text += "Pose:" + str(round(x,4)) + "," + str(round(y,4)) + "," + str(round(z,4)) + "," + str(round(alpha,4)) + "," + str(round(beta,4)) + ","  + str(round(gamma,4)) + ""
     

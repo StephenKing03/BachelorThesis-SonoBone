@@ -22,7 +22,8 @@ def init_logger():
 
             #print line with timestamp
             text = GlobalState().terminal_text
-
+    
+    
             #remove the text
             GlobalState().terminal_text = ""
             

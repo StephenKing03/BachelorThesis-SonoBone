@@ -5,7 +5,9 @@ class GlobalState:
     _instance = None
   
     #printing_state - RT variable for print status information
-    printing_state = 0 #0: not printing, 1:ready 2:printing, 3: paused 4: finished  5: stopped 6: calibration
+    printing_state = 0 #0: uninitialized, 1:ready 2:printing, 3: paused 4: finished  5: stopped 6: calibration
+
+    confirmed = True
 
     #user_z_offset - RT variable for z offset tuning
     user_z_offset = 0
@@ -28,12 +30,15 @@ class GlobalState:
     #terminal_text - RT variable for terminal output, gets added on top
     terminal_text = "Terminal activated "
     status_text = ""
+    current_progress = 0
 
     threshold = 0.3
 
     #check position reached
     target_positions = None
     semaphore = 0
+    last_pose = [130, 0, 100, 180, 0, -180]
+    previous_state = 0
 
     #progress
     current_line = 0
@@ -41,6 +46,8 @@ class GlobalState:
     #msb - Robot instance - for referencing the robot   
     msb = None
     arduino_port = None
+
+    
 
     #singeleton class
     def __new__(cls, *args, **kwargs):
@@ -78,7 +85,7 @@ class RobotStats:
 
         self.max_semaphores = 3 #not used 
     
-        self.port = 'COM20'
+        self.port = 'COM25'
 
         self.extrusion_speed = 1000
 

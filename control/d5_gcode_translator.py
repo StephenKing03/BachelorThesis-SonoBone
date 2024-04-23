@@ -13,35 +13,38 @@ def extract_coordinates(file_path):
     
     with open(file_path, 'r') as file:
         i = 0
-        
         for line in file:
-            if i <44:
-                i+=1
-                continue
+           
             if line.startswith(';TIME_ELAPSED'):
                 break
-            if line.startswith('G0') or line.startswith('G1'):
-                x = None
-                y = None
-                z = None
-                alpha = None
-                beta = None
-                gamma = None
-                e = None
-                er = False
-                for command in line.split():
-                    if command.startswith('X'):
-                        x = float(command[1:])
-                    elif command.startswith('Y'):
-                        y = float(command[1:])
-                    elif command.startswith('Z'):
-                        try:
-                            z = float(command[1:])
-                        except:
-                            er = True
-                    elif command.startswith('E'):
-                        e = float(command[1:])
-                coordinates.append([x, y, z, e, er])
+            
+            x = None
+            y = None
+            z = None
+            alpha = None
+            beta = None
+            gamma = None
+            e = None
+            er = False
+            for command in line.split():
+                if command.startswith('X'):
+                    x = float(command[1:])
+                elif command.startswith('Y'):
+                    y = float(command[1:])
+                elif command.startswith('Z'):
+                    try:
+                        z = float(command[1:])
+                    except:
+                        er = True
+                elif command.startswith('a'):
+                    alpha = float(command[1:])
+                elif command.startswith('b'):
+                    beta = float(command[1:])
+                elif command.startswith('c'):
+                    gamma = float(command[1:])
+                elif command.startswith('E'):
+                    e = float(command[1:])
+            coordinates.append([x, y, z, alpha, beta, gamma, e, er])
                 
     return coordinates
 
@@ -58,10 +61,6 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
     z_0 = RobotStats().min_z 
 
     #offset from modify placement
-    
-    non_none_z = 0
-    non_none_x = 0
-    non_none_y = 0
     previous_percent = 0
     
     non_none_e = 0
@@ -69,7 +68,7 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
     i = 0
 
     length = len(coordinates)
-    for x, y, z, e, er in coordinates:
+    for x, y, z, alpha, beta, gamma, e, er in coordinates:
         
         print(f'--{i}--')
 
@@ -81,7 +80,7 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
                 return
             time.sleep(0.1)
         
-        # Check printing_state if the print is stoppedc
+        # Check printing_state if the print is stopped
             if GlobalState().printing_state == 5:  
                 print("exit path 2")
                 print(GlobalState().printing_state)
@@ -91,84 +90,32 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
         GlobalState().current_line = i
         
         GlobalState().current_progress = round(float(i)/float(length) * 100, 1)
+
+        if (alpha >-150 and alpha) <0:
+            GlobalState().terminal_text += "alpha is negative -> + 180" + alpha
+            alpha += 180
+            GlobalState().terminal_text += "alpha is negative -> + 180; alpha was: " + alpha
+
+        if(alpha < 150):
+            alpha = 150
+            if GlobalState().terminal_text != " ":
+                GlobalState().terminal_text += "\n"
+            GlobalState().terminal_text += "alpha is smaller than 150"
+
+        if(abs(beta) > 30):
+            
+            sign = sign(beta)
+            beta = math.copysign(30, beta)
+            
+            if GlobalState().terminal_text != " ":
+                GlobalState().terminal_text += "\n"
+            GlobalState().terminal_text += "abs(beta) is larger than 30 -> set to" + beta
         
+        #send Pose
+        uf.commandPose(x,y,z, alpha, beta, gamma, self)
+        GlobalState().last_pose = [x, y, z, alpha, beta, gamma]
+        uf.WaitReachedPose([x, y, z, alpha, beta, gamma])
         
-        
-
-        #GlobalState().terminal_text += f'{i} / {length}'
-
-        #blank line -> skip
-        if(x == None and y == None and z == None):
-            continue
-        #reference so that constant z is managed if z is not specified
-        if(z != None):
-            non_none_z = z
-        if(x != None):
-            non_none_x = x
-        if(y != None):
-            non_none_y = y  
-        if(e != None):
-            non_none_e = e
-
-        ''' waiting for future implementation
-        #if er = True, continue with the next line
-        if(er == True):
-            print('Error was TRUE -> continued')
-            continue
-
-        #extrusion information
-        if(e != None):
-            print(f'extrusion: {e}')
-            #time.sleep(1)
-        '''
-
-        '''
-        #wait for the last position to be nearly reached
-        while(GlobalState().semaphore != 0): 
-            if GlobalState().printing_state == 5:
-                print("exit path 3")
-                print(GlobalState().printing_state)
-                return
-            time.sleep(0.1)
-        '''
-        
-        #if x and y are not specified, move to current position with z offset
-        if (x == None or y == None):
-            
-            #print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_0+10}')
-            uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180, self)
-            GlobalState().last_pose = [non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180]
-            if(e != None):
-                sc.send_position(e - last_e)
-                last_e = e
-            
-            #wait for position to be almost reached
-            uf.WaitReachedPose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
-            
-            
-            #sc.send_speed(0)
-            GlobalState().semaphore += 1
-            #uf.add_target_pose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
-            
-        elif z == None:
-            
-            uf.commandPose(x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180, self)
-            GlobalState().last_pose = [x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180]
-            if(e != None ):
-                #sc.send_position(e - last_e)
-                last_e = e
-
-            #wait for position to be almost reached
-            uf.WaitReachedPose([x+x_offset, y + y_offset, non_none_z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
-            GlobalState().semaphore += 1
-            #sc.send_speed(0)
-            ''' removed in command pose to wait'''
-            #uf.add_target_pose([x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180])
-            
-        #throw exception
-        else:
-            print("!-!-!-!-!Line skip error!-!-!-!-!")
-            #GlobalState().terminal_text += "Line skip error"
 
         time.sleep(0.01)
         
@@ -229,15 +176,12 @@ def modify_placement(coordinates):
 
 def start_print():
 
-    x_offset = 0
-    y_offset = 0
     
     #Extract coordinates
     GlobalState().terminal_text += "Extracting coordinates from file..."
     coordinates = extract_coordinates(GlobalState().filepath)
 
     x_offset, y_offset = modify_placement(coordinates)
-    
     if x_offset == None or y_offset == None:
         GlobalState().terminal_text += "Select a different File that fits"
         GlobalState().confirmed = True
