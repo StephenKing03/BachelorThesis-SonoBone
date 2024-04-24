@@ -215,7 +215,8 @@ def init_sequence():
 
         #activate steppers
         sc.init_steppers()
-    
+        #sc.wait_ack()
+        print("stepper")
     msb = GlobalState().msb
     #setup robot arm
     GlobalState().msb.ResetError()

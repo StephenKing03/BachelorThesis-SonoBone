@@ -33,10 +33,11 @@ void loop() {
             speed = command.substring(2).toInt();
             stepper.setSpeed(speed);
             // Step the motor with a constant speed as set by setSpeed():
-            Serial.println("Speed set to " + String(speed));
+            //Serial.println("Speed set to " + String(speed));
+            Serial.println("ack");
 
 
-        }else if(command.startsWith("init")){
+        }else if(command.startsWith("init")){ 
 
             Serial.println("Initializing stepper");
             stepper.setMaxSpeed(10000);

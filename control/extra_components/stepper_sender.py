@@ -2,13 +2,13 @@ import serial
 import time
 
 # Configure the serial port
-port = serial.Serial('COM18', 9600)  # Replace 'COM3' with the appropriate port name
+port = serial.Serial('COM25', 9600)  # Replace 'COM3' with the appropriate port name
 
 # Function to send the integer value to the stepper motor
 def send_value(value):
 
     # Convert value to message
-    message = "speed " + str(value)
+    message = "sp" + str(value)
 
     # Convert message to bytes - for sending
     message_bytes = message.encode()

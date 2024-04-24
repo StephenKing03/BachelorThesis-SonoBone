@@ -105,7 +105,7 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
         next_checkpoint = GlobalState().msb.SetCheckpoint(i)
 
         if(i > 1):
-            checkpoint.wait(timeout=5/GlobalState().printspeed_modifier *100) 
+            checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100) 
         checkpoint = next_checkpoint
         print(f'Checkpoint {i} reached')
 
@@ -149,6 +149,7 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
             #GlobalState().terminal_text += "Line skip error"
 
         time.sleep(0.01)
+        GlobalState().checkpoint_reached = False
         
         #-------------------finished print -----------------------------
     
@@ -264,65 +265,3 @@ def start_print():
     write_coordinates(coordinates,GlobalState().msb, x_offset, y_offset)
 
     return
-
-
-'''
-def print_queue_control():
-
-
-    start_time = time.time()
-    paused_time = 0
-    pause_time_start = 0
-    while GlobalState().printing_state == 2 or GobalState().printing_state == 3: #exit program
-
-            if(GlobalState().printing_state == 5): #exit program
-                break
-
-
-            while(GlobalState().semaphore == 0): #wait for new target
-                time.sleep(0.01)
-
-
-            start_time = time.time() #reset timer
-            while( not ReachedPose(GlobalState().msb, GlobalState().target_positions[RobotStats().max_semaphores-1])):
-                if(GlobalState().printing_state == 5): #exit program
-                    break
-                if (GlobalState().printing_state == 3): #paused
-                    pause_time_start = time.time()
-                    while(GlobalState().printing_state == 3):
-                        time.sleep(0.1)
-                    paused_time += time.time() - pause_time_start
-
-                if(time.time() - start_time - paused_time > 5): #timeout
-                    GlobalState().terminal_text += "!!!!!!!!!!!!!!!!!!Semaphore reduced - timeout!!!!!!!!!!!!\n"
-                    break
-                time.sleep(0.01)
-            GlobalState().target_positions.pop()
-            GlobalState().semaphore -= 1
-        
-
-    return
-
-#adds target positions to the stack
-def add_target_pose(target = [0,0,0,0,0,0]):
-
-    GlobalState().semaphore += 1
-    if(len(GlobalState().target_positions) <= RobotStats().max_semaphores):
-        print("MORE THAN MAX SEMAPHORES")
-
-    
-    if(GlobalState().target_positions == None):
-        GlobalState().target_positions = [target]
-        return
-    
-    elif(len(GlobalState().target_positions) < RobotStats().max_semaphores):
-        
-        GlobalState().target_positions.insert(0, target)
-
-    elif(len(GlobalState().target_positions) == RobotStats().max_semaphores):
-        GlobalState().terminal_text += "!!!!!!!!!!!!!!!!!! target stack full!!!!!!!!!!!!\n"
-
-    else:
-        GlobalState().terminal_text += "!!!!!!!!!!!!!!!!!! DIFFERENT target stack error!!!!!!!!!!!!\n"
-    return
-'''
