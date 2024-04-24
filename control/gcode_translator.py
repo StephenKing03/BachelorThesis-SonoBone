@@ -101,16 +101,15 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
         if(e != None):
             non_none_e = e
 
-        '''
-        #wait for the last position to be nearly reached
-        while(GlobalState().semaphore != 0): 
-            if GlobalState().printing_state == 5:
-                print("exit path 3")
-                print(GlobalState().printing_state)
-                return
-            time.sleep(0.1)
-        '''
-        
+        #---Set Checkpoint---
+        next_checkpoint = GlobalState().msb.SetCheckpoint(i)
+
+        if(i > 1):
+            checkpoint.wait(timeout=5/GlobalState().printspeed_modifier *100) 
+        checkpoint = next_checkpoint
+        print(f'Checkpoint {i} reached')
+
+
         #if x and y are not specified, move to current position with z offset
         if (x == None or y == None):
             
@@ -122,7 +121,7 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
                 last_e = e
             
             #wait for position to be almost reached
-            uf.WaitReachedPose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
+            #uf.WaitReachedPose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             
             
             #sc.send_speed(0)
@@ -138,7 +137,7 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
                 last_e = e
 
             #wait for position to be almost reached
-            uf.WaitReachedPose([x+x_offset, y + y_offset, non_none_z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
+            #uf.WaitReachedPose([x+x_offset, y + y_offset, non_none_z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
             GlobalState().semaphore += 1
             #sc.send_speed(0)
             ''' removed in command pose to wait'''
@@ -167,6 +166,8 @@ def modify_placement(coordinates):
     max_x = coordinates[0][0]
     max_y = coordinates[0][1]
     min_y = coordinates[0][1]
+    min_z = 0
+    max_z = 0
 
     #get max and min x and y
     for x, y, z, e, er in coordinates:
@@ -180,7 +181,13 @@ def modify_placement(coordinates):
                 max_y = y
             elif y < min_y:
                 min_y = y
-    print(max_x, min_x, max_y, min_y)
+        if z != None:
+            if z > RobotStats().max_z:
+                max_z = z
+            elif z < RobotStats().min_z:
+                min_z = z
+
+        GlobalState().max_z_offset = RobotStats().max_z - max_z
 
     #check if dimensions are feasible
     if (max_x - min_x) > (RobotStats().max_x - RobotStats().min_x):
@@ -193,6 +200,8 @@ def modify_placement(coordinates):
         GlobalState().terminal_text += "\nY-dimension are too large for the printebed for Δy = " + str(max_y-min_y)+ " \n" + "It must be within Δy = " + str(RobotStats().max_y - RobotStats().min_y) 
         time.sleep(2)
         return None, None
+
+    
         
     
     

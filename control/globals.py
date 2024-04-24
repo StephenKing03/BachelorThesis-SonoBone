@@ -12,6 +12,8 @@ class GlobalState:
     #user_z_offset - RT variable for z offset tuning
     user_z_offset = 0
     user_z_offset_increment = 0.5
+    max_z_offset = 10
+    max_speed = 650
 
     #printspeed - RT variable for print speed tuning
     printspeed_modifier = 50 #% 

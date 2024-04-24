@@ -209,21 +209,24 @@ def init_sequence():
         GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
         GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
         GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
+        GlobalState().msb.ResetError()
         GlobalState().msb.Home() #Home the robot
+        GlobalState().msb.ResetError()
 
         #activate steppers
         sc.init_steppers()
     
     msb = GlobalState().msb
     #setup robot arm
+    GlobalState().msb.ResetError()
+    GlobalState().msb.Home() #Home the robot
+    msb.ResetError()
     msb.ClearMotion()
     msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().max_linvel})')
     msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging position
     msb.SendCustomCommand('ResetError()')
     msb.SendCustomCommand('ResumeMotion()')
-    msb.WaitIdle()
     msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')
-    msb.WaitIdle()
     msb.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel})')
     msb.SendCustomCommand(f'SetCartAcc({RobotStats().max_acc}')
     msb.SendCustomCommand('SetBlending(70)')

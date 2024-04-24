@@ -30,25 +30,41 @@ global pause_button
 global e_speed_textbox
 global progress_text
 global calibrate_button
+global file_button
+global stop_button
+global init_button
+global start_button
+global z_offset_up_button
+global z_offset_down_button
+global speed_up_button
+global speed_down_button
+global e_speed_up_button
+global e_speed_down_button
+global calibrate_button
+
 
 
 
 def print_control(root, leftcol, rightcol, buttoncolor, rcol):
     #button to initialize the robot
+    global init_button
     init_button = ctk.CTkButton(master=root, text="Initialize Robot", font=("Avenir Heavy",15), fg_color= buttoncolor, command=init_print_but)
     init_button.place(relx=leftcol, rely=0.35, anchor=ctk.NW)
 
     #button to set file path
+    global file_button
     file_button = ctk.CTkButton(master=root, text="Select File", font=("Avenir Heavy",15),fg_color= '#089DC3', command=select_file_but)
     file_button.place(relx=leftcol, rely=0.45, anchor=ctk.NW)
 
     #button to start printing
+    global start_button
     start_button = ctk.CTkButton(master=root, text="Start Printing", font=("Avenir Heavy",15),fg_color= buttoncolor, command=start_print_but)
     start_button.place(relx=leftcol, rely=0.55, anchor=ctk.NW)
 
     #button to stop printing
-    start_button = ctk.CTkButton(master=root, text="Stop Printing", font=("Avenir Heavy",15), fg_color= '#DC0F24' ,command=stop_print_but)
-    start_button.place(relx=leftcol, rely=0.75, anchor=ctk.NW)
+    global stop_button
+    stop_button = ctk.CTkButton(master=root, text="Stop Printing", font=("Avenir Heavy",15), fg_color= '#DC0F24' ,command=stop_print_but)
+    stop_button.place(relx=leftcol, rely=0.75, anchor=ctk.NW)
 
     #button to pause and resume printing
     global pause_button
@@ -113,6 +129,13 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
     global speed_textbox
     global e_speed_textbox
 
+    global z_offset_up_button
+    global z_offset_down_button
+    global speed_up_button
+    global speed_down_button
+    global e_speed_up_button
+    global e_speed_down_button
+
     #set z offsetbutton up and down
     z_offset_up_button = ctk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= buttoncolor, command=z_up_but, width = 50, height = 25, anchor = 'center')
     z_offset_up_button.place(relx=rcol, rely=0.25, anchor=ctk.NW)
@@ -162,25 +185,31 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
 
 def start_print_but():
 
+    
     #if other button active don't do anything
     if GlobalState().confirmed == False:
         print("OCCUPIED")
         return
     GlobalState().confirmed = False
+    start_button.configure(state="disabled")
 
     if(GlobalState().printing_state != 1 and GlobalState().printing_state != 0):
         GlobalState().terminal_text += "Not ready for printing"
         GlobalState().confirmed = True
+        start_button.configure(state="normal")
         return
 
     if(GlobalState().printing_state == 2 or GlobalState().printing_state == 3):
         GlobalState().terminal_text += "print already in progress - stop first"
         GlobalState().confirmed = True
+        start_button.configure(state="normal")
+        return
 
     #check if file path is set:
     if (GlobalState().filepath == " " or GlobalState().filepath == ''):
         GlobalState().terminal_text +="Error: No file selected"
         GlobalState().confirmed = True
+        start_button.configure(state="normal")
         return 
 
     if(GlobalState().msb == None):
@@ -196,12 +225,6 @@ def start_print_but():
     filename = os.path.basename(GlobalState().filepath)
     status_update("Printing ...  \nFile: " + str(filename))
 
-    '''
-    #start modification threads
-    RT_operation_thread = threading.Thread(target=check_rts)
-    RT_operation_thread.start()
-    '''
-
     progress_thread = threading.Thread(target=progress_update)
     progress_thread.start()
 
@@ -211,6 +234,8 @@ def start_print_but():
     #wait for program to finish to update the text
     finished_thread = threading.Thread(target=wait_for_printing)
     finished_thread.start()
+    
+    start_button.configure(state="normal")
 
     return
 
@@ -229,11 +254,14 @@ def wait_for_printing():
     return
 
 def stop_print_but():
+
+    global stop_button
     
     if(GlobalState().confirmed == False):
         print("OCCUPIED")
         return
     GlobalState().confirmed = False
+    stop_button.configure(state="disabled")
 
     if(GlobalState().printing_state == 2):
 
@@ -255,22 +283,29 @@ def stop_print_but():
     return
 
 def stop():
+    global stop_button
+
+    GlobalState().filepath = " "
+    GlobalState().msb.ResetError()
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
     uf.cleanpose(GlobalState().msb)
     GlobalState().msb.WaitIdle()
     GlobalState().confirmed = True
+    stop_button.configure(state="normal")
     GlobalState().printing_state = 1
-    GlobalState().filepath = " "
+    
     status_update("stopped - ready to print again")
     return
 
 def init_print_but():
 
+    global init_button
     #if other button active don't do anything
     if GlobalState().confirmed == False:
         print("OCCUPIED")
         return
     GlobalState().confirmed = False
+    init_button.configure(state="disabled")
 
     if(GlobalState().msb != None):
         GlobalState().terminal_text += "Already Initialized"
@@ -288,8 +323,6 @@ def init_print_but():
     init_thread = threading.Thread(target=init)
     init_thread.start()
 
-
-
     status_update("Ready to print")
     
 
@@ -297,13 +330,23 @@ def init_print_but():
 
 def init():
 
+    global init_button
 
     uf.init_sequence()
+
     GlobalState().confirmed = True
+    init_button.configure(state="normal")
 
     return
 
 def select_file_but():
+
+    global file_button
+    if(GlobalState().confirmed == False):
+        print("OCCUPIED")
+        return
+    GlobalState().confirmed = False
+    file_button.configure(state="disabled")
 
     if(GlobalState().printing_state == 2 or GlobalState().printing_state == 3 ):
         GlobalState().terminal_text += "Please stop printing before selecting a new file!"
@@ -324,6 +367,7 @@ def select_file_but():
     #status_update("File selected:\n'"  + filename + "'")
     GlobalState().terminal_text += f"File selected: '{filename}'"
 
+    file_button.configure(state="normal")
     GlobalState().confirmed = True
 
     return
@@ -335,6 +379,7 @@ def pause_print_but():
         print("OCCUPIED")
         return
     GlobalState().confirmed == False
+    pause_button.configure(state="disabled")
     
     if(GlobalState().printing_state == 2):
 
@@ -362,12 +407,15 @@ def pause():
     GlobalState().printing_state = 3 #3 = paused
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
     GlobalState().msb.WaitIdle()
+    #GlobalState().msb.ClearMotion() #Watch OUT! This clears the motion queue
+    time.sleep(0.3)
     uf.cleanpose(GlobalState().msb)
     GlobalState().msb.WaitIdle()
     GlobalState().confirmed = True
+    pause_button.configure(state="normal")
 
     #set all states for pausing
-    
+    pause_button.configure(state="normal")
     pause_button.configure(text="Resume Printing")
 
     return
@@ -382,6 +430,7 @@ def resume():
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
     #reset all states so that printing can continue
     GlobalState().confirmed = True
+    pause_button.configure(state="normal")
     GlobalState().printing_state = 2 #2 = printing
     filename = os.path.basename(GlobalState().filepath)
     status_update("Printing ...  \nFile: " + str(filename))
@@ -395,23 +444,25 @@ def calibration_but():
         GlobalState().terminal_text += "Error: Robot not initialized"
         return
     if(GlobalState().printing_state != 2 and GlobalState().printing_state != 3 and GlobalState().printing_state != 6):
-
-        calibrate_button.configure(text="Stop Calibration")
+        
+        calibrate_button.configure(state = "disabled")
         GlobalState().terminal_text += " ---Ready for callibration - 10mm above the bed--- "
         GlobalState().previous_state = GlobalState().printing_state
         GlobalState().printing_state = 6 #6 = calibration
         status_update("Calibrating...")
-        uf.callibrationpose(GlobalState().msb)
 
         #thread to update callibration pose
         callibration_thread = threading.Thread(target=wait_for_callibration)
         callibration_thread.start()
 
+        calibrate_button.configure(text="Stop Calibration", state = "normal")
+
     elif(GlobalState().printing_state == 6):
     
+        calibrate_button.configure(state = "disabled")
         GlobalState().printing_state = GlobalState().previous_state
         uncallibration_thread = threading.Thread(target=uncallibrate)
-        calibrate_button.configure(text="Calibrate")
+        calibrate_button.configure(text="Calibrate", state = "normal")
 
     else:
         GlobalState().terminal_text += "print in process - continued printing"
@@ -433,6 +484,15 @@ def uncallibrate():
 
 def z_up_but():
     global z_offset_textbox
+    global z_offset_up_button
+
+    z_offset_up_button.configure(state="disabled")
+
+    if round(GlobalState().max_z_offset - GlobalState().user_z_offset, 1) < 1:
+        GlobalState().terminal_text += " z_offset may not exceed" + " " + str(GlobalState().max_z_offset) + "mm in this print!"
+        speed_down_button.configure(state="normal")
+        return
+
     GlobalState().user_z_offset += GlobalState().user_z_offset_increment
     GlobalState().user_z_offset = round(GlobalState().user_z_offset, 2)
     z_offset_textbox.delete(0, ctk.END)
@@ -440,20 +500,28 @@ def z_up_but():
     # Insert the new text
     z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
     print(GlobalState().user_z_offset)
+    z_offset_up_button.configure(state="normal")
     return
 
 def z_down_but():
     global z_offset_textbox
+    global z_offset_down_button
+
+    z_offset_down_button.configure(state="disabled")
     GlobalState().user_z_offset -= GlobalState().user_z_offset_increment
     GlobalState().user_z_offset = round(GlobalState().user_z_offset, 2)
     z_offset_textbox.delete(0, ctk.END)
     # Insert the new text
     z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
     print(GlobalState().user_z_offset)
+    z_offset_down_button.configure(state="normal")
     return
 
 def e_speed_up_but():
     global e_speed_textbox
+    global e_speed_up_button
+
+    e_speed_up_button.configure(state="disabled")
     GlobalState().extrusion_speed_modifier += GlobalState().extrusion_speed_increment
     GlobalState().extrusion_speed_modifier = round(GlobalState().extrusion_speed_modifier, 2)
     e_speed_textbox.delete(0, ctk.END)
@@ -461,14 +529,19 @@ def e_speed_up_but():
     # Insert the new text
     e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
     print(GlobalState().extrusion_speed_modifier)
+    e_speed_up_button.configure(state="normal")
     return
 
 def e_speed_down_but():
     global e_speed_textbox
+    global e_speed_down_button
+
+    e_speed_down_button.configure(state="disabled")
     
     #check that speed does not reach 0
     if round(GlobalState().extrusion_speed_modifier - GlobalState().extrusion_speed_increment, 2) < 1:
         GlobalState().terminal_text += " Extrusion Speed may not reach 0!"
+        speed_down_button.configure(state="normal")
         return
 
     GlobalState().extrusion_speed_modifier -= GlobalState().extrusion_speed_increment
@@ -477,25 +550,42 @@ def e_speed_down_but():
 
     # Insert the new text
     e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
+    e_speed_down_button.configure(state="normal")
     print(GlobalState().extrusion_speed_modifier)
     return
 
 def speed_up_but():
     global speed_textbox
+    global speed_up_button
+
+    speed_up_button.configure(state="disabled")
+
+    #check that speed does not reach 650 %
+    if round(GlobalState().max_speed - GlobalState().printspeed_modifier, 0) < 1:
+        GlobalState().terminal_text += "Speed may not exceed 650 %!"
+        speed_down_button.configure(state="normal")
+        return
+
+
     GlobalState().printspeed_modifier += GlobalState().printspeed_increment
     time.sleep(0.01)
     uf.adjust_speed(GlobalState().printspeed_modifier, GlobalState().msb)
     speed_textbox.delete(0, ctk.END)
     # Insert the new text
     speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
+    speed_up_button.configure(state="normal")
     return
 
 def speed_down_but():
     global speed_textbox
+    global speed_down_button
+
+    speed_down_button.configure(state="disabled")
 
     #check that speed does not reach 0
     if round(GlobalState().printspeed_modifier - GlobalState().printspeed_increment, 2) < 1:
         GlobalState().terminal_text += "Speed may not reach 0!"
+        speed_down_button.configure(state="normal")
         return
 
     GlobalState().printspeed_modifier -= GlobalState().printspeed_increment
@@ -504,6 +594,7 @@ def speed_down_but():
     speed_textbox.delete(0, ctk.END)
     # Insert the new text
     speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
+    speed_down_button.configure(state="normal")
     return
 
 #-------------------Helper functions-------------------
@@ -570,8 +661,8 @@ def progress_update():
     progress = 0
     current_progress = 0
     filename = os.path.basename(GlobalState().filepath)
-    while(GlobalState().printing_state == 2 or GlobalState().printing_state == 3 or True):
-        if(GlobalState().current_progress != progress):
+    while(GlobalState().printing_state == 2 or GlobalState().printing_state == 3):
+        if(round(GlobalState().current_progress,0) != round(progress,0)):
             progress = current_progress
             #GlobalState().terminal_text += f'Progress: {progress}%'
             
@@ -664,6 +755,14 @@ def on_z_offset_textbox_return(event):
     # Get the current value of the textbox
     value = z_offset_textbox.get()
     value = float(value.rstrip('mm'))
+
+    if(value > GlobalState().max_z_offset):
+        GlobalState().terminal_text += " z_offset may not exceed" + " " + str(GlobalState().max_z_offset) + "mm in this print!"
+        z_offset_textbox.delete(0, ctk.END)
+        # Insert the new text
+        z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
+        return
+
     GlobalState().user_z_offset = value
     z_offset_textbox.delete(0, ctk.END)
     # Insert the new text
@@ -697,6 +796,13 @@ def on_speed_textbox_return(event):
     # Get the current value of the textbox
     value = speed_textbox.get()
     value = float(value.rstrip('%'))
+
+    if(value > GlobalState().max_speed):
+        GlobalState().terminal_text += "Speed may not exceed 650%!"
+        speed_textbox.delete(0, ctk.END)
+        # Insert the new text
+        speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
+        return
     
     if(value < 1):
         GlobalState().terminal_text += "Speed may not reach 0!"
