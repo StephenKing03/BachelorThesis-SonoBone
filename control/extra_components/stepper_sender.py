@@ -2,7 +2,7 @@ import serial
 import time
 
 # Configure the serial port
-port = serial.Serial('COM25', 9600)  # Replace 'COM3' with the appropriate port name
+port = serial.Serial('COM26', 9600)  # Replace 'COM3' with the appropriate port name
 
 # Function to send the integer value to the stepper motor
 def send_value(value):
@@ -19,7 +19,7 @@ def send_value(value):
 
 # Example usage
 for i in range (10):
-    for i in range(0,1000,100):
+    for i in range(0,10000,1000):
         send_value(i)
         print(i)
         time.sleep(3)

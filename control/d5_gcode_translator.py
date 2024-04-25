@@ -13,8 +13,9 @@ def extract_coordinates(file_path):
     
     with open(file_path, 'r') as file:
         i = 0
-        for line in file:
-           
+        content = file.readlines()
+        print(content)
+        for line in content:
             if line.startswith(';TIME_ELAPSED'):
                 break
             
@@ -36,11 +37,11 @@ def extract_coordinates(file_path):
                         z = float(command[1:])
                     except:
                         er = True
-                elif command.startswith('a'):
+                elif command.startswith('A'):
                     alpha = float(command[1:])
-                elif command.startswith('b'):
+                elif command.startswith('B'):
                     beta = float(command[1:])
-                elif command.startswith('c'):
+                elif command.startswith('C'):
                     gamma = float(command[1:])
                 elif command.startswith('E'):
                     e = float(command[1:])
@@ -48,26 +49,26 @@ def extract_coordinates(file_path):
                 
     return coordinates
 
+
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
 def write_coordinates(coordinates, self, x_offset, y_offset):
-    
-    #set printing speed
-    #self.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
-    #self.SendCustomCommand(f'SetCartLinVel({RobotStats().max_linvel})')
 
-    GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
+    self.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
 
     #coordinates consist of [x, y, z, e, er]        
     z_0 = RobotStats().min_z 
 
     #offset from modify placement
+    non_none_z = 0
+    non_none_x = 0
+    non_none_y = 0
     previous_percent = 0
-    
     non_none_e = 0
     last_e = 0
     i = 0
-
     length = len(coordinates)
+
+    #main printing loop
     for x, y, z, alpha, beta, gamma, e, er in coordinates:
         
         print(f'--{i}--')
@@ -80,7 +81,7 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
                 return
             time.sleep(0.1)
         
-        # Check printing_state if the print is stopped
+        # Check printing_state if the print is stoppedc
             if GlobalState().printing_state == 5:  
                 print("exit path 2")
                 print(GlobalState().printing_state)
@@ -90,17 +91,20 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
         GlobalState().current_line = i
         
         GlobalState().current_progress = round(float(i)/float(length) * 100, 1)
-
-        if (alpha >-150 and alpha) <0:
-            GlobalState().terminal_text += "alpha is negative -> + 180" + alpha
+        
+        if (alpha >-150 and alpha <0):
+            GlobalState().terminal_text += "alpha is negative -> + 180" + str(alpha)
             alpha += 180
-            GlobalState().terminal_text += "alpha is negative -> + 180; alpha was: " + alpha
-
+            GlobalState().terminal_text += "alpha is negative -> + 180; alpha was: " + str(alpha)
+    
+        
         if(alpha < 150):
+            GlobalState().terminal_text += "alpha is smaller than 150! alphe =" + str(alpha)
             alpha = 150
+            
             if GlobalState().terminal_text != " ":
                 GlobalState().terminal_text += "\n"
-            GlobalState().terminal_text += "alpha is smaller than 150"
+        
 
         if(abs(beta) > 30):
             
@@ -109,19 +113,18 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
             
             if GlobalState().terminal_text != " ":
                 GlobalState().terminal_text += "\n"
-            GlobalState().terminal_text += "abs(beta) is larger than 30 -> set to" + beta
+            GlobalState().terminal_text += "abs(beta) is larger than 30 -> set to" + str(beta)
         
         #send Pose
-        uf.commandPose(x,y,z, alpha, beta, gamma, self)
-        GlobalState().last_pose = [x, y, z, alpha, beta, gamma]
-        uf.WaitReachedPose([x, y, z, alpha, beta, gamma])
-        
+        uf.commandPose(x + x_offset,y+y_offset,z+ GlobalState().user_z_offset + z_0, alpha, beta, gamma, self)
+        GlobalState().last_pose = [x + x_offset, y + y_offset, z + GlobalState().user_z_offset+ z_0, alpha, beta, gamma]
+
 
         time.sleep(0.01)
         
         #-------------------finished print -----------------------------
     
-    sc.send_speed(0)
+    #sc.send_speed(0)
     #set speed higher again
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')
     uf.endpose(self)
@@ -135,9 +138,11 @@ def modify_placement(coordinates):
     max_x = coordinates[0][0]
     max_y = coordinates[0][1]
     min_y = coordinates[0][1]
+    min_z = 0
+    max_z = 0
 
     #get max and min x and y
-    for x, y, z, e, er in coordinates:
+    for x, y, z, a, b, c, e, er in coordinates:
         if x != None:
             if x > max_x:
                 max_x = x
@@ -148,7 +153,13 @@ def modify_placement(coordinates):
                 max_y = y
             elif y < min_y:
                 min_y = y
-    print(max_x, min_x, max_y, min_y)
+        if z != None:
+            if z > RobotStats().max_z:
+                max_z = z
+            elif z < RobotStats().min_z:
+                min_z = z
+
+        GlobalState().max_z_offset = RobotStats().max_z - max_z
 
     #check if dimensions are feasible
     if (max_x - min_x) > (RobotStats().max_x - RobotStats().min_x):
@@ -161,6 +172,8 @@ def modify_placement(coordinates):
         GlobalState().terminal_text += "\nY-dimension are too large for the printebed for Δy = " + str(max_y-min_y)+ " \n" + "It must be within Δy = " + str(RobotStats().max_y - RobotStats().min_y) 
         time.sleep(2)
         return None, None
+
+    
         
     
     
@@ -173,15 +186,18 @@ def modify_placement(coordinates):
 
     return x_offset, y_offset
 
-
+#main printing function - refers to the other functions in this file
 def start_print():
 
+    x_offset = 0
+    y_offset = 0
     
     #Extract coordinates
     GlobalState().terminal_text += "Extracting coordinates from file..."
     coordinates = extract_coordinates(GlobalState().filepath)
 
     x_offset, y_offset = modify_placement(coordinates)
+    
     if x_offset == None or y_offset == None:
         GlobalState().terminal_text += "Select a different File that fits"
         GlobalState().confirmed = True
@@ -217,10 +233,8 @@ def start_print():
 
     GlobalState().printing_state = 2
     #start printing
+    
     write_coordinates(coordinates,GlobalState().msb, x_offset, y_offset)
 
     return
 
-
-
-    

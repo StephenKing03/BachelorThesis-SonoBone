@@ -46,6 +46,7 @@ class GlobalState:
 
     #progress
     current_line = 0
+    
 
     #msb - Robot instance - for referencing the robot   
     msb = None
@@ -89,7 +90,7 @@ class RobotStats:
 
         self.max_semaphores = 3 #not used 
     
-        self.port = 'COM25'
+        self.port = 'COM26'
 
         self.extrusion_speed = 1000
 

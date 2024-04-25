@@ -55,6 +55,7 @@ void loop() {
             }
             stepper.setSpeed(0);
             Serial.println("Stepper initialized");
+            Serial.println("ack");
 
         }else {
 

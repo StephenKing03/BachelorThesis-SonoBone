@@ -12,6 +12,9 @@ def command_speed():
 # Function to send the integer value to the stepper motor
 def send_speed(value):
 
+    
+    #port = GlobalState().arduino_port
+    port  = serial.Serial(RobotStats().port, 9600)
     # Convert value to message
     message = "sp" + str(value)
 
@@ -19,7 +22,7 @@ def send_speed(value):
     message_bytes = message.encode()
 
     # Send the bytes over serial
-    GlobalState().arduino_port.write(message_bytes)
+    port.write(message_bytes)
 
     return
 
@@ -68,14 +71,18 @@ def retract(direction = -1):
     return
 
 def init_steppers():
-    
-    #setup port for arduino communication
-    GlobalState().arduino_port = serial.Serial(RobotStats().port, 9600)
 
-    #initialization sequence
-    message = "init"
-    message_bytes = message.encode()
-    GlobalState().arduino_port.write(message_bytes)
+    try: 
+        #setup port for arduino communication
+        GlobalState().arduino_port = serial.Serial(RobotStats().port, 9600)
+
+        #initialization sequence
+        message = "init"
+        message_bytes = message.encode()
+        GlobalState().arduino_port.write(message_bytes)
+        print("init sent")
+    except serial.SerialException:
+        print(f"Could not open port {RobotStats().port}")
     
     return
 
@@ -90,13 +97,22 @@ def read_steppers():
 
 def wait_ack():
     
-        while True:
-            #read from serial port
-            message = GlobalState().arduino_port.readline()
+    while True:
+        print("wait ack")
+        try:
+            # Read from serial port
+            
+            message = GlobalState().arduino_port.readline().decode().strip()
+            print(message)
             if message == "ack":
+                print("acknowledged init")
                 break
-    
-        return
+        except serial.SerialException:
+            print("Could not read from port")
+            break
+
+
+    return
 
 def stop_steppers():
 
@@ -116,4 +132,34 @@ def monitor_stepper():
         time.sleep(0.1)
 
 
+'''
+# Configure the serial port
+port = serial.Serial('COM26', 9600)  # Replace 'COM3' with the appropriate port name
 
+# Function to send the integer value to the stepper motor
+def send_value(value):
+
+    # Convert value to message
+    message = "sp" + str(value)
+
+    # Convert message to bytes - for sending
+    message_bytes = message.encode()
+
+    # Send the bytes over serial
+    port.write(message_bytes)
+
+
+send_value(0)
+print("0 sent")
+time.sleep(3)
+
+send_value(1000)
+print("1000 sent")
+time.sleep(3)
+send_value(10000)
+print("100000")
+time.sleep(3)
+
+# Close the serial port when done
+port.close()
+'''

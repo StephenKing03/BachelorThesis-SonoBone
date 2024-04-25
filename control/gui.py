@@ -228,7 +228,8 @@ def start_print_but():
     progress_thread = threading.Thread(target=progress_update)
     progress_thread.start()
 
-    print_thread = threading.Thread(target=gt.start_print)
+    ''' change this for the 5d print, exchange d5 with gt '''
+    print_thread = threading.Thread(target=d5.start_print)  
     print_thread.start()
     
     #wait for program to finish to update the text
@@ -404,6 +405,7 @@ def pause():
     
     #set cleanpose for adjustments
     #GlobalState().msb.WaitIdle()
+    
     GlobalState().printing_state = 3 #3 = paused
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
     GlobalState().msb.WaitIdle()
