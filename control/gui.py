@@ -322,6 +322,7 @@ def stop():
     GlobalState().filepath = " "
     GlobalState().msb.ResetError()
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
+    sc.send_speed(0)
     uf.cleanpose(GlobalState().msb)
     GlobalState().msb.WaitIdle()
     GlobalState().confirmed = True
@@ -475,6 +476,7 @@ def pause():
     
     GlobalState().printing_state = 3 #3 = paused
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
+    sc.send_speed(0)
     GlobalState().msb.WaitIdle()
     #GlobalState().msb.ClearMotion() #Watch OUT! This clears the motion queue
     time.sleep(0.3)

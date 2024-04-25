@@ -4,18 +4,14 @@ from globals import GlobalState
 from globals import RobotStats
 import serial.tools.list_ports
 
-#currently not used
 def find_arduino():
     ports = serial.tools.list_ports.comports()
-    i = 10
     for port in ports:
-        print(i)
-        i += 1
         try:
             # Try to open and close the port
             # If it fails, it's not the Arduino
             GlobalState().arduino_port = serial.Serial(port.device, 9600, timeout=1)
-            
+            time.sleep(3)
             
             
             # If it succeeds, return the port
@@ -96,13 +92,7 @@ def retract(direction = -1):
 
 def init_steppers():
 
-    #find_arduino()
-    GlobalState().arduino_port = serial.Serial(RobotStats().portname, 9600, timeout=1)
-
-    send_speed(0)
-    time.sleep(4)
-
-
+    find_arduino()
     if GlobalState().arduino_port is None:
         print("Could not find Arduino")
 
@@ -111,7 +101,7 @@ def init_steppers():
         # Configure the serial port
         #GlobalState().arduino_port = serial.Serial('COM27', 9600)  # Replace 'COM3' with the appropriate port 
         #time.sleep(3)
-        
+
         #initialization sequence
         message = "init"
         message_bytes = message.encode()
@@ -150,8 +140,6 @@ def wait_ack():
     return
 
 def wait_done():
-
-
     
     while True:
         print("wait done")

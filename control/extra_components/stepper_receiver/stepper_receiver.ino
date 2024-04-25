@@ -122,10 +122,10 @@ void loop() {
     }
 
     stepper.runSpeed();
-    if(millis()-last_command > 15000 && last_command != 0){
+    if(millis()-last_command > 15000){
       stepper.setSpeed(0);
       Serial.println("timout - speed 0");
-      last_command = 0;
+      last_command = millis();
     }
         
 

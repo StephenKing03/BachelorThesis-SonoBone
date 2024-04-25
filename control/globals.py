@@ -90,8 +90,6 @@ class RobotStats:
         self.print_offset_y = 0
 
         self.max_semaphores = 3 #not used 
-    
-        self.port = 'COM27'
 
         self.extrusion_speed = 1000 #mm/min
 
