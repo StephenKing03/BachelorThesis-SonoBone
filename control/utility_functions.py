@@ -201,6 +201,17 @@ def deactivation_sequence(self = mdr.Robot()):
 
     return
 
+def reset():
+
+    msb = GlobalState().msb
+    msb.ResetError()
+    msb.ClearMotion()
+    msb.SendCustomCommand('ResetError()')
+    msb.SendCustomCommand('ResumeMotion()')
+    msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')
+
+    return
+
 
 def init_sequence():
 
@@ -217,17 +228,15 @@ def init_sequence():
         GlobalState().msb.ResetError()
 
         #activate steppers
-        #sc.init_steppers()
-        #sc.wait_ack()
-        print("stepper 2")
+        sc.init_steppers()
+        sc.wait_done()
 
-    print("2") 
+        
     msb = GlobalState().msb
     #setup robot arm
     GlobalState().msb.ResetError()
     GlobalState().msb.Home() #Home the robot
     msb.ResetError()
-    msb.ClearMotion()
     msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().max_linvel})')
     msb.SendCustomCommand("SetRealTimeMonitoring('cartpos')") #start logging position
     msb.SendCustomCommand('ResetError()')

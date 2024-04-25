@@ -14,7 +14,7 @@ def send_speed(value):
 
     
     #port = GlobalState().arduino_port
-    port  = serial.Serial(RobotStats().port, 9600)
+    port  = GlobalState().arduino_port
     # Convert value to message
     message = "sp" + str(value)
 
@@ -23,6 +23,7 @@ def send_speed(value):
 
     # Send the bytes over serial
     port.write(message_bytes)
+    print("speed "  +str(value) + " sent")
 
     return
 
@@ -33,11 +34,11 @@ def send_position(value):
 
     '''test with constant extrusion'''
 
-    if(GlobalState().extrusion_direction != 0 and value == 0):
+    if(value == 0):
         send_speed(0)
-    elif(GlobalState().extrusion_direction != 1 and value > 0):
+    elif(value > 0):
         send_speed(extrusion_speed)
-    elif(GlobalState().extrusion_direction != -1 and value < 0):
+    elif(value < 0):
         send_speed(-extrusion_speed)
     '''end test with constant extrusion'''
 
@@ -74,7 +75,9 @@ def init_steppers():
 
     try: 
         #setup port for arduino communication
-        GlobalState().arduino_port = serial.Serial(RobotStats().port, 9600)
+        # Configure the serial port
+        GlobalState().arduino_port = serial.Serial('COM27', 9600)  # Replace 'COM3' with the appropriate port 
+        time.sleep(3)
 
         #initialization sequence
         message = "init"
@@ -111,10 +114,28 @@ def wait_ack():
             print("Could not read from port")
             break
 
-
     return
 
-def stop_steppers():
+def wait_done():
+    
+    while True:
+        print("wait done")
+        try:
+            # Read from serial port
+            
+            message = GlobalState().arduino_port.readline().decode().strip()
+            print(message)
+            if message == "done":
+                print("done init")
+                break
+        except serial.SerialException:
+            print("Could not read from port")
+            break
+
+        time.sleep(0.05)
+    return
+
+def close_steppers():
 
     # Close the serial port when done
     GlobalState().GlobalState().arduino_portclose()
@@ -132,13 +153,13 @@ def monitor_stepper():
         time.sleep(0.1)
 
 
-'''
-# Configure the serial port
-port = serial.Serial('COM26', 9600)  # Replace 'COM3' with the appropriate port name
+
+
 
 # Function to send the integer value to the stepper motor
 def send_value(value):
 
+    port = GlobalState().arduino_port
     # Convert value to message
     message = "sp" + str(value)
 
@@ -147,19 +168,4 @@ def send_value(value):
 
     # Send the bytes over serial
     port.write(message_bytes)
-
-
-send_value(0)
-print("0 sent")
-time.sleep(3)
-
-send_value(1000)
-print("1000 sent")
-time.sleep(3)
-send_value(10000)
-print("100000")
-time.sleep(3)
-
-# Close the serial port when done
-port.close()
-'''
+    print("sent " + str(value))

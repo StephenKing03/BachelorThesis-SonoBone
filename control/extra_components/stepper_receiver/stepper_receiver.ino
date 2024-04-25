@@ -55,7 +55,7 @@ void loop() {
           int speed = speedString.toInt();
 
 
-
+            Serial.println("ack");
             Serial.println("position: " + String(position) + "; speed: " + String(speed) );
 
             // calculate the number of steps required to move the specified distance
@@ -78,11 +78,12 @@ void loop() {
                 }
             }
             stepper.setSpeed(0);
-            Serial.println("ack");
+            Serial.println("done");
         
         
         }else if(command.startsWith("init")){
 
+            Serial.println("ack");
             Serial.println("Initializing stepper");
             stepper.setMaxSpeed(10000);
             stepper.setSpeed(3000);
@@ -99,8 +100,10 @@ void loop() {
             }
             stepper.setSpeed(0);
             Serial.println("Stepper initialized");
+            Serial.println("done");
 
         }else if(command.startsWith("reset")){
+
 
           stepper.setCurrentPosition(0);
           Serial.println("position reset");

@@ -90,7 +90,7 @@ class RobotStats:
 
         self.max_semaphores = 3 #not used 
     
-        self.port = 'COM26'
+        self.port = 'COM27'
 
         self.extrusion_speed = 1000
 

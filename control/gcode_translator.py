@@ -108,6 +108,7 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
             checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100) 
         checkpoint = next_checkpoint
         print(f'Checkpoint {i} reached')
+        print(e)
 
 
         #if x and y are not specified, move to current position with z offset
@@ -119,31 +120,15 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
             if(e != None):
                 sc.send_position(e - last_e)
                 last_e = e
-            
-            #wait for position to be almost reached
-            #uf.WaitReachedPose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
-            
-            
-            #sc.send_speed(0)
-            GlobalState().semaphore += 1
-            #uf.add_target_pose([non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
+
             
         elif z == None:
             
             uf.commandPose(x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180, self)
             GlobalState().last_pose = [x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180]
             if(e != None ):
-                #sc.send_position(e - last_e)
+                sc.send_position(e - last_e)
                 last_e = e
-
-            #wait for position to be almost reached
-            #uf.WaitReachedPose([x+x_offset, y + y_offset, non_none_z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180])
-            GlobalState().semaphore += 1
-            #sc.send_speed(0)
-            ''' removed in command pose to wait'''
-            #uf.add_target_pose([x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180])
-            
-        #throw exception
         else:
             print("!-!-!-!-!Line skip error!-!-!-!-!")
             #GlobalState().terminal_text += "Line skip error"

@@ -6,7 +6,7 @@ from globals import GlobalState
 from globals import RobotStats
 import mecademicpy.robot as mdr #mechademicpy API import (see Github documentation)
 import utility_functions as uf
-
+'''
 def init_logger():
 
     old_terminal_text = GlobalState().terminal_text
@@ -45,7 +45,9 @@ def init_logger():
 #logging_thread = threading.Thread(target=init_logger)
 # - en or disable the logging
 #logging_thread.start()
-#main program
+
+'''
+
 
 #---------------main program start------------
 gui.init_gui()

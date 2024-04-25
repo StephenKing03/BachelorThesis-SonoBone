@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 import mecademicpy.robot as mdr
 from PIL import Image, ImageTk
+import sys
 
 from tkinter import filedialog
 
@@ -41,6 +42,7 @@ global speed_down_button
 global e_speed_up_button
 global e_speed_down_button
 global calibrate_button
+global reset_button
 
 
 
@@ -75,6 +77,10 @@ def print_control(root, leftcol, rightcol, buttoncolor, rcol):
     global calibrate_button
     calibrate_button = ctk.CTkButton(master=root, text="Calibrate", font=("Avenir Heavy",15), fg_color= buttoncolor, command=calibration_but)
     calibrate_button.place(relx=leftcol, rely=0.9, anchor=ctk.NW)
+
+    global reset_button
+    reset_button = ctk.CTkButton(master=root, text="Reset", font=("Avenir Heavy",13), text_color = '#030303', width = 50, height = 25, fg_color= '#ECE331', command=reset_but)
+    reset_button.place(relx=rcol +0.08, rely=0.25, anchor=ctk.NW)
 
     return
 
@@ -115,7 +121,7 @@ def cosmetics(root, leftcol, rightcol, buttoncolor, rcol):
     info_title.place(relwidth = 1)
 
     #cool icon
-    image = Image.open(r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\cool_robot_icon.png")
+    image = Image.open(search_file("cool_robot_icon.png"))
     image  = image.resize((70,70))
     photo = ImageTk.PhotoImage(image)
     icon_label = ctk.CTkLabel(master=root, image=photo,fg_color= '#333332', text = "")
@@ -185,13 +191,15 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
 
 def start_print_but():
 
-    
+    global start_button
+    start_button.configure(state="disabled")
     #if other button active don't do anything
     if GlobalState().confirmed == False:
         print("OCCUPIED")
+        start_button.configure(state="normal")
         return
     GlobalState().confirmed = False
-    start_button.configure(state="disabled")
+    
 
     if(GlobalState().printing_state != 1 and GlobalState().printing_state != 0):
         GlobalState().terminal_text += "Not ready for printing"
@@ -229,7 +237,7 @@ def start_print_but():
     progress_thread.start()
 
     ''' change this for the 5d print, exchange d5 with gt '''
-    print_thread = threading.Thread(target=d5.start_print)  
+    print_thread = threading.Thread(target=gt.start_print)  
     print_thread.start()
     
     #wait for program to finish to update the text
@@ -257,12 +265,14 @@ def wait_for_printing():
 def stop_print_but():
 
     global stop_button
+    stop_button.configure(state="disabled")
     
     if(GlobalState().confirmed == False):
         print("OCCUPIED")
+        stop_button.configure(state="normal")
         return
     GlobalState().confirmed = False
-    stop_button.configure(state="disabled")
+    
 
     if(GlobalState().printing_state == 2):
 
@@ -278,6 +288,7 @@ def stop_print_but():
     else:
         GlobalState().terminal_text += "no print in process - nothing done"
         GlobalState().confirmed = True
+        stop_button.configure(state="normal")
     
     
     #deactivate() optional to deactivate the robot
@@ -301,17 +312,20 @@ def stop():
 def init_print_but():
 
     global init_button
+    init_button.configure(state="disabled")
     #if other button active don't do anything
     if GlobalState().confirmed == False:
         print("OCCUPIED")
+        init_button.configure(state="")
         return
     GlobalState().confirmed = False
-    init_button.configure(state="disabled")
+    
 
     if(GlobalState().msb != None):
         GlobalState().terminal_text += "Already Initialized"
         GlobalState().confirmed = True
         return
+    GlobalState().terminal_text += "Initializing Robot..."
 
     
     #start the terminal thread
@@ -343,18 +357,23 @@ def init():
 def select_file_but():
 
     global file_button
+    file_button.configure(state="disabled")
+    
     if(GlobalState().confirmed == False):
         print("OCCUPIED")
+        file_button.configure(state="normal")
         return
     GlobalState().confirmed = False
-    file_button.configure(state="disabled")
+    
 
     if(GlobalState().printing_state == 2 or GlobalState().printing_state == 3 ):
         GlobalState().terminal_text += "Please stop printing before selecting a new file!"
+        file_button.configure(state="normal")
         return
 
     if(GlobalState().printing_state == 6):
         GlobalState().terminal_text += "Please stop calibration before selecting a new file!"
+        file_button.configure(state="normal")
         return
     
     GlobalState().printing_state = 0 #0 = not printing
@@ -362,10 +381,17 @@ def select_file_but():
     file_path = filedialog.askopenfilename()
     #print("Selected file:", file_path)
 
+    if(file_path == ""):
+        GlobalState().terminal_text += "No file selected"
+        GlobalState().confirmed = True
+        file_button.configure(state="normal")
+        return
+
     # save the file path into GlobalState().filepath for later use
     GlobalState().filepath = file_path
     filename = os.path.basename(file_path)
     #status_update("File selected:\n'"  + filename + "'")
+    
     GlobalState().terminal_text += f"File selected: '{filename}'"
 
     file_button.configure(state="normal")
@@ -376,11 +402,13 @@ def select_file_but():
 def pause_print_but():
     global pause_button
 
+    pause_button.configure(state="disabled")
     if(GlobalState().confirmed == False):
         print("OCCUPIED")
+        pause_button.configure(state="normal")
         return
     GlobalState().confirmed == False
-    pause_button.configure(state="disabled")
+   
     
     if(GlobalState().printing_state == 2):
 
@@ -442,12 +470,14 @@ def resume():
 
 def calibration_but():
     global calibrate_button
+    calibrate_button.configure(state = "disabled")
     if(GlobalState().msb == None):
         GlobalState().terminal_text += "Error: Robot not initialized"
+        calibrate_button.configure(state = "normal")
         return
     if(GlobalState().printing_state != 2 and GlobalState().printing_state != 3 and GlobalState().printing_state != 6):
         
-        calibrate_button.configure(state = "disabled")
+        
         GlobalState().terminal_text += " ---Ready for callibration - 10mm above the bed--- "
         GlobalState().previous_state = GlobalState().printing_state
         GlobalState().printing_state = 6 #6 = calibration
@@ -461,14 +491,15 @@ def calibration_but():
 
     elif(GlobalState().printing_state == 6):
     
-        calibrate_button.configure(state = "disabled")
+        
         GlobalState().printing_state = GlobalState().previous_state
         uncallibration_thread = threading.Thread(target=uncallibrate)
         calibrate_button.configure(text="Calibrate", state = "normal")
 
     else:
         GlobalState().terminal_text += "print in process - continued printing"
-
+        
+    calibrate_button.configure(state = "normal")
     return
 
 def wait_for_callibration():
@@ -481,6 +512,29 @@ def uncallibrate():
     #uf.commandPose(GlobalState().last_pose)
 
     return
+
+def reset_but():
+
+    global reset_button
+
+    reset_button.configure(state="disabled")
+    if(GlobalState().confirmed == False):
+        print("OCCUPIED")
+        reset_button.configure(state="normal")
+        return
+    GlobalState().confirmed == False
+    
+
+    if(GlobalState().msb == None):
+        GlobalState().terminal_text += "Robot not initialized"
+    else:
+        GlobalState().terminal_text += "Resetting..."
+        uf.reset()
+        GlobalState().terminal_text += "Reset done"
+
+    GlobalState().confirmed = True
+    reset_button.configure(state="normal")
+
 
 #----- tuning buttons -----
 
@@ -821,6 +875,29 @@ def on_speed_textbox_return(event):
 
     return
 
+
+def search_file(filename):
+
+    
+    # Get the directory of the script
+    script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
+    
+    # Get the parent directory
+    parent_directory = os.path.dirname(script_directory)
+    
+    # Search for the file in the script directory and the parent directory
+    for directory in [script_directory, parent_directory]:
+        filepath = os.path.join(directory, filename)
+        if os.path.isfile(filepath):
+            break
+    else:
+        print(f"Could not find {filename}")
+        filepath = None
+        return filepath
+
+    if filepath is not None:
+        return filepath
+    
 #main gui function
 def init_gui():
     
@@ -836,8 +913,8 @@ def init_gui():
     root = ctk.CTk()  # create CTk window like you do with the Tk window
     root.geometry("800x450")
     root.title("SonoBone control interface")
-    root.iconbitmap(r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\SonoBone_icon.ico")
-
+    #root.iconbitmap(r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\SonoBone_icon.ico")
+    root.iconbitmap(search_file("SonoBone_icon.ico"))
 
     #initialize all the gui parts
     print_control(root, leftcol,rightcol,buttoncolor,rcol)
