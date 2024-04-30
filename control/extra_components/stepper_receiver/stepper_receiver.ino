@@ -2,6 +2,7 @@
 #define stepPin 2
 #define motorInterfaceType 1
 #include "AccelStepper.h"
+float last_command = 0;
 
 // Create a new instance of the AccelStepper class:
 AccelStepper stepper = AccelStepper(motorInterfaceType, stepPin, dirPin);
@@ -12,6 +13,7 @@ void setup() {
     
     stepper.setMaxSpeed(10000);
     stepper.setAcceleration(50000);
+    
 }
 
 void loop() {
@@ -35,6 +37,7 @@ void loop() {
             stepper.setSpeed(speed);
             // Step the motor with a constant speed as set by setSpeed():
             Serial.println("Speed set to " + String(speed));
+            last_command = millis();
 
 
         }else if(command.startsWith("p")){
@@ -79,6 +82,7 @@ void loop() {
             }
             stepper.setSpeed(0);
             Serial.println("done");
+            last_command = millis();
         
         
         }else if(command.startsWith("init")){
@@ -101,6 +105,7 @@ void loop() {
             stepper.setSpeed(0);
             Serial.println("Stepper initialized");
             Serial.println("done");
+            last_command = millis();
 
         }else if(command.startsWith("reset")){
 
@@ -117,6 +122,11 @@ void loop() {
     }
 
     stepper.runSpeed();
+    if(millis()-last_command > 15000 && last_command != 0){
+      stepper.setSpeed(0);
+      Serial.println("timout - speed 0");
+      last_command = 0;
+    }
         
 
     

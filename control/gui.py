@@ -55,7 +55,7 @@ def print_control(root, leftcol, rightcol, buttoncolor, rcol):
 
     #button to set file path
     global file_button
-    file_button = ctk.CTkButton(master=root, text="Select File", font=("Avenir Heavy",15),fg_color= '#089DC3', command=select_file_but)
+    file_button = ctk.CTkButton(master=root, text="Select File", font=("Avenir Heavy",15),fg_color= buttoncolor, command=select_file_but)
     file_button.place(relx=leftcol, rely=0.45, anchor=ctk.NW)
 
     #button to start printing
@@ -65,7 +65,7 @@ def print_control(root, leftcol, rightcol, buttoncolor, rcol):
 
     #button to stop printing
     global stop_button
-    stop_button = ctk.CTkButton(master=root, text="Stop Printing", font=("Avenir Heavy",15), fg_color= '#DC0F24' ,command=stop_print_but)
+    stop_button = ctk.CTkButton(master=root, text="Stop Printing", font=("Avenir Heavy",15), fg_color= '#089DC3' ,command=stop_print_but)
     stop_button.place(relx=leftcol, rely=0.75, anchor=ctk.NW)
 
     #button to pause and resume printing
@@ -79,7 +79,7 @@ def print_control(root, leftcol, rightcol, buttoncolor, rcol):
     calibrate_button.place(relx=leftcol, rely=0.9, anchor=ctk.NW)
 
     global reset_button
-    reset_button = ctk.CTkButton(master=root, text="Reset", font=("Avenir Heavy",13), text_color = '#030303', width = 50, height = 25, fg_color= '#ECE331', command=reset_but)
+    reset_button = ctk.CTkButton(master=root, text="Reset \nSystem", font=("Avenir Heavy",13), width = 50, height = 50, fg_color= '#089DC3', command=reset_but)
     reset_button.place(relx=rcol +0.08, rely=0.25, anchor=ctk.NW)
 
     return
@@ -193,31 +193,34 @@ def start_print_but():
 
     global start_button
     start_button.configure(state="disabled")
+    
     #if other button active don't do anything
     if GlobalState().confirmed == False:
         print("OCCUPIED")
-        start_button.configure(state="normal")
+        start_button.configure(state="normal", color = '#0859C3')
         return
+
     GlobalState().confirmed = False
+    start_button.set_color('#F5E079')
     
 
     if(GlobalState().printing_state != 1 and GlobalState().printing_state != 0):
         GlobalState().terminal_text += "Not ready for printing"
         GlobalState().confirmed = True
-        start_button.configure(state="normal")
+        start_button.configure(state="normal", color = '#0859C3')
         return
 
     if(GlobalState().printing_state == 2 or GlobalState().printing_state == 3):
         GlobalState().terminal_text += "print already in progress - stop first"
         GlobalState().confirmed = True
-        start_button.configure(state="normal")
+        start_button.configure(state="normal", color = '#0859C3')
         return
 
     #check if file path is set:
     if (GlobalState().filepath == " " or GlobalState().filepath == ''):
         GlobalState().terminal_text +="Error: No file selected"
         GlobalState().confirmed = True
-        start_button.configure(state="normal")
+        start_button.configure(state="normal", color = '#0859C3')
         return 
 
     if(GlobalState().msb == None):
@@ -244,7 +247,7 @@ def start_print_but():
     finished_thread = threading.Thread(target=wait_for_printing)
     finished_thread.start()
     
-    start_button.configure(state="normal")
+    start_button.configure(state="normal", color = '#0859C3')
 
     return
 
@@ -267,11 +270,13 @@ def stop_print_but():
     global stop_button
     stop_button.configure(state="disabled")
     
+    
     if(GlobalState().confirmed == False):
         print("OCCUPIED")
-        stop_button.configure(state="normal")
+        stop_button.configure(state="normal", color = '#0859C3')
         return
     GlobalState().confirmed = False
+    stop_button.set_color('#F5E079')
     
 
     if(GlobalState().printing_state == 2):
@@ -288,7 +293,7 @@ def stop_print_but():
     else:
         GlobalState().terminal_text += "no print in process - nothing done"
         GlobalState().confirmed = True
-        stop_button.configure(state="normal")
+        stop_button.configure(state="normal", color = '#0859C3')
     
     
     #deactivate() optional to deactivate the robot
@@ -303,7 +308,7 @@ def stop():
     uf.cleanpose(GlobalState().msb)
     GlobalState().msb.WaitIdle()
     GlobalState().confirmed = True
-    stop_button.configure(state="normal")
+    stop_button.configure(state="normal", color = '#0859C3')
     GlobalState().printing_state = 1
     
     status_update("stopped - ready to print again")
@@ -313,12 +318,14 @@ def init_print_but():
 
     global init_button
     init_button.configure(state="disabled")
+    
     #if other button active don't do anything
     if GlobalState().confirmed == False:
         print("OCCUPIED")
-        init_button.configure(state="")
+        init_button.configure(state="normal", color = '#0859C3')
         return
     GlobalState().confirmed = False
+    init_button.configure(fg_color = '#F5E079')
     
 
     if(GlobalState().msb != None):
@@ -350,7 +357,7 @@ def init():
     uf.init_sequence()
 
     GlobalState().confirmed = True
-    init_button.configure(state="normal")
+    init_button.configure(state="normal", color = '#0859C3')
 
     return
 
@@ -359,21 +366,25 @@ def select_file_but():
     global file_button
     file_button.configure(state="disabled")
     
+    
     if(GlobalState().confirmed == False):
         print("OCCUPIED")
-        file_button.configure(state="normal")
+        file_button.configure(state="normal", color = '#0859C3')
         return
     GlobalState().confirmed = False
+    file_button.set_color('#F5E079')
     
 
     if(GlobalState().printing_state == 2 or GlobalState().printing_state == 3 ):
         GlobalState().terminal_text += "Please stop printing before selecting a new file!"
-        file_button.configure(state="normal")
+        file_button.configure(state="normal", color = '#0859C3')
+        file_button.set_color("0859C3")
         return
 
     if(GlobalState().printing_state == 6):
         GlobalState().terminal_text += "Please stop calibration before selecting a new file!"
-        file_button.configure(state="normal")
+        file_button.configure(state="normal") 
+        file_button.set_color("0859C3")
         return
     
     GlobalState().printing_state = 0 #0 = not printing
@@ -384,7 +395,7 @@ def select_file_but():
     if(file_path == ""):
         GlobalState().terminal_text += "No file selected"
         GlobalState().confirmed = True
-        file_button.configure(state="normal")
+        file_button.configure(state="normal", color = '#0859C3')
         return
 
     # save the file path into GlobalState().filepath for later use
@@ -394,7 +405,7 @@ def select_file_but():
     
     GlobalState().terminal_text += f"File selected: '{filename}'"
 
-    file_button.configure(state="normal")
+    file_button.configure(state="normal", color = '#0859C3')
     GlobalState().confirmed = True
 
     return
@@ -403,11 +414,14 @@ def pause_print_but():
     global pause_button
 
     pause_button.configure(state="disabled")
+    
     if(GlobalState().confirmed == False):
         print("OCCUPIED")
-        pause_button.configure(state="normal")
+        pause_button.configure(state="normal",color = '#0859C3')
+        pause_button.set_color("0859C3")
         return
     GlobalState().confirmed == False
+    pause_button.set_color('#F5E079')
    
     
     if(GlobalState().printing_state == 2):
@@ -442,7 +456,7 @@ def pause():
     uf.cleanpose(GlobalState().msb)
     GlobalState().msb.WaitIdle()
     GlobalState().confirmed = True
-    pause_button.configure(state="normal")
+    
 
     #set all states for pausing
     pause_button.configure(state="normal")
@@ -461,6 +475,7 @@ def resume():
     #reset all states so that printing can continue
     GlobalState().confirmed = True
     pause_button.configure(state="normal")
+    pause_button.set_color('#0859C3')
     GlobalState().printing_state = 2 #2 = printing
     filename = os.path.basename(GlobalState().filepath)
     status_update("Printing ...  \nFile: " + str(filename))
@@ -471,9 +486,10 @@ def resume():
 def calibration_but():
     global calibrate_button
     calibrate_button.configure(state = "disabled")
+    
     if(GlobalState().msb == None):
         GlobalState().terminal_text += "Error: Robot not initialized"
-        calibrate_button.configure(state = "normal")
+        calibrate_button.configure(state = "normal",color = '#0859C3')
         return
     if(GlobalState().printing_state != 2 and GlobalState().printing_state != 3 and GlobalState().printing_state != 6):
         
@@ -488,6 +504,7 @@ def calibration_but():
         callibration_thread.start()
 
         calibrate_button.configure(text="Stop Calibration", state = "normal")
+        calibrate_button.set_color('#F5E079')
 
     elif(GlobalState().printing_state == 6):
     
@@ -495,11 +512,12 @@ def calibration_but():
         GlobalState().printing_state = GlobalState().previous_state
         uncallibration_thread = threading.Thread(target=uncallibrate)
         calibrate_button.configure(text="Calibrate", state = "normal")
+        calibrate_button.set_color('#0859C3')
 
     else:
         GlobalState().terminal_text += "print in process - continued printing"
         
-    calibrate_button.configure(state = "normal")
+    calibrate_button.configure(state = "normal", color = '#0859C3')
     return
 
 def wait_for_callibration():
@@ -518,22 +536,25 @@ def reset_but():
     global reset_button
 
     reset_button.configure(state="disabled")
+    
     if(GlobalState().confirmed == False):
         print("OCCUPIED")
-        reset_button.configure(state="normal")
+        reset_button.configure(state="normal", color = '#0859C3')
         return
+
     GlobalState().confirmed == False
+    reset_button.set_color('#F5E079')
     
 
     if(GlobalState().msb == None):
         GlobalState().terminal_text += "Robot not initialized"
     else:
-        GlobalState().terminal_text += "Resetting..."
+        GlobalState().terminal_text += "Resetting...  "
         uf.reset()
-        GlobalState().terminal_text += "Reset done"
+        GlobalState().terminal_text += "-Reset done"
 
     GlobalState().confirmed = True
-    reset_button.configure(state="normal")
+    reset_button.configure(state="normal", color = '#0859C3')
 
 
 #----- tuning buttons -----
@@ -556,6 +577,7 @@ def z_up_but():
     # Insert the new text
     z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
     print(GlobalState().user_z_offset)
+    time.sleep(0.01)
     z_offset_up_button.configure(state="normal")
     return
 
@@ -570,6 +592,7 @@ def z_down_but():
     # Insert the new text
     z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
     print(GlobalState().user_z_offset)
+    time.sleep(0.01)
     z_offset_down_button.configure(state="normal")
     return
 
@@ -585,6 +608,7 @@ def e_speed_up_but():
     # Insert the new text
     e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
     print(GlobalState().extrusion_speed_modifier)
+    time.sleep(0.01)
     e_speed_up_button.configure(state="normal")
     return
 
@@ -606,6 +630,7 @@ def e_speed_down_but():
 
     # Insert the new text
     e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
+    time.sleep(0.01)
     e_speed_down_button.configure(state="normal")
     print(GlobalState().extrusion_speed_modifier)
     return
@@ -629,6 +654,7 @@ def speed_up_but():
     speed_textbox.delete(0, ctk.END)
     # Insert the new text
     speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
+    time.sleep(0.01)
     speed_up_button.configure(state="normal")
     return
 
@@ -650,6 +676,7 @@ def speed_down_but():
     speed_textbox.delete(0, ctk.END)
     # Insert the new text
     speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
+    time.sleep(0.01)
     speed_down_button.configure(state="normal")
     return
 

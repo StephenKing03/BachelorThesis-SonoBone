@@ -94,6 +94,8 @@ class RobotStats:
 
         self.extrusion_speed = 1000
 
+        self.portname = "COM22"
+
 
 
     
