@@ -11,6 +11,9 @@ import sys
 
 from tkinter import filedialog
 
+#TODO:
+#implement the function for disabling the buttons and error handling
+
 import utility_functions as uf  # import utility functions
 import gcode_translator as gt  # import gcode translator
 import stepper_control as sc  # import stepper control
@@ -44,47 +47,57 @@ global e_speed_down_button
 global calibrate_button
 global reset_button
 
+class GUI:
+    
+    column1 = 0.05
+    column2 = 0.28
+    column3 = 0.78
+    column4 = 0.78 + 0.08 
+
+    buttoncolor = '#0859C3'
+    disabled_color = '#F5E079'
+    second_color = '#089DC3'
 
 
 
-def print_control(root, leftcol, rightcol, buttoncolor, rcol):
+def print_control(root):
     #button to initialize the robot
     global init_button
-    init_button = ctk.CTkButton(master=root, text="Initialize Robot", font=("Avenir Heavy",15), fg_color= buttoncolor, command=init_print_but)
-    init_button.place(relx=leftcol, rely=0.35, anchor=ctk.NW)
+    init_button = ctk.CTkButton(master=root, text="Initialize Robot", font=("Avenir Heavy",15), fg_color= GUI.buttoncolor, command=init_print_but)
+    init_button.place(relx=GUI.column1, rely=0.35, anchor=ctk.NW)
 
     #button to set file path
     global file_button
-    file_button = ctk.CTkButton(master=root, text="Select File", font=("Avenir Heavy",15),fg_color= buttoncolor, command=select_file_but)
-    file_button.place(relx=leftcol, rely=0.45, anchor=ctk.NW)
+    file_button = ctk.CTkButton(master=root, text="Select File", font=("Avenir Heavy",15),fg_color= GUI.buttoncolor, command=select_file_but)
+    file_button.place(relx=GUI.column1, rely=0.45, anchor=ctk.NW)
 
     #button to start printing
     global start_button
-    start_button = ctk.CTkButton(master=root, text="Start Printing", font=("Avenir Heavy",15),fg_color= buttoncolor, command=start_print_but)
-    start_button.place(relx=leftcol, rely=0.55, anchor=ctk.NW)
+    start_button = ctk.CTkButton(master=root, text="Start Printing", font=("Avenir Heavy",15),fg_color= GUI.buttoncolor, command=start_print_but)
+    start_button.place(relx=GUI.column1, rely=0.55, anchor=ctk.NW)
 
     #button to stop printing
     global stop_button
-    stop_button = ctk.CTkButton(master=root, text="Stop Printing", font=("Avenir Heavy",15), fg_color= '#089DC3' ,command=stop_print_but)
-    stop_button.place(relx=leftcol, rely=0.75, anchor=ctk.NW)
+    stop_button = ctk.CTkButton(master=root, text="Stop Printing", font=("Avenir Heavy",15), fg_color= GUI.buttoncolor ,command=stop_print_but)
+    stop_button.place(relx=GUI.column1, rely=0.75, anchor=ctk.NW)
 
     #button to pause and resume printing
     global pause_button
-    pause_button = ctk.CTkButton(master=root, text="Pause Printing", font=("Avenir Heavy",15), fg_color= buttoncolor, command=pause_print_but)
-    pause_button.place(relx=leftcol, rely=0.65, anchor=ctk.NW)
+    pause_button = ctk.CTkButton(master=root, text="Pause Printing", font=("Avenir Heavy",15), fg_color= GUI.buttoncolor, command=pause_print_but)
+    pause_button.place(relx=GUI.column1, rely=0.65, anchor=ctk.NW)
 
     #button to callibrate the robot
     global calibrate_button
-    calibrate_button = ctk.CTkButton(master=root, text="Calibrate", font=("Avenir Heavy",15), fg_color= buttoncolor, command=calibration_but)
-    calibrate_button.place(relx=leftcol, rely=0.9, anchor=ctk.NW)
+    calibrate_button = ctk.CTkButton(master=root, text="Calibrate", font=("Avenir Heavy",15), fg_color= GUI.buttoncolor, command=calibration_but)
+    calibrate_button.place(relx=GUI.column1, rely=0.9, anchor=ctk.NW)
 
     global reset_button
-    reset_button = ctk.CTkButton(master=root, text="Reset \nSystem", font=("Avenir Heavy",13), width = 50, height = 50, fg_color= '#089DC3', command=reset_but)
-    reset_button.place(relx=rcol +0.08, rely=0.25, anchor=ctk.NW)
+    reset_button = ctk.CTkButton(master=root, text="Reset \nSystem", font=("Avenir Heavy",13), width = 50, height = 50, fg_color= GUI.second_color, command=reset_but)
+    reset_button.place(relx=GUI.column4, rely=0.25, anchor=ctk.NW)    
 
     return
 
-def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
+def print_monitor(root):
 
     global status_text
     global terminal_text
@@ -92,29 +105,29 @@ def print_monitor(root, leftcol, rightcol, buttoncolor, rcol):
 
     #status infos
     status_label = ctk.CTkLabel(master=root, text="Status:", font=("Avenir Heavy", 15, 'bold'), width = 40, pady = 10, anchor = 'center')
-    status_label.place(relx=leftcol, rely=0.18, anchor=ctk.NW)
+    status_label.place(relx=GUI.column1, rely=0.18, anchor=ctk.NW)
 
     status_text = ctk.CTkLabel(master=root, text = " - ", font=("Avenir Heavy",12), height=4, width=450, anchor = ctk.W)
-    status_text.place(relx=leftcol, rely=0.25, anchor=ctk.NW)
+    status_text.place(relx=GUI.column1, rely=0.25, anchor=ctk.NW)
 
     status_update("Deactivated")
 
     #terminal info
     terminal_label = ctk.CTkLabel(master=root, text="Print info", font=("Avenir Heavy", 15, 'bold'), width = 40, pady = 10, anchor = 'center')
-    terminal_label.place(relx=rightcol, rely=0.18, anchor=ctk.NW)
+    terminal_label.place(relx=GUI.column2, rely=0.18, anchor=ctk.NW)
 
     terminal_text = tk.Text(master=root, font=("Avenir",12), height=26, width=57, bg = '#1A0F10', fg = '#FFFFFF')
-    terminal_text.place(relx=rightcol, rely=0.25, anchor=ctk.NW)
+    terminal_text.place(relx=GUI.column2, rely=0.25, anchor=ctk.NW)
 
     scrollbar = tk.Scrollbar(root, command=terminal_text.yview, background = 'blue')
-    scrollbar.place(relx=rightcol+0.43, rely=0.25, anchor=ctk.NW, height=root.winfo_screenheight()*0.59)
+    scrollbar.place(relx=GUI.column2+0.43, rely=0.25, anchor=ctk.NW, height=root.winfo_screenheight()*0.59)
     terminal_text['yscrollcommand'] = scrollbar.set
 
     terminal_text.insert(ctk.END, "")
 
     return
 
-def cosmetics(root, leftcol, rightcol, buttoncolor, rcol):
+def cosmetics(root):
 
     #title
     info_title = ctk.CTkLabel(master=root, text="SonoBone control interface", font=("Avenir Heavy", 31, 'bold'), fg_color= '#333332', width = root.winfo_screenwidth(), pady = 5, anchor = 'center')
@@ -127,9 +140,12 @@ def cosmetics(root, leftcol, rightcol, buttoncolor, rcol):
     icon_label = ctk.CTkLabel(master=root, image=photo,fg_color= '#333332', text = "")
     icon_label.place(relx=0.12, rely=0.015, anchor=ctk.NW)
 
+    copyright_label = ctk.CTkLabel(master=root, text="©2024 Acoustic Robotics Systems Lab, ETH Zurich", font=("Avenir Heavy", 10, 'bold'), width = 40, pady = 10, anchor = 'center')
+    copyright_label.place(relx=GUI.column2, rely=0.93, anchor=ctk.NW)
+
     return
 
-def tuning(root, leftcol, rightcol, buttoncolor, rcol):
+def tuning(root):
 
     global z_offset_textbox
     global speed_textbox
@@ -143,47 +159,47 @@ def tuning(root, leftcol, rightcol, buttoncolor, rcol):
     global e_speed_down_button
 
     #set z offsetbutton up and down
-    z_offset_up_button = ctk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= buttoncolor, command=z_up_but, width = 50, height = 25, anchor = 'center')
-    z_offset_up_button.place(relx=rcol, rely=0.25, anchor=ctk.NW)
-    z_offset_down_button = ctk.CTkButton(master=root, text="↓", font=("Avenir Heavy",15), fg_color= buttoncolor, command=z_down_but, width = 50, height = 25, anchor = 'center')
-    z_offset_down_button.place(relx=rcol, rely=0.45, anchor=ctk.NW)
+    z_offset_up_button = ctk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= GUI.buttoncolor, command=z_up_but, width = 50, height = 25, anchor = 'center')
+    z_offset_up_button.place(relx=GUI.column3, rely=0.25, anchor=ctk.NW)
+    z_offset_down_button = ctk.CTkButton(master=root, text="↓", font=("Avenir Heavy",15), fg_color= GUI.buttoncolor, command=z_down_but, width = 50, height = 25, anchor = 'center')
+    z_offset_down_button.place(relx=GUI.column3, rely=0.45, anchor=ctk.NW)
 
     #z offset textbox
     z_offset_textbox = ctk.CTkEntry(master=root, font=("Avenir", 10), width=50)
-    z_offset_textbox.place(relx=rcol, rely=0.35, anchor=ctk.NW)
+    z_offset_textbox.place(relx=GUI.column3, rely=0.35, anchor=ctk.NW)
     # Set the text of z_offset_textbox
     z_offset_textbox.insert(0, str(GlobalState().user_z_offset) + "mm")
 
     z_offset_label= ctk.CTkLabel(master=root, text="Z-offset", font=("Avenir Heavy", 15, 'bold'), width = 40, anchor = 'center')
-    z_offset_label.place(relx=rcol, rely=0.18, anchor=ctk.NW)
+    z_offset_label.place(relx=GUI.column3, rely=0.18, anchor=ctk.NW)
 
     #set speed button up and down
-    speed_up_button = ctk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= buttoncolor, command=speed_up_but, width = 50, height = 25)
-    speed_up_button.place(relx=rcol, rely=0.63, anchor=ctk.NW)
-    speed_down_button = ctk.CTkButton(master=root, text="↓", font=("Avenir Heavy",15), fg_color= buttoncolor, command=speed_down_but, width = 50, height = 25, anchor = 'center')
-    speed_down_button.place(relx=rcol, rely=0.83, anchor=ctk.NW)
+    speed_up_button = ctk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= GUI.buttoncolor, command=speed_up_but, width = 50, height = 25)
+    speed_up_button.place(relx=GUI.column3, rely=0.63, anchor=ctk.NW)
+    speed_down_button = ctk.CTkButton(master=root, text="↓", font=("Avenir Heavy",15), fg_color= GUI.buttoncolor, command=speed_down_but, width = 50, height = 25, anchor = 'center')
+    speed_down_button.place(relx=GUI.column3, rely=0.83, anchor=ctk.NW)
 
     #speed textbox
     speed_textbox = ctk.CTkEntry(master=root, font=("Avenir", 10), width=50)
-    speed_textbox.place(relx=rcol, rely=0.73, anchor=ctk.NW)
+    speed_textbox.place(relx=GUI.column3, rely=0.73, anchor=ctk.NW)
     speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
 
     speed_label= ctk.CTkLabel(master=root, text="Speed", font=("Avenir Heavy", 15, 'bold'), width = 40, anchor = 'center')
-    speed_label.place(relx=rcol, rely=0.56, anchor=ctk.NW)
+    speed_label.place(relx=GUI.column3, rely=0.56, anchor=ctk.NW)
 
     #set extrusion speed button up and down
-    e_speed_up_button = ctk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= buttoncolor, command=e_speed_up_but, width = 50, height = 25)
-    e_speed_up_button.place(relx=rcol+0.08, rely=0.63, anchor=ctk.NW)
-    e_speed_down_button = ctk.CTkButton(master=root, text="↓", font=("Avenir Heavy",15), fg_color= buttoncolor, command=e_speed_down_but, width = 50, height = 25, anchor = 'center')
-    e_speed_down_button.place(relx=rcol+0.08, rely=0.83, anchor=ctk.NW)
+    e_speed_up_button = ctk.CTkButton(master=root, text="↑", font=("Avenir Heavy",15), fg_color= GUI.buttoncolor, command=e_speed_up_but, width = 50, height = 25)
+    e_speed_up_button.place(relx=GUI.column4, rely=0.63, anchor=ctk.NW)
+    e_speed_down_button = ctk.CTkButton(master=root, text="↓", font=("Avenir Heavy",15), fg_color= GUI.buttoncolor, command=e_speed_down_but, width = 50, height = 25, anchor = 'center')
+    e_speed_down_button.place(relx=GUI.column4, rely=0.83, anchor=ctk.NW)
 
     #extrusion speed textbox
     e_speed_textbox = ctk.CTkEntry(master=root, font=("Avenir", 10), width=50)
-    e_speed_textbox.place(relx=rcol+0.08, rely=0.73, anchor=ctk.NW)
+    e_speed_textbox.place(relx=GUI.column4, rely=0.73, anchor=ctk.NW)
     e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
 
     e_speed_label= ctk.CTkLabel(master=root, text="Extrusion", font=("Avenir Heavy", 15, 'bold'), width = 40, anchor = 'center')
-    e_speed_label.place(relx=rcol+0.08, rely=0.56, anchor=ctk.NW)
+    e_speed_label.place(relx=GUI.column4, rely=0.56, anchor=ctk.NW)
 
     return
 
@@ -193,34 +209,35 @@ def start_print_but():
 
     global start_button
     start_button.configure(state="disabled")
+    time.sleep(0.1)
     
     #if other button active don't do anything
     if GlobalState().confirmed == False:
         print("OCCUPIED")
-        start_button.configure(state="normal", color = '#0859C3')
+        start_button.configure(state="normal", fg_color = '#0859C3')
         return
 
     GlobalState().confirmed = False
-    start_button.set_color('#F5E079')
+    start_button.configure(fg_color ='#F5E079')
     
 
     if(GlobalState().printing_state != 1 and GlobalState().printing_state != 0):
         GlobalState().terminal_text += "Not ready for printing"
         GlobalState().confirmed = True
-        start_button.configure(state="normal", color = '#0859C3')
+        start_button.configure(state="normal", fg_color='#0859C3')
         return
 
     if(GlobalState().printing_state == 2 or GlobalState().printing_state == 3):
         GlobalState().terminal_text += "print already in progress - stop first"
         GlobalState().confirmed = True
-        start_button.configure(state="normal", color = '#0859C3')
+        start_button.configure(state="normal", fg_color='#0859C3')
         return
 
     #check if file path is set:
     if (GlobalState().filepath == " " or GlobalState().filepath == ''):
         GlobalState().terminal_text +="Error: No file selected"
         GlobalState().confirmed = True
-        start_button.configure(state="normal", color = '#0859C3')
+        start_button.configure(state="normal", fg_color='#0859C3')
         return 
 
     if(GlobalState().msb == None):
@@ -247,7 +264,7 @@ def start_print_but():
     finished_thread = threading.Thread(target=wait_for_printing)
     finished_thread.start()
     
-    start_button.configure(state="normal", color = '#0859C3')
+    start_button.configure(state="normal", fg_color='#0859C3')
 
     return
 
@@ -273,10 +290,10 @@ def stop_print_but():
     
     if(GlobalState().confirmed == False):
         print("OCCUPIED")
-        stop_button.configure(state="normal", color = '#0859C3')
+        stop_button.configure(state="normal", fg_color = '#0859C3')
         return
     GlobalState().confirmed = False
-    stop_button.set_color('#F5E079')
+    stop_button.configure(fg_color ='#F5E079')
     
 
     if(GlobalState().printing_state == 2):
@@ -293,7 +310,7 @@ def stop_print_but():
     else:
         GlobalState().terminal_text += "no print in process - nothing done"
         GlobalState().confirmed = True
-        stop_button.configure(state="normal", color = '#0859C3')
+        stop_button.configure(state="normal", fg_color ='#0859C3')
     
     
     #deactivate() optional to deactivate the robot
@@ -308,7 +325,7 @@ def stop():
     uf.cleanpose(GlobalState().msb)
     GlobalState().msb.WaitIdle()
     GlobalState().confirmed = True
-    stop_button.configure(state="normal", color = '#0859C3')
+    stop_button.configure(state="normal", fg_color= '#0859C3')
     GlobalState().printing_state = 1
     
     status_update("stopped - ready to print again")
@@ -322,10 +339,10 @@ def init_print_but():
     #if other button active don't do anything
     if GlobalState().confirmed == False:
         print("OCCUPIED")
-        init_button.configure(state="normal", color = '#0859C3')
+        init_button.configure(state="normal", fg_color = button_color)
         return
     GlobalState().confirmed = False
-    init_button.configure(fg_color = '#F5E079')
+    init_button.configure(fg_color = disabled_color)
     
 
     if(GlobalState().msb != None):
@@ -342,6 +359,7 @@ def init_print_but():
     #set states and info text
     GlobalState().printing_state = 0 #0 = not printing
 
+    
     init_thread = threading.Thread(target=init)
     init_thread.start()
 
@@ -354,10 +372,17 @@ def init():
 
     global init_button
 
-    uf.init_sequence()
+    try:
+        uf.init_sequence()
+    
+    except Execption as e:
+        GlobalState().terminal_text += "Error: " + str(e)
+        GlobalState().confirmed = True
+        init_button.configure(state="normal", fg_color = '#0859C3')
+        return
 
     GlobalState().confirmed = True
-    init_button.configure(state="normal", color = '#0859C3')
+    init_button.configure(state="normal", fg_color = '#0859C3')
 
     return
 
@@ -369,22 +394,22 @@ def select_file_but():
     
     if(GlobalState().confirmed == False):
         print("OCCUPIED")
-        file_button.configure(state="normal", color = '#0859C3')
+        file_button.configure(state="normal", fg_color = '#0859C3')
         return
     GlobalState().confirmed = False
-    file_button.set_color('#F5E079')
+    file_button.configure(fg_color = '#F5E079')
     
 
     if(GlobalState().printing_state == 2 or GlobalState().printing_state == 3 ):
         GlobalState().terminal_text += "Please stop printing before selecting a new file!"
-        file_button.configure(state="normal", color = '#0859C3')
-        file_button.set_color("0859C3")
+        file_button.configure(state="normal", fg_color= '#0859C3')
+        file_button.configure(fg_color = "0859C3")
         return
 
     if(GlobalState().printing_state == 6):
         GlobalState().terminal_text += "Please stop calibration before selecting a new file!"
         file_button.configure(state="normal") 
-        file_button.set_color("0859C3")
+        file_button.configure(fg_color ="0859C3")
         return
     
     GlobalState().printing_state = 0 #0 = not printing
@@ -395,7 +420,7 @@ def select_file_but():
     if(file_path == ""):
         GlobalState().terminal_text += "No file selected"
         GlobalState().confirmed = True
-        file_button.configure(state="normal", color = '#0859C3')
+        file_button.configure(state="normal", fg_color = '#0859C3')
         return
 
     # save the file path into GlobalState().filepath for later use
@@ -405,7 +430,7 @@ def select_file_but():
     
     GlobalState().terminal_text += f"File selected: '{filename}'"
 
-    file_button.configure(state="normal", color = '#0859C3')
+    file_button.configure(state="normal", fg_color ='#0859C3')
     GlobalState().confirmed = True
 
     return
@@ -417,11 +442,11 @@ def pause_print_but():
     
     if(GlobalState().confirmed == False):
         print("OCCUPIED")
-        pause_button.configure(state="normal",color = '#0859C3')
-        pause_button.set_color("0859C3")
+        pause_button.configure(state="normal", fg_color ='#0859C3')
         return
     GlobalState().confirmed == False
-    pause_button.set_color('#F5E079')
+    
+    pause_button.configure(fg_color = '#F5E079')
    
     
     if(GlobalState().printing_state == 2):
@@ -475,7 +500,7 @@ def resume():
     #reset all states so that printing can continue
     GlobalState().confirmed = True
     pause_button.configure(state="normal")
-    pause_button.set_color('#0859C3')
+    pause_button.configure(fg_color = '#0859C3')
     GlobalState().printing_state = 2 #2 = printing
     filename = os.path.basename(GlobalState().filepath)
     status_update("Printing ...  \nFile: " + str(filename))
@@ -489,7 +514,7 @@ def calibration_but():
     
     if(GlobalState().msb == None):
         GlobalState().terminal_text += "Error: Robot not initialized"
-        calibrate_button.configure(state = "normal",color = '#0859C3')
+        calibrate_button.configure(state = "normal",  fg_color ='#0859C3')
         return
     if(GlobalState().printing_state != 2 and GlobalState().printing_state != 3 and GlobalState().printing_state != 6):
         
@@ -504,7 +529,7 @@ def calibration_but():
         callibration_thread.start()
 
         calibrate_button.configure(text="Stop Calibration", state = "normal")
-        calibrate_button.set_color('#F5E079')
+        calibrate_button.configure(fg_color = '#F5E079')
 
     elif(GlobalState().printing_state == 6):
     
@@ -512,12 +537,12 @@ def calibration_but():
         GlobalState().printing_state = GlobalState().previous_state
         uncallibration_thread = threading.Thread(target=uncallibrate)
         calibrate_button.configure(text="Calibrate", state = "normal")
-        calibrate_button.set_color('#0859C3')
+        calibrate_button.configure(fg_color = '#0859C3')
 
     else:
         GlobalState().terminal_text += "print in process - continued printing"
         
-    calibrate_button.configure(state = "normal", color = '#0859C3')
+    calibrate_button.configure(state = "normal", fg_color = '#0859C3')
     return
 
 def wait_for_callibration():
@@ -531,6 +556,8 @@ def uncallibrate():
 
     return
 
+
+
 def reset_but():
 
     global reset_button
@@ -539,11 +566,11 @@ def reset_but():
     
     if(GlobalState().confirmed == False):
         print("OCCUPIED")
-        reset_button.configure(state="normal", color = '#0859C3')
+        reset_button.configure(state="normal", fg_color='#0859C3')
         return
 
     GlobalState().confirmed == False
-    reset_button.set_color('#F5E079')
+    reset_button.configure(fg_color = '#F5E079')
     
 
     if(GlobalState().msb == None):
@@ -554,10 +581,10 @@ def reset_but():
         GlobalState().terminal_text += "-Reset done"
 
     GlobalState().confirmed = True
-    reset_button.configure(state="normal", color = '#0859C3')
+    reset_button.configure(state="normal", fg_color='#0859C3')
 
 
-#----- tuning buttons -----
+''' *************** 6 functions for in-print modifications *************** '''
 
 def z_up_but():
     global z_offset_textbox
@@ -680,7 +707,8 @@ def speed_down_but():
     speed_down_button.configure(state="normal")
     return
 
-#-------------------Helper functions-------------------
+''' ***************search for the file in the directory*************** '''
+
 def deactivate():
     
     global terminal_text
@@ -698,7 +726,7 @@ def deactivate():
     return
   
 
-# ------------------ GUI ------------------
+''' ************** continuously checks global variable terminal_text for a new text to display ****************'''
 def terminal_update():
     global terminal_text
     
@@ -734,11 +762,17 @@ def terminal_update():
         time.sleep(0.0005)
     return
 
+
+''' ***************status update of the print to be displayed in the status*************** '''
 def status_update(new_status = " ? "):
     global status_text
 
     status_text.configure(text= new_status)
 
+    return
+
+
+''' ***************progress update of the print to be displayed in the status*************** '''
 def progress_update():
 
     progress = 0
@@ -751,90 +785,15 @@ def progress_update():
             
             status_update("Printing: " + str(GlobalState().current_progress) + "%\nFile: " + str(filename))
 
-    
         time.sleep(0.1)
 
     return
-'''
-def check_rts():
 
-    global speed_textbox
-    global e_speed_textbox
-    global z_offset_textbox
-
-    progress = 0
-    current_progress = 0
-    filename = os.path.basename(GlobalState().filepath)
-
-
-    while True:
-
-        #progress update
-        if(GlobalState().printing_state == 2 or GlobalState().printing_state == 3 or True):
-            if(GlobalState().current_progress != progress):
-                progress = current_progress
-                #GlobalState().terminal_text += f'Progress: {progress}%'
-                
-                status_update("Printing: " + str(GlobalState().current_progress) + "%\nFile: " + str(filename))
-
-    
-        time.sleep(0.1)
-
-
-
-        if(GlobalState().printing_state == 2):
-
-            # check printspeed ---------
-            textspeed = speed_textbox.get()
-            valuespeed = int(textspeed.rstrip('%'))
-            if(GlobalState().printspeed_modifier != valuespeed):
-                if round(GlobalState().printspeed_modifier - GlobalState().printspeed_increment, 2) < 1:
-                    GlobalState().terminal_text += "Speed may not reach 0!"
-                    speed_textbox.delete(0, ctk.END)
-                    # Insert the new text
-                    speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
-                    continue
-                GlobalState().printspeed_modifier = valuespeed
-                uf.adjust_speed(GlobalState().printspeed_modifier, GlobalState().msb)
-
-                speed_textbox.delete(0, ctk.END)
-                # Insert the new text
-                speed_textbox.insert(0, f'{GlobalState().printspeed_modifier}%')
-                print("MANUAL CHANGE")
-            
-            #check extrusion speed ---------
-            textspeed = e_speed_textbox.get()
-            valuespeed = int(textspeed.rstrip('%'))
-            if(GlobalState().printspeed_modifier != valuespeed):
-
-                if round(GlobalState().extrusion_speed_modifier - GlobalState().extrusion_speed_increment, 2) < 1:
-                    GlobalState().terminal_text += " Extrusion Speed may not reach 0!"
-                    e_speed_textbox.delete(0, ctk.END)
-
-                    # Insert the new text
-                    e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
-                    continue
-                
-                GlobalState().printspeed_modifier = valuespeed
-                uf.adjust_speed(GlobalState().printspeed_modifier, GlobalState().msb)
-                print("MANUAL CHANGE")
-
-            #check z offset ---------
-            textspeed = z_offset_textbox.get()
-            valuespeed = int(textspeed.rstrip('mm'))
-            if(GlobalState().user_z_offset != valuespeed):
-                GlobalState().user_z_offset = valuespeed
-                print("MANUAL CHANGE")
-                z_offset_textbox.delete(0, ctk.END)
-                # Insert the new text
-                z_offset_textbox.insert(0, f'{GlobalState().user_z_offset}mm')
-
-
-            time.sleep(0.11)
-    return
-'''
+''' ***** three functions to adjust the values of the textboxes ***** '''
 def on_z_offset_textbox_return(event):
+
     global z_offset_textbox
+
     # Get the current value of the textbox
     value = z_offset_textbox.get()
     value = float(value.rstrip('mm'))
@@ -854,9 +813,10 @@ def on_z_offset_textbox_return(event):
 
     return
 
-
 def on_e_speed_textbox_return(event):
+
     global e_speed_textbox
+
     # Get the current value of the textbox
     value = e_speed_textbox.get()
     value = float(value.rstrip('%'))
@@ -875,7 +835,9 @@ def on_e_speed_textbox_return(event):
     return
 
 def on_speed_textbox_return(event):
+
     global speed_textbox
+
     # Get the current value of the textbox
     value = speed_textbox.get()
     value = float(value.rstrip('%'))
@@ -901,11 +863,39 @@ def on_speed_textbox_return(event):
     print(f"speed_value: {value}")
 
     return
+    
 
 
+'''********* deactivate button and then reactivate it again************************'''
+def check_occupied(self):
+
+    self.configure(state="disabled")
+    #sleep so that mutliple hits do not crash anything
+    time.sleep(0.1)
+    
+    #if other button active don't do anything
+    if GlobalState().occupied == True:
+        print("OCCUPIED")
+        self.configure(state="normal")
+        return True
+    
+    #if no other button is blocking execution, set the occupied flag to true
+    GlobalState().occupied = True
+    GUI.init_button.configure(fg_color = GUI.disabled_color)
+
+    return False
+
+def reactivate_button(self):
+
+    self.configure(state="normal", fg_color = GUI.button_color)
+    GlobalState().occupied = False
+    return
+
+
+
+''' ***************search file function*************** '''
 def search_file(filename):
 
-    
     # Get the directory of the script
     script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
     
@@ -922,45 +912,42 @@ def search_file(filename):
         filepath = None
         return filepath
 
+    #output the path
     if filepath is not None:
         return filepath
     
-#main gui function
+
+'''***************main gui function******************** '''
 def init_gui():
     
     #define soime parameters
-    leftcol = 0.05
-    rightcol = 0.28
-    rcol = 0.78
+    column1 = 0.05
+    column2 = 0.28
+    column3 = 0.78
     buttoncolor = '#0859C3'
 
-    ctk.set_appearance_mode("System")  # Modes: system (default), light, dark
-    ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
+    ctk.set_appearance_mode("System")  
+    ctk.set_default_color_theme("blue")  
 
-    root = ctk.CTk()  # create CTk window like you do with the Tk window
+    root = ctk.CTk()
     root.geometry("800x450")
     root.title("SonoBone control interface")
-    #root.iconbitmap(r"C:\Users\steph\OneDrive\_Studium\_Semester 6 (FS2024)\Bachelor Thesis\CODEBASE\BachelorThesis_SonoBone\SonoBone_icon.ico")
     root.iconbitmap(search_file("SonoBone_icon.ico"))
 
     #initialize all the gui parts
-    print_control(root, leftcol,rightcol,buttoncolor,rcol)
-    print_monitor(root, leftcol,rightcol,buttoncolor,rcol)
-    cosmetics(root, leftcol,rightcol,buttoncolor,rcol)
-    tuning(root, leftcol,rightcol,buttoncolor,rcol)
+    print_control(root)
+    print_monitor(root)
+    cosmetics(root)
+    tuning(root)
 
     #start the terminal update thread
     update_terminal_thread = threading.Thread(target=terminal_update)
     update_terminal_thread.start()
 
-    
     # Bind the function to the <Return> event for the e_speed_textbox
     e_speed_textbox.bind('<Return>', on_e_speed_textbox_return)
     z_offset_textbox.bind('<Return>', on_z_offset_textbox_return)
     speed_textbox.bind('<Return>', on_speed_textbox_return)
-
-    threads_activated = False
-
 
     #start gui
     root.mainloop()

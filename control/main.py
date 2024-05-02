@@ -17,8 +17,8 @@ def init_logger():
             continue
         if GlobalState().terminal_text != "":
             #get timestamp
-            current_time = datetime.now().time()
-            current_time_string = current_time.strftime("%H:%M:%S")
+            current_time = datetime.now().time()    
+            current_time_string = current_time.strftime("%H:%M:%S") 
 
             #print line with timestamp
             text = GlobalState().terminal_text

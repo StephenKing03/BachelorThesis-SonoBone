@@ -1,0 +1,15 @@
+TODOS:
+
+ # Bind the function to the <Return> event for the e_speed_textbox
+    e_speed_textbox.bind('<Return>', on_e_speed_textbox_return)
+    z_offset_textbox.bind('<Return>', on_z_offset_textbox_return)
+    speed_textbox.bind('<Return>', on_speed_textbox_return)
+
+----------------------
+
+    threads_activated = False
+
+
+---------
+
+uf.init_arduinos()

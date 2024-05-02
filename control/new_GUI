@@ -1,0 +1,212 @@
+import customtkinter as ctk
+import tkinter as tk
+import string
+import os
+import threading
+import time
+from datetime import datetime
+import mecademicpy.robot as mdr
+from PIL import Image, ImageTk
+import sys
+
+from tkinter import filedialog
+
+import utility_functions as uf  # import utility functions
+import gcode_translator as gt  # import gcode translator
+import stepper_control as sc  # import stepper control
+import d5_gcode_translator as d5 #5d test file
+
+from globals import GlobalState #class for using global information like the msb object 
+from globals import RobotStats #class for standard Robot Info
+
+def button_function():
+    print("Button pressed")
+    return
+
+#class with all the buttons and extra info
+class GUI:
+
+
+
+  #singeleton class
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(GlobalState, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
+    root = None
+
+    #buttons
+    pause_button = None
+    calibrate_button = None
+    file_button = None
+    stop_button = None
+    init_button = None
+    start_button = None
+    z_offset_up_button  = None
+    z_offset_down_button = None
+    p_speed_up_button = None
+    p_speed_down_button = None
+    e_speed_up_button = None
+    e_speed_down_button = None
+    calibrate_button = None
+    reset_button = None
+
+    #textboxes
+    status_text = None
+    z_offset_textbox = None
+    p_speed_textbox = None
+    terminal_text = None
+    e_speed_textbox = None 
+    progress_text = None
+     
+    #info parameters
+    disabled_color = '#F5E079'
+    button_color ='#0859C3'
+
+    column1  = 0.05
+    column2 = 0.28
+    column3 = 0.78
+
+    row1 = 0.35
+    button_distance_y = 0.1
+
+    d5 = False
+
+
+
+
+''' -----------------button to control the GUI-----------------'''
+def print_controls():
+
+    root = GUI.root
+
+    #initialization button
+    GUI.init_button = ctk.CTkButton(master=root, text="Initialize Robot", font=("Avenir Heavy",15), fg_color= GUI.button_color, command=init_robot_button)
+    GUI.init_button.place(relx=GUI.column1, rely=GUI.row1 + 0* GUI.button_distance_y, anchor=ctk.NW)
+
+    #button to set file path
+    GUI.file_button = ctk.CTkButton(master=root, text="Select File", font=("Avenir Heavy",15),fg_color= GUI.button_color, command=button_function)
+    GUI.file_button.place(relx=GUI.column1, rely=GUI.row1 + 1* GUI.button_distance_y, anchor=ctk.NW)
+
+    #button to start printing
+    GUI.start_button = ctk.CTkButton(master=root, text="Start Printing", font=("Avenir Heavy",15),fg_color= GUI.button_color, command=button_function)
+    GUI.start_button.place(relx=GUI.column1, rely=GUI.row1 + 2* GUI.button_distance_y, anchor=ctk.NW)
+
+
+'''-----------------button to init the robot + peripherals-----------------'''
+def init_robot_button():
+
+    if check_occupied(GUI.init_button):
+        return
+    print("init button pressed")
+    init()
+    reactivate_button(GUI.init_button)
+    return
+
+    
+'''-----------------funcionality of the init_robot_button-----------------'''
+def init():
+
+    try:
+        
+        #do something
+        print("done something")
+        time.sleep(5)
+
+        #deactivate button forever
+
+    except Exception as e:
+        GlobalState().terminal_text += "Error: " + str(e) + "\n"
+        GlobalState().printing_state = 7 #error state
+
+    return
+
+
+'''-----------------deactivate_button-----------------'''
+
+def check_occupied(self):
+
+    self.configure(state="disabled")
+    #sleep so that mutliple hits do not crash anything
+    time.sleep(0.1)
+    
+    #if other button active don't do anything
+    if GlobalState().occupied == True:
+        print("OCCUPIED")
+        self.configure(state="normal")
+        return True
+    
+    #if no other button is blocking execution, set the occupied flag to true
+    GlobalState().occupied = True
+    GUI.init_button.configure(fg_color = "red")
+    return False
+
+'''-----------------reactivate_button-----------------'''
+def reactivate_button(self):
+
+    self.configure(state="normal", fg_color = GUI.button_color)
+    GlobalState().occupied = False
+    return
+
+'''-----------------deactivate_button-----------------'''
+
+'''-----------------activate_button-----------------'''
+
+'''-------------search for a file like an icon-----------------'''
+def search_file(filename):
+    
+    script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
+    parent_directory = os.path.dirname(script_directory)
+
+    for directory in [script_directory, parent_directory]:
+        filepath = os.path.join(directory, filename)
+        if os.path.isfile(filepath):
+            break
+    else:
+        print(f"Could not find {filename}")
+        filepath = None
+        return filepath
+
+    if filepath is not None:
+        return filepath
+
+
+
+
+
+#main init function that will be called from a different program
+def init_gui(d5 = False):
+
+    ctk.set_appearance_mode("System")  # Modes: system (default), light, dark
+    ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
+    
+    #init the GUI
+    GUI.root = ctk.CTk()  
+    root = GUI.root
+    root.geometry("800x450")
+    root.title("SonoBone control interface")
+    root.iconbitmap(search_file("SonoBone_icon.ico"))
+
+    #init all the elements
+    print_controls()
+    #print_monitor()
+    #cosmetics()
+    #tuning()
+
+    #if d5 is true, we will use the 5d printer
+    if d5:
+        GUI.d5 = True
+    else:
+        GUI.d5 = False
+
+    #start the terminal update thread
+    #update_terminal_thread = threading.Thread(target=terminal_update)
+    #update_terminal_thread.start()
+
+    #start gui
+    root.mainloop()
+    
+
+
+init_gui()

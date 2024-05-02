@@ -5,9 +5,10 @@ class GlobalState:
     _instance = None
   
     #printing_state - RT variable for print status information
-    printing_state = 0 #0: uninitialized, 1:ready 2:printing, 3: paused 4: finished  5: stopped 6: calibration
+    printing_state = 0 #0: uninitialized, 1:initialized, 2:printing, 3: paused 4: finished  5: stopped 6: calibration 7: error
 
     confirmed = True
+    occupied = False
 
     #user_z_offset - RT variable for z offset tuning
     user_z_offset = 0
@@ -92,7 +93,7 @@ class RobotStats:
     
         self.port = 'COM27'
 
-        self.extrusion_speed = 1000
+        self.extrusion_speed = 1000 #mm/min
 
         self.portname = "COM22"
 
