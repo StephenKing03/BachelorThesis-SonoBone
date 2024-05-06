@@ -126,7 +126,7 @@ def print_control(root):
     global reset_button
     reset_button = ctk.CTkButton(master=root, text="Reset \nSystem", font=("Avenir Heavy",13), width = 50, height = 50, fg_color= GUI.second_color, command=reset_but)
     reset_button.place(relx=GUI.column4, rely=0.25, anchor=ctk.NW)    
-
+    
     return
 
 def print_monitor(root):
@@ -553,9 +553,8 @@ def calibration_but():
         GlobalState().terminal_text += "Error: Robot not initialized"
         GUI.reenable_button(calibrate_button)
         return
+
     if(GlobalState().printing_state != 2 and GlobalState().printing_state != 3 and GlobalState().printing_state != 6):
-        
-        
         GlobalState().terminal_text += " ---Ready for callibration - 10mm above the bed--- "
         GlobalState().previous_state = GlobalState().printing_state
         GlobalState().printing_state = 6 #6 = calibration
@@ -583,6 +582,7 @@ def calibration_but():
     return
 
 def wait_for_callibration():
+
     while GlobalState().printing_state == 6:
         uf.callibrationpose(GlobalState().msb)
         time.sleep(0.2)

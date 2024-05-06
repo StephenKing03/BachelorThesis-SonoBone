@@ -13,6 +13,11 @@ def extract_coordinates(file_path):
     
     with open(file_path, 'r') as file:
         i = 0
+        x = RobotStats().min_x + (RobotStats().max_x -RobotStats().min_x) /2
+        y = 0
+        z = RobotStats().max_z
+        
+        e = 0
         
         for line in file:
             if i <44:
@@ -21,13 +26,7 @@ def extract_coordinates(file_path):
             if line.startswith(';TIME_ELAPSED'):
                 break
             if line.startswith('G0') or line.startswith('G1'):
-                x = None
-                y = None
-                z = None
-                alpha = None
-                beta = None
-                gamma = None
-                e = None
+                
                 er = False
                 for command in line.split():
                     if command.startswith('X'):
