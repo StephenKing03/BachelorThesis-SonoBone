@@ -49,6 +49,7 @@ def extract_coordinates(file_path):
 def write_coordinates(coordinates, self, x_offset, y_offset):
 
     self.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
+    uf.adjust_speed(self, GlobalState().printspeed_modifier)
 
     #coordinates consist of [x, y, z, e, er]        
     z_0 = RobotStats().min_z 

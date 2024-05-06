@@ -31,7 +31,8 @@ def init_logger():
             logging.info(current_time_string + ": " + text + "\n")
             
             last_text = text
-
+  
+  
             #scroll to the end
             last_index = i
         time.sleep(0.005)

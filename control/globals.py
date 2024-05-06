@@ -7,8 +7,8 @@ class GlobalState:
     #printing_state - RT variable for print status information
     printing_state = 0 #0: uninitialized, 1:initialized, 2:printing, 3: paused 4: finished  5: stopped 6: calibration 7: error
 
-    confirmed = True
     occupied = False
+    error = 0
 
     #user_z_offset - RT variable for z offset tuning
     user_z_offset = 0

@@ -149,28 +149,6 @@ def reactivate_button(self):
     GlobalState().occupied = False
     return
 
-'''-----------------deactivate_button-----------------'''
-
-'''-----------------activate_button-----------------'''
-
-'''-------------search for a file like an icon-----------------'''
-def search_file(filename):
-    
-    script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
-    parent_directory = os.path.dirname(script_directory)
-
-    for directory in [script_directory, parent_directory]:
-        filepath = os.path.join(directory, filename)
-        if os.path.isfile(filepath):
-            break
-    else:
-        print(f"Could not find {filename}")
-        filepath = None
-        return filepath
-
-    if filepath is not None:
-        return filepath
-
 
 
 
