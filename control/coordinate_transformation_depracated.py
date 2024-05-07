@@ -13,8 +13,8 @@ def transform_rotating_base(coordinate):
 
     r = coordinate[3:6]
     p_pre = coordinate[0:3]
-    print("r: " + str(r))
-    print("p: " + str(p_pre))
+    #print("r: " + str(r))
+    #print("p: " + str(p_pre))
 
     #get angle phi from v to z-axis
     phi = np.arccos(r[2] / np.linalg.norm(r))
@@ -27,7 +27,7 @@ def transform_rotating_base(coordinate):
     p_post = rotation_around_z(p_pre, theta)
 
     
-    return [p_post[0], p_post[1], p_post[2], rad_to_deg(theta), rad_to_deg(phi), 0]
+    return [p_post[0], p_post[1], p_post[2], rad_to_deg(theta), rad_to_deg(phi)]
 
 
 def shift_to_middle(coordinates):
@@ -60,17 +60,7 @@ def shift_to_middle(coordinates):
     '''           + (half the distance left if evenly spaced)     '''
     x_offset = -min_x  + (max_x - min_x) /2
     '''         (align to the left edge)      + (half the distance left if evenly spaced)      '''
-    y_offset = -min_y  + ((RobotStats().max_y - RobotStats().min_y) - (max_y - min_y )) /2
+    y_offset = -min_y  + max_y - min_y /2
 
 
-
-
-
-
-#define unit vector r
-r = np.array([1, 0, 0]) #orientation vector (quaternions)
-p_pre = np.array([0, 1, 1]) #position vector of the printhead (cartesian)
-
-c = np.concatenate((p_pre, r))
-
-transform_rotating_base(c)
+    return x_offset, y_offset

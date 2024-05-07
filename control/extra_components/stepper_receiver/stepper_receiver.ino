@@ -40,24 +40,28 @@ void loop() {
             last_command = millis();
 
 
-        }else if(command.startsWith("b")){
+        }else if(command.startsWith("b")){ // BASE MOVEMENT
         
           Serial.println(command);
-          // Find the position of 'p' and 's'
+          // Find the position of 'b' and 's'
           int pIndex = command.indexOf('b');
           int sIndex = command.indexOf('s');
           int semicolonIndex = command.indexOf(';');
+          int colonIndex = command.indexOf(':');
+          int iIndex = command.indexOf('i');
 
           // Extract the position and speed from the command string
           String positionString = command.substring(pIndex + 1, semicolonIndex);
-          String speedString = command.substring(sIndex + 1);
+          String speedString = command.substring(sIndex + 1,colonIndex);
+          String indexString = command.substring(iIndex + 1);
 
           // Convert the position and speed to integers
           int position = positionString.toInt();
           int speed = speedString.toInt();
+          int index = indexString.toInt();
 
-            Serial.println("ack");
-            Serial.println("base-position: " + String(position) + "; speed: " + String(speed) );
+            Serial.println("ack_b")
+            
 
             // calculate the number of steps required to move the specified distance
             float distanceInMM = position;
@@ -70,6 +74,18 @@ void loop() {
 
             unsigned long startTime = millis();
             unsigned long timeout = 10000; // 3 seconds
+
+            
+            while(stepper.distanceToGo() != 0 ){
+                stepper.run();
+                if(millis()-startTime > timeout){
+                Serial.println("timeout");
+                break;
+                }
+            }
+            stepper.setSpeed(0);
+            last_command = millis();
+            Serial.println("base" + position+ "i"+index)
 
         
         

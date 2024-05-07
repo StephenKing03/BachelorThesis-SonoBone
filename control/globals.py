@@ -43,12 +43,14 @@ class GlobalState:
 
     
     last_pose = [130, 0, 100, 180, 0, -180]
+    last_base_angle = 0
     previous_state = 0
 
     #progress
     current_line = 0
     displaying_preview = False 
-    coordinates = [0,0,0]
+    coordinates = []
+    cartesian_coordinates = []
     
 
     #msb - Robot instance - for referencing the robot   
@@ -69,10 +71,14 @@ class RobotStats:
     def __init__(self):
         self.min_z = -55 #-68 and then -55
         self.max_z = 100
-        self.min_x = 130
+        self.min_x = 120
         self.max_x = 210
-        self.min_y = -90
-        self.max_y = 90
+        self.min_y = -50
+        self.max_y = 50
+
+        self.diameter = 90
+        self.center_x = 165
+        self.center_y = 0
 
         self.tooloffset_x = 0
         self.tooloffset_y = 0

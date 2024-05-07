@@ -308,10 +308,34 @@ def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
         elif(checklimits(x, y, z, self)  == -3):
             z = RobotStats().min_z+ GlobalState().user_z_offset
     
-
-    
     GlobalState().msb.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')
 
-
     return
+
+def commandPose5d(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
+
+    #check if the pose is within the limits
+    if(z > RobotStats().max_z + GlobalState().user_z_offset ): 
+        print(f'z out of bounds for {z}')
+        GlobalState().terminal_text += f'z out of bounds for z = {z}'
+        z = RobotStats().max_z + GlobalState().user_z_offset
+
+        
+    elif(z < RobotStats().min_z+ GlobalState().user_z_offset):
+        print(f'z out of bounds for {z}')
+        GlobalState().terminal_text += f'z out of bounds for z = {z}'
+        z = RobotStats().min_z + GlobalState().user_z_offset
+    
+    GlobalState().msb.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')
+    return
+
+    
+def check_round_bounds(x,y):
+
+    r = sqrt(x**2 + y**2)
+    if r < RobotStats().diameter/2:
+        GlobalState().terminal_text += "\nDiameter of the print is too large for r = " + str(r)+ " \n" + "It must be within r = " + str(RobotStats().diameter /2) 
+        return False
+
+    return True
     

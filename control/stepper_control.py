@@ -158,6 +158,47 @@ def wait_done():
         time.sleep(0.05)
     return
 
+def wait_done_base(theta, index):
+
+    while True:
+        print("wait base")
+        try:
+            # Read from serial port
+            
+            message = GlobalState().arduino_port.readline().decode().strip()
+            print(message)
+            if message == "base"+ str(theta) + "i"+str(index):
+                print("base position reached")
+                break
+        except serial.SerialException:
+            print("Could not read from port")
+            break
+
+    return
+
+
+def turn_base(theta, index):
+
+    turnspeed_modifier = 1
+    speed  = GlobalState().printspeed_modifier * turnspeed_modifier
+
+    
+    port  = GlobalState().arduino_port
+    # Convert value to message
+    message = "b" + str(theta) + ";s" + str(speed)+ ":i" + str(index)
+
+    # Convert message to bytes - for sending
+    message_bytes = message.encode()
+
+    # Send the bytes over serial
+    port.write(message_bytes)
+    print("theta "  +str(theta) + " sent")
+
+
+
+    return
+
+
 def close_steppers():
 
     # Close the serial port when done

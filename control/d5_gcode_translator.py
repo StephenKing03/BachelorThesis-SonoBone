@@ -10,12 +10,11 @@ import matplotlib.pyplot as plt
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import os
-import coordinate_transformation as ct
 
 
 #---extract the coordinates from the gcode file---------------------------------------------------------
 def extract_coordinates(file_path):
-    coordinates = []
+    cartesian_coordinates = []
 
     
     with open(file_path, 'r') as file:
@@ -23,7 +22,7 @@ def extract_coordinates(file_path):
         i = 0
         x = 0
         y = 0
-        z = RobotStats().max_z
+        z = 0
         a = 0
         b = 0
         c = 0
@@ -39,23 +38,45 @@ def extract_coordinates(file_path):
                 a = float(values[3])
                 b = float(values[4])
                 c = float(values[5])
+                e = 0
+                #classic cartesian coordinates + three quaternion values
                 pose = [x, y, z, a, b, c]
-                pose = ct.transform_rotating_base(pose)	
-                coordinates.append([pose[0], pose[1], 0.3 *pose[2], pose[3], pose[4], pose[5], 0, False])
+                cartesian_coordinates.append([pose[0], pose[1], pose[2], pose[3], pose[4], pose[5], e, False])
             else:
                 er = True
-                coordinates.append([0, 0, 0, 0, 180, 0, -180, er])
+                cartesian_coordinates.append([0, 0, 0, 0, 180, 0, -180, er])
+
             
+
+            #---finished reading all the lines---
+
+        coordinates = []
+        #shift them into the middle and transform then into the rotating base system
+        x_offset, y_offset = shift_to_middle(coordinates)
+        for i in range(len(coordinates)):
+            
+            #shift to be centered
+            cartesian_coordinates[i][0] += x_offset
+            cartesian_coordinates[i][1] += y_offset
+            #transform into rotating base
+            pose = transform_rotating_base(cartesian_coordinates[i])	
+            coordinates.append([pose[0:5], cartesian_coordinates[i][6], cartesian_coordinates[i][7]]) #transformed pose + extrusion values + error flag
+
+    GlobalState().cartesian_coordinates = coordinates   
     GlobalState().coordinates = coordinates
     return coordinates
 
 def display_preview():
-    coordinates = np.array(GlobalState().coordinates).T
+    coordinates = np.array(GlobalState().cartesian_coordinates).T
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.plot(*coordinates)
     filename = os.path.basename(GlobalState().filepath)
     ax.set_title(filename)
+
+    #add printbed 
+    circle = plt.Circle((0, 0), 5, color='black', fill=False)
+    ax.add_artist(circle)
 
     # Create a new Tkinter window
     window = tk.Tk()
@@ -65,31 +86,25 @@ def display_preview():
     canvas = FigureCanvasTkAgg(fig, master=window)
     canvas.draw()
     canvas.get_tk_widget().pack()
-    
-
-    # Show the plot
-    #plt.show()
 
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
-def write_coordinates(coordinates, self, x_offset, y_offset):
-    print("started")
+def write_coordinates(coordinates, self):
+
+
     self.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
     uf.adjust_speed(GlobalState().printspeed_modifier, self)
 
     #coordinates consist of [x, y, z, e, er]        
     z_0 = RobotStats().min_z 
-
-    #offset from modify placement
-    
-    previous_percent = 0
-    non_none_e = 0
-    last_e = 0
     i = 0
     length = len(coordinates)
 
-    #main printing loop
-    for x, y, z, a, b, c, e, er in coordinates:
+    last_theta = 0
 
+    #main printing loop
+    for x, y, z, phi, theta, e, er in coordinates:
+
+    #--------------------------loop control-----------------------------------------
         #wait in this position when the print is paused
         while(GlobalState().printing_state != 2): #print paused 
             if GlobalState().printing_state == 5:
@@ -103,23 +118,34 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
                 print("exit path 2")
                 print(GlobalState().printing_state)
                 return
-
+    #-------------------------------------------------------------------------------
+    #--------------------------progress report--------------------------------------
         i += 1 #index
         GlobalState().current_line = i
         GlobalState().current_progress = round(float(i)/float(length) * 100, 1)
 
+
+    #-------------------------------------------------------------------------------
+    #--------------------------checkpoint system------------------------------------
         #---Set Checkpoint---
         next_checkpoint = GlobalState().msb.SetCheckpoint(i)
+        next_checkpoint_theta = theta
 
         if(i > 1):
-            checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100) 
+            checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100)
+            start_time = time.time()
+            print(f'Checkpoint {i} reached')
+            sc.wait_base(checkpoint_theta, i-1)
+            print(f'Checkpoint_theta {i} reached after {time.time() - start_time} seconds')
         checkpoint = next_checkpoint
-        print(f'Checkpoint {i} reached')
+        checkpoint_theta = next_checkpoint_theta
         
-
-        #SEND PRINT COMMAND
-        uf.commandPose(x+x_offset, y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, a, 0, -180, self)
-        GlobalState().last_pose = [x+x_offset, y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, a, 0, -180]
+    #-------------------------------------------------------------------------------
+    #--------------------------send print commands----------------------------------
+        uf.commandPose5d(x+RobotStats().center_x, y + RobotStats().center_y, z + RobotStats().min_z + GlobalState().user_z_offset, a, 0, -180, self)
+        sc.turn_base(theta, i)
+        GlobalState().last_pose = [x+x_offset, y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, phi, 0, -180]
+        GlobalState().last_base_angle = theta
         print(f'Printing line {i} of {length} at {GlobalState().current_progress}%')
         if(e != None ):
                 #sc.send_position(e - last_e)
@@ -139,7 +165,83 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
     GlobalState().printing_state = 4
     return
 
-def modify_placement(coordinates):
+#main printing function - refers to the other functions in this file
+def start_print():
+    
+    #Extract coordinates
+    GlobalState().terminal_text += "Extracting coordinates from file..."
+    coordinates = extract_coordinates(GlobalState().filepath)
+    
+    for i in range(len(coordinates)):
+        if uf.check_round_bounds(coordinates[i][0], coordinates[i][1]):
+
+            GlobalState().terminal_text += "Select a different File that fits"
+            GlobalState().occupied = False
+            GlobalState().printing_state = 5
+        return
+        
+    
+    time.sleep(2)
+    GlobalState().terminal_text += " --done! - Starting print--"
+    
+    #wait for msb != None with timeout
+    start_time = time.time() #reset timer
+    timeout = False
+    while (GlobalState().msb == None and timeout):
+        if(time.time() - start_time > 10):
+            timeout = True
+            break
+        time.sleep(0.1)
+
+    if timeout == True:
+        GlobalState().terminal_text += "Robot not connected"
+        GlobalState().occupied = False
+        GlobalState().printing_state = 5
+        return
+
+    time.sleep(1)
+    
+    #set starting position
+    uf.startpose(GlobalState().msb)
+    GlobalState().msb.WaitIdle()
+
+    #start printing
+    GlobalState().printing_state = 2
+    write_coordinates(coordinates,GlobalState().msb)
+
+    return
+
+'''coordinate transformation functions'''
+def rad_to_deg(rad):
+    return rad * 180 / np.pi
+
+def rotation_around_z(pre, theta):
+    return np.array([[np.cos(theta), -np.sin(theta), 0],
+                     [np.sin(theta), np.cos(theta), 0],
+                     [0, 0, 1]]) @ pre 
+
+def transform_rotating_base(coordinate):
+
+    r = coordinate[3:6]
+    p_pre = coordinate[0:3]
+    #print("r: " + str(r))
+    #print("p: " + str(p_pre))
+
+    #get angle phi from v to z-axis
+    phi = np.arccos(r[2] / np.linalg.norm(r))
+
+    #get angle theta from v projected into the xy-plane to y-axis
+    theta = np.arccos(r[1] / (np.sin(phi) * np.linalg.norm(r)))
+
+
+    #transform coordinates from before p_pre to p_post
+    p_post = rotation_around_z(p_pre, theta)
+
+    
+    return [p_post[0], p_post[1], p_post[2], rad_to_deg(theta), rad_to_deg(phi), 0]
+
+
+def shift_to_middle(coordinates):
 
     min_x = coordinates[0][0]
     max_x = coordinates[0][0]
@@ -160,83 +262,16 @@ def modify_placement(coordinates):
                 max_y = y
             elif y < min_y:
                 min_y = y
-        if z != None:
-            if z > RobotStats().max_z:
-                max_z = z
-            elif z < RobotStats().min_z:
-                min_z = z
+        
 
         GlobalState().max_z_offset = RobotStats().max_z - max_z
 
-    #check if dimensions are feasible
-    if (max_x - min_x) > (RobotStats().max_x - RobotStats().min_x):
-        print("X-dimension too large")
-        GlobalState().terminal_text += "\nX-dimensions are too large for the printebed for Δx = " + str(max_x-min_x)+ " \n" + "It must be within Δx = " + str(RobotStats().max_x - RobotStats().min_x)
-        time.sleep(2)
-        return None, None
-    if (max_y - min_y) > (RobotStats().max_y - RobotStats().min_y):
-        print("Y-dimension too large")
-        GlobalState().terminal_text += "\nY-dimension are too large for the printebed for Δy = " + str(max_y-min_y)+ " \n" + "It must be within Δy = " + str(RobotStats().max_y - RobotStats().min_y) 
-        time.sleep(2)
-        return None, None
 
-    
-    #calculate offset so that the print is centered
-    '''         (align to the lower edge)      + (half the distance left if evenly spaced)     '''
-    x_offset = (-min_x + RobotStats().min_x) + ((RobotStats().max_x - RobotStats().min_x) - (max_x - min_x)) /2
+#calculate offset so that the print is centered
+    '''           + (half the distance left if evenly spaced)     '''
+    x_offset = -min_x  + (max_x - min_x) /2
     '''         (align to the left edge)      + (half the distance left if evenly spaced)      '''
-    y_offset = (-min_y + RobotStats().min_y) + ((RobotStats().max_y - RobotStats().min_y) - (max_y - min_y )) /2
+    y_offset = -min_y  + max_y - min_y /2
 
 
     return x_offset, y_offset
-
-#main printing function - refers to the other functions in this file
-def start_print():
-
-    x_offset = 0
-    y_offset = 0
-    
-    #Extract coordinates
-    GlobalState().terminal_text += "Extracting coordinates from file..."
-    coordinates = extract_coordinates(GlobalState().filepath)
-
-    x_offset, y_offset = modify_placement(coordinates)
-    
-    if x_offset == None or y_offset == None:
-        GlobalState().terminal_text += "Select a different File that fits"
-        GlobalState().confirmed = True
-        GlobalState().printing_state = 5
-        return
-        
-    
-    time.sleep(2)
-    GlobalState().terminal_text += " --done! - Starting print--"
-    
-    #wait for msb != None with timeout
-    start_time = time.time() #reset timer
-    timeout = False
-    while (GlobalState().msb == None and timeout):
-        if(time.time() - start_time > 10):
-            timeout = True
-            break
-        time.sleep(0.1)
-
-    if timeout == True:
-        GlobalState().terminal_text += "Robot not connected"
-        GlobalState().confirmed = True
-        GlobalState().printing_state = 5
-        return
-
-    time.sleep(1)
-    
-    #set starting position
-    uf.startpose(GlobalState().msb)
-   
-    
-    GlobalState().msb.WaitIdle()
-
-    GlobalState().printing_state = 2
-    #start printing
-    write_coordinates(coordinates,GlobalState().msb, x_offset, y_offset)
-
-    return
