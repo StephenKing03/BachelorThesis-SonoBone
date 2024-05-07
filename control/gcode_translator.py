@@ -5,6 +5,12 @@ import stepper_control as sc
 from globals import GlobalState
 from globals import RobotStats
 
+import numpy as np
+import matplotlib.pyplot as plt
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import os
+
 
 #---extract the coordinates from the gcode file---------------------------------------------------------
 def extract_coordinates(file_path):
@@ -42,13 +48,35 @@ def extract_coordinates(file_path):
                         e = float(command[1:])
                 coordinates.append([x, y, z, e, er])
                 
+    GlobalState().coordinates = coordinates
     return coordinates
+
+def display_preview():
+    coordinates = np.array(GlobalState().coordinates).T
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot(*coordinates)
+    filename = os.path.basename(GlobalState().filepath)
+    ax.set_title(filename)
+
+    # Create a new Tkinter window
+    window = tk.Tk()
+    window.title("SonoBone Print Preview")
+
+    # Create a canvas and add the plot to it
+    canvas = FigureCanvasTkAgg(fig, master=window)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+    
+
+    # Show the plot
+    #plt.show()
 
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
 def write_coordinates(coordinates, self, x_offset, y_offset):
 
     self.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
-    uf.adjust_speed(self, GlobalState().printspeed_modifier)
+    uf.adjust_speed(GlobalState().printspeed_modifier,self)
 
     #coordinates consist of [x, y, z, e, er]        
     z_0 = RobotStats().min_z 

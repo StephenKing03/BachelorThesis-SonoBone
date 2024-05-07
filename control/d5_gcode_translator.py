@@ -5,6 +5,13 @@ import stepper_control as sc
 from globals import GlobalState
 from globals import RobotStats
 
+import numpy as np
+import matplotlib.pyplot as plt
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import os
+import coordinate_transformation as ct
+
 
 #---extract the coordinates from the gcode file---------------------------------------------------------
 def extract_coordinates(file_path):
@@ -12,56 +19,68 @@ def extract_coordinates(file_path):
 
     
     with open(file_path, 'r') as file:
+
         i = 0
-        content = file.readlines()
-        print(content)
-        for line in content:
-            if line.startswith(';TIME_ELAPSED'):
-                break
-            
-            x = None
-            y = None
-            z = None
-            alpha = None
-            beta = None
-            gamma = None
-            e = None
+        x = 0
+        y = 0
+        z = RobotStats().max_z
+        a = 0
+        b = 0
+        c = 0
+        e = 0
+        
+        for line in file:
             er = False
-            for command in line.split():
-                if command.startswith('X'):
-                    x = float(command[1:])
-                elif command.startswith('Y'):
-                    y = float(command[1:])
-                elif command.startswith('Z'):
-                    try:
-                        z = float(command[1:])
-                    except:
-                        er = True
-                elif command.startswith('A'):
-                    alpha = float(command[1:])
-                elif command.startswith('B'):
-                    beta = float(command[1:])
-                elif command.startswith('C'):
-                    gamma = float(command[1:])
-                elif command.startswith('E'):
-                    e = float(command[1:])
-            coordinates.append([x, y, z, alpha, beta, gamma, e, er])
-                
+            values = line.split()
+            if len(values) >= 6:
+                x = float(values[0])
+                y = float(values[1])
+                z = float(values[2])
+                a = float(values[3])
+                b = float(values[4])
+                c = float(values[5])
+                pose = [x, y, z, a, b, c]
+                pose = ct.transform_rotating_base(pose)	
+                coordinates.append([pose[0], pose[1], 0.3 *pose[2], pose[3], pose[4], pose[5], 0, False])
+            else:
+                er = True
+                coordinates.append([0, 0, 0, 0, 180, 0, -180, er])
+            
+    GlobalState().coordinates = coordinates
     return coordinates
 
+def display_preview():
+    coordinates = np.array(GlobalState().coordinates).T
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot(*coordinates)
+    filename = os.path.basename(GlobalState().filepath)
+    ax.set_title(filename)
+
+    # Create a new Tkinter window
+    window = tk.Tk()
+    window.title("SonoBone Print Preview")
+
+    # Create a canvas and add the plot to it
+    canvas = FigureCanvasTkAgg(fig, master=window)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+    
+
+    # Show the plot
+    #plt.show()
 
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
 def write_coordinates(coordinates, self, x_offset, y_offset):
-
+    print("started")
     self.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
+    uf.adjust_speed(GlobalState().printspeed_modifier, self)
 
     #coordinates consist of [x, y, z, e, er]        
     z_0 = RobotStats().min_z 
 
     #offset from modify placement
-    non_none_z = 0
-    non_none_x = 0
-    non_none_y = 0
+    
     previous_percent = 0
     non_none_e = 0
     last_e = 0
@@ -69,9 +88,7 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
     length = len(coordinates)
 
     #main printing loop
-    for x, y, z, alpha, beta, gamma, e, er in coordinates:
-        
-        print(f'--{i}--')
+    for x, y, z, a, b, c, e, er in coordinates:
 
         #wait in this position when the print is paused
         while(GlobalState().printing_state != 2): #print paused 
@@ -89,41 +106,31 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
 
         i += 1 #index
         GlobalState().current_line = i
-        
         GlobalState().current_progress = round(float(i)/float(length) * 100, 1)
-        
-        if (alpha >-150 and alpha <0):
-            GlobalState().terminal_text += "alpha is negative -> + 180" + str(alpha)
-            alpha += 180
-            GlobalState().terminal_text += "alpha is negative -> + 180; alpha was: " + str(alpha)
-    
-        
-        if(alpha < 150):
-            GlobalState().terminal_text += "alpha is smaller than 150! alphe =" + str(alpha)
-            alpha = 150
-            
-            if GlobalState().terminal_text != " ":
-                GlobalState().terminal_text += "\n"
+
+        #---Set Checkpoint---
+        next_checkpoint = GlobalState().msb.SetCheckpoint(i)
+
+        if(i > 1):
+            checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100) 
+        checkpoint = next_checkpoint
+        print(f'Checkpoint {i} reached')
         
 
-        if(abs(beta) > 30):
-            
-            sign = sign(beta)
-            beta = math.copysign(30, beta)
-            
-            if GlobalState().terminal_text != " ":
-                GlobalState().terminal_text += "\n"
-            GlobalState().terminal_text += "abs(beta) is larger than 30 -> set to" + str(beta)
-        
-        #send Pose
-        uf.commandPose(x + x_offset,y+y_offset,z+ GlobalState().user_z_offset + z_0, alpha, beta, gamma, self)
-        GlobalState().last_pose = [x + x_offset, y + y_offset, z + GlobalState().user_z_offset+ z_0, alpha, beta, gamma]
-
+        #SEND PRINT COMMAND
+        uf.commandPose(x+x_offset, y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, a, 0, -180, self)
+        GlobalState().last_pose = [x+x_offset, y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, a, 0, -180]
+        print(f'Printing line {i} of {length} at {GlobalState().current_progress}%')
+        if(e != None ):
+                #sc.send_position(e - last_e)
+                last_e = e
 
         time.sleep(0.01)
+        GlobalState().checkpoint_reached = False
         
         #-------------------finished print -----------------------------
     
+
     #sc.send_speed(0)
     #set speed higher again
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')
@@ -173,9 +180,6 @@ def modify_placement(coordinates):
         time.sleep(2)
         return None, None
 
-    
-        
-    
     
     #calculate offset so that the print is centered
     '''         (align to the lower edge)      + (half the distance left if evenly spaced)     '''
@@ -233,8 +237,6 @@ def start_print():
 
     GlobalState().printing_state = 2
     #start printing
-    
     write_coordinates(coordinates,GlobalState().msb, x_offset, y_offset)
 
     return
-

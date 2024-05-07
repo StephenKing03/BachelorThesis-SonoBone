@@ -47,6 +47,8 @@ class GlobalState:
 
     #progress
     current_line = 0
+    displaying_preview = False 
+    coordinates = [0,0,0]
     
 
     #msb - Robot instance - for referencing the robot   
@@ -93,7 +95,7 @@ class RobotStats:
 
         self.extrusion_speed = 1000 #mm/min
 
-        self.portname = "COM22"
+        self.portname = "COM27"
 
 
 

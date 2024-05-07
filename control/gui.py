@@ -46,6 +46,7 @@ global e_speed_up_button
 global e_speed_down_button
 global calibrate_button
 global reset_button
+global preview_button
 
 class GUI:
     
@@ -55,8 +56,9 @@ class GUI:
     column4 = 0.78 + 0.08 
 
     buttoncolor = '#0859C3'
-    disabled_color = '#F5E079'
+    disabled_color = '#A9A15C'
     second_color = '#089DC3'
+    grey_color = '#505050'
 
     
 
@@ -65,7 +67,7 @@ class GUI:
 
         self.configure(state="disabled")
         #sleep so that mutliple hits do not crash anything
-        time.sleep(0.1)
+        
         
         #if other button active don't do anything
         if GlobalState().occupied == True:
@@ -124,15 +126,21 @@ def print_control(root):
     calibrate_button.place(relx=GUI.column1, rely=0.9, anchor=ctk.NW)
 
     global reset_button
-    reset_button = ctk.CTkButton(master=root, text="Reset \nSystem", font=("Avenir Heavy",13), width = 50, height = 50, fg_color= GUI.second_color, command=reset_but)
-    reset_button.place(relx=GUI.column4, rely=0.25, anchor=ctk.NW)    
-    
+    reset_button = ctk.CTkButton(master=root, text="Reset System", font=("Avenir Heavy",10), width = 50, height = 25, fg_color= GUI.second_color, command=reset_but)
+    reset_button.place(relx=GUI.column4, rely=0.25, anchor=ctk.NW)
+
     return
 
 def print_monitor(root):
 
     global status_text
     global terminal_text
+    global preview_button
+
+    #preview button
+    preview_button = ctk.CTkButton(master=root, text="Preview Print", font=("Avenir Heavy",10),  width = 50, height = 25, fg_color= GUI.grey_color, command=open_preview)
+    preview_button.place(relx=GUI.column4, rely=0.35, anchor=ctk.NW)
+    preview_button.configure(state="disabled")
     
 
     #status infos
@@ -238,9 +246,17 @@ def tuning(root):
 #------------------ Button functions ------------------
 
 
+def open_preview():
+
+    gt.display_preview()
+    return    
+    
+
+
 def start_print_but():
 
     global start_button 
+    global preview_button
     
 
     if(GUI.check_occupied(start_button)):
@@ -277,6 +293,7 @@ def start_print_but():
     #start print
     filename = os.path.basename(GlobalState().filepath)
     status_update("Printing ...  \nFile: " + str(filename))
+    preview_button.configure(state="normal", fg_color = GUI.buttoncolor)
 
     #disable some buttons
     global calibrate_button
@@ -290,12 +307,13 @@ def start_print_but():
     progress_thread.start()
     try:
         ''' change this for the 5d print, exchange d5 with gt '''
-        print_thread = threading.Thread(target=gt.start_print)  
+        print_thread = threading.Thread(target=d5.start_print)  
         print_thread.start()
         
         #wait for program to finish to update the text
         finished_thread = threading.Thread(target=wait_for_printing)
         finished_thread.start()
+        GlobalState().occupied = False
 
     except Exception as e:
         GlobalState().terminal_text += "Error: " + str(e) + " - try again"
@@ -321,7 +339,6 @@ def late_init():
         GlobalState().error = 1
         return
 
-
     #GUI.reenable_button(init_button) #not needed as the button is not useful anymore 
     return
 
@@ -329,7 +346,7 @@ def late_init():
 def wait_for_printing():
 
     global start_button
-
+    global preview_button
 
     while GlobalState().printing_state != 4 and GlobalState().printing_state != 5:
         time.sleep(0.1)
@@ -337,7 +354,7 @@ def wait_for_printing():
     GlobalState().msb.WaitIdle()
     
     if GlobalState().printing_state == 4:
-        GlobalState().terminal_text += "-------------------PRINT FINISHED!-------------"
+        GlobalState().terminal_text += "PRINT FINISHED!"
         status_update("Finished printing!\n  ready to print again")
         uf.cleanpose(GlobalState().msb)
         time.sleep(3)
@@ -347,12 +364,12 @@ def wait_for_printing():
     global select_file_button
     
 
-    #reenable the buttons
-    calibrate_button.configure(state="disabled", fg_color = GUI.buttoncolor)
-    file_button.configure(state="disabled", fg_color = GUI.buttoncolor)
+    #re-enable the buttons
+    calibrate_button.configure(state="normal", fg_color = GUI.buttoncolor)
+    file_button.configure(state="normal", fg_color = GUI.buttoncolor)
     
     GUI.reenable_button(start_button)
-    
+    preview_button.configure(state="disabled", fg_color = GUI.grey_color)
     return
 
 def stop_print_but():
@@ -412,7 +429,7 @@ def init_print_but():
     #set states and info text
     GlobalState().printing_state = 0 #0 = not printing
 
-    
+    print("start init")
     init_thread = threading.Thread(target=init)
     init_thread.start()
 
@@ -436,7 +453,7 @@ def init():
         return
 
 
-    #GUI.reenable_button(init_button) #not needed as the button is not useful anymore 
+    GUI.reenable_button(init_button) #not needed as the button is not useful anymore 
     return
 
 def select_file_but():
@@ -499,6 +516,7 @@ def pause_print_but():
         resume_thread.start()
     else:
         GlobalState().terminal_text += "no print in process - nothing done"
+        GUI.reenable_button(pause_button)
 
     return
 

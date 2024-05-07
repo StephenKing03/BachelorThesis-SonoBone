@@ -1,5 +1,5 @@
-#define dirPin 5
-#define stepPin 2
+#define dirPin 6
+#define stepPin 3
 #define motorInterfaceType 1
 #include "AccelStepper.h"
 float last_command = 0;
@@ -40,6 +40,40 @@ void loop() {
             last_command = millis();
 
 
+        }else if(command.startsWith("b")){
+        
+          Serial.println(command);
+          // Find the position of 'p' and 's'
+          int pIndex = command.indexOf('b');
+          int sIndex = command.indexOf('s');
+          int semicolonIndex = command.indexOf(';');
+
+          // Extract the position and speed from the command string
+          String positionString = command.substring(pIndex + 1, semicolonIndex);
+          String speedString = command.substring(sIndex + 1);
+
+          // Convert the position and speed to integers
+          int position = positionString.toInt();
+          int speed = speedString.toInt();
+
+            Serial.println("ack");
+            Serial.println("base-position: " + String(position) + "; speed: " + String(speed) );
+
+            // calculate the number of steps required to move the specified distance
+            float distanceInMM = position;
+            float stepsPerMM = 100.0; // Adjust this value based on your stepper motor specifications
+            int steps = distanceInMM * stepsPerMM;
+
+            //set the speed in steps per second
+            stepper.moveTo(steps);
+            stepper.setSpeed(10);
+
+            unsigned long startTime = millis();
+            unsigned long timeout = 10000; // 3 seconds
+
+        
+        
+        
         }else if(command.startsWith("p")){
 
           // Extract position and speed from command string
@@ -90,13 +124,13 @@ void loop() {
             Serial.println("ack");
             Serial.println("Initializing stepper");
             stepper.setMaxSpeed(10000);
-            stepper.setSpeed(3000);
+            stepper.setSpeed(1000);
             unsigned long startTime = millis();
             unsigned long duration = 1000; // 3 seconds
             while (millis() - startTime < duration) {
                 stepper.runSpeed();
             }
-            stepper.setSpeed(-3000);
+            stepper.setSpeed(-1000);
             startTime = millis();
             duration = 1000; // 3 seconds
             while (millis() - startTime < duration) {

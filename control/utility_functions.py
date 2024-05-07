@@ -219,16 +219,18 @@ def init_sequence():
     if(GlobalState().msb == None):
         #sc.init_steppers()
         # sc.wait_ack()
+        print("test")
         GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
         GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
+        print("test2")
         GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
         GlobalState().msb.ResetError()
         GlobalState().msb.Home() #Home the robot
         GlobalState().msb.ResetError()
-
+        print("test3")
         #activate steppers
-        sc.init_steppers()
-        sc.wait_done()
+        #sc.init_steppers()
+        #sc.wait_done()
 
         
     msb = GlobalState().msb

@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from tkinter import filedialog
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Initialize a list to hold the coordinates
 coordinates = []
@@ -36,9 +38,20 @@ with open(file_path, 'r') as file:
 coordinates = np.array(coordinates).T
 
 # Create a 3D plot
+# Create a 3D plot
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.plot(*coordinates)
+ax.set_title('')
 
-# Show the plot
-plt.show()
+# Create a new Tkinter window
+window = tk.Tk()
+window.title("SonoBone Print Preview")
+
+# Create a canvas and add the plot to it
+canvas = FigureCanvasTkAgg(fig, master=window)
+canvas.draw()
+canvas.get_tk_widget().pack()
+
+# Start the Tkinter event loop
+tk.mainloop()
