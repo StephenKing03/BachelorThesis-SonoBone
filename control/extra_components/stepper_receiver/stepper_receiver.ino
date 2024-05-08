@@ -3,6 +3,7 @@
 #define motorInterfaceType 1
 #include "AccelStepper.h"
 float last_command = 0;
+int max_speed = 100000;
 
 // Create a new instance of the AccelStepper class:
 AccelStepper stepper = AccelStepper(motorInterfaceType, stepPin, dirPin);
@@ -11,7 +12,7 @@ void setup() {
     pinMode(A2, INPUT);
     Serial.begin(9600);
     
-    stepper.setMaxSpeed(10000);
+    stepper.setMaxSpeed(max_speed);
     stepper.setAcceleration(50000);
     
 }
@@ -60,32 +61,36 @@ void loop() {
           int speed = speedString.toInt();
           int index = indexString.toInt();
 
-            Serial.println("ack_b")
+            Serial.println("ack_b");
+            
             
 
             // calculate the number of steps required to move the specified distance
-            float distanceInMM = position;
-            float stepsPerMM = 100.0; // Adjust this value based on your stepper motor specifications
-            int steps = distanceInMM * stepsPerMM;
+            float distanceInDeg = position;
+            float degPerStep = 1.8; // Adjust this value based on your stepper motor specifications
+            int steps = distanceInDeg / degPerStep;
 
+            
             //set the speed in steps per second
+            stepper.setMaxSpeed(speed);
             stepper.moveTo(steps);
-            stepper.setSpeed(10);
+            stepper.setSpeed(speed);
+            
 
             unsigned long startTime = millis();
             unsigned long timeout = 10000; // 3 seconds
 
             
-            while(stepper.distanceToGo() != 0 ){
+            while(stepper.distanceToGo() >= 1){
                 stepper.run();
-                if(millis()-startTime > timeout){
-                Serial.println("timeout");
-                break;
-                }
             }
             stepper.setSpeed(0);
+            stepper.setMaxSpeed(max_speed);
+            
+
+
             last_command = millis();
-            Serial.println("base" + position+ "i"+index)
+            Serial.println("base" + String(position)+ "i"+ String(index));
 
         
         
@@ -139,8 +144,8 @@ void loop() {
 
             Serial.println("ack");
             Serial.println("Initializing stepper");
-            stepper.setMaxSpeed(10000);
-            stepper.setSpeed(1000);
+            stepper.setMaxSpeed(max_speed);
+            stepper.setSpeed(500);
             unsigned long startTime = millis();
             unsigned long duration = 1000; // 3 seconds
             while (millis() - startTime < duration) {
