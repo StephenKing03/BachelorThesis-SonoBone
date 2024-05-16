@@ -161,14 +161,13 @@ def wait_done():
 def wait_done_base(theta, index):
 
     while True:
-        print("wait base")
+        print("wait base" + str(theta))
         try:
             # Read from serial port
-            
             message = GlobalState().arduino_port.readline().decode().strip()
             print(message)
-            if message == "base"+ str(theta) + "i"+str(index):
-                print("base position reached")
+            if message == "done:i"+str(index):
+                print("base position reached" + str(index))
                 break
         except serial.SerialException:
             print("Could not read from port")
@@ -180,12 +179,17 @@ def wait_done_base(theta, index):
 def turn_base(theta, index):
 
     turnspeed_modifier = 1
+    #angle = GlobalState().last_base_angle - theta
+     #if(angle < 0):
     speed  = GlobalState().printspeed_modifier * turnspeed_modifier
-
+    #else:
+    #    speed  = -GlobalState().printspeed_modifier * turnspeed_modifier
+    
+    speed = speed * 10
     
     port  = GlobalState().arduino_port
     # Convert value to message
-    message = "b" + str(theta) + ";s" + str(speed)+ ":i" + str(index)
+    message = "b" + str(theta) + "s" + str(speed)+ "i" + str(index)
 
     # Convert message to bytes - for sending
     message_bytes = message.encode()
@@ -205,31 +209,3 @@ def close_steppers():
     GlobalState().GlobalState().arduino_portclose()
     
     return
-
-def monitor_stepper():
-    previous_text = ""
-    text = " "
-    while True:
-        text = GlobalState().arduino_port.readline()
-        if previous_text != text:
-            GlobalState().terminal_text += text
-            previous_text = text
-        time.sleep(0.1)
-
-
-
-
-
-# Function to send the integer value to the stepper motor
-def send_value(value):
-
-    port = GlobalState().arduino_port
-    # Convert value to message
-    message = "sp" + str(value)
-
-    # Convert message to bytes - for sending
-    message_bytes = message.encode()
-
-    # Send the bytes over serial
-    port.write(message_bytes)
-    print("sent " + str(value))

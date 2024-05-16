@@ -10,7 +10,7 @@ import threading
 
 #---set the speed of the robot in mm/s---------------------------------------------------------
 def adjust_speed(speed_p, self = mdr.Robot()):
-    self.SendCustomCommand(f'SetJointVelLimit({speed_p * RobotStats().joint_vel_limit/100/2})')
+    self.SendCustomCommand(f'SetJointVelLimit({speed_p * RobotStats().joint_vel_limit/100/2 * 0.5})')
     print(f'LinVel set to {speed_p} %')
     return
 
@@ -282,7 +282,7 @@ def exit_print():
 
     print('BREAK - exitprogram')
     GlobalState().terminal_text += "-----------BREAK - Print Process Stopped--------------"
-    uf.cleanpose(self)
+    cleanpose(GlobalState().msb)
     time.sleep(3)
     return
 
@@ -334,9 +334,9 @@ def commandPose5d(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
 def check_round_bounds(x,y):
 
     r = math.sqrt(x**2 + y**2)
-    if r < RobotStats().diameter/2:
+    if r > RobotStats().diameter/2:
         GlobalState().terminal_text += "\nDiameter of the print is too large for r = " + str(r)+ " \n" + "It must be within r = " + str(RobotStats().diameter /2) 
-        return False
+        return True
 
-    return True
+    return False
     

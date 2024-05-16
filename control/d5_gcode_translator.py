@@ -33,9 +33,9 @@ def extract_coordinates(file_path):
             er = False
             values = line.split()
             if len(values) >= 6:
-                x = float(values[0])
-                y = float(values[1])
-                z = float(values[2])
+                x = 0.1*float(values[0])
+                y = 0.1*float(values[1])
+                z = 0.1*float(values[2])
                 a = float(values[3])
                 b = float(values[4])
                 c = float(values[5])
@@ -54,14 +54,14 @@ def extract_coordinates(file_path):
 
         coordinates = []
         #shift them into the middle and transform then into the rotating base system
-        x_offset, y_offset = shift_to_middle(coordinates)
-        for i in range(len(coordinates)):
+        x_offset, y_offset = shift_to_middle(cartesian_coordinates)
+        for i in range(len(cartesian_coordinates)):
             
             #shift to be centered
             cartesian_coordinates[i][0] += x_offset
             cartesian_coordinates[i][1] += y_offset
             #transform into rotating base
-            pose = transform_rotating_base(cartesian_coordinates[i])	
+            pose = transform_rotating_base(cartesian_coordinates[i])
             coordinates.append([pose[0], pose[1], pose[2], pose[3], pose[4], cartesian_coordinates[i][6], cartesian_coordinates[i][7]]) #transformed pose + extrusion values + error flag
 
     GlobalState().cartesian_coordinates = cartesian_coordinates   
@@ -139,16 +139,16 @@ def write_coordinates(coordinates, self):
             checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100)
             start_time = time.time()
             print(f'Checkpoint {i} reached')
-            sc.wait_base(checkpoint_theta, i-1)
+            sc.wait_done_base(checkpoint_theta, i-1)
             print(f'Checkpoint_theta {i} reached after {time.time() - start_time} seconds')
         checkpoint = next_checkpoint
         checkpoint_theta = next_checkpoint_theta
         
     #-------------------------------------------------------------------------------
     #--------------------------send print commands----------------------------------
-        uf.commandPose5d(x+RobotStats().center_x, y + RobotStats().center_y, z + RobotStats().min_z + GlobalState().user_z_offset, a, 0, -180, self)
+        uf.commandPose5d(x+RobotStats().center_x, y + RobotStats().center_y, z + RobotStats().min_z + GlobalState().user_z_offset, phi, 0, -180, self)
         sc.turn_base(theta, i)
-        GlobalState().last_pose = [x+x_offset, y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, phi, 0, -180]
+        GlobalState().last_pose = [x, y, z + z_0  + GlobalState().user_z_offset, phi, 0, -180]
         GlobalState().last_base_angle = theta
         print(f'Printing line {i} of {length} at {GlobalState().current_progress}%')
         if(e != None ):
@@ -182,7 +182,7 @@ def start_print():
             GlobalState().terminal_text += "Select a different File that fits"
             GlobalState().occupied = False
             GlobalState().printing_state = 5
-        return
+            return
         
     
     time.sleep(2)

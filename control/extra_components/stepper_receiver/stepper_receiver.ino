@@ -9,6 +9,8 @@ int mode = 0; // 0 = waiting, 1 = fulfilling, 2 = base.runtoposition, 3 = base +
 int current_index = 0;
 String previous_input = "None";
 int j = 0;
+int max_base_speed = 100000;
+int previous_base_pos = 0;
 
 
 
@@ -16,11 +18,11 @@ void setup(){
 
   Serial.begin(9600);
 
-  base.setMaxSpeed(100);
-  base.setAcceleration(100);
+  base.setMaxSpeed(max_base_speed);
+  base.setAcceleration(50000);
 
   extruder.setMaxSpeed(100);
-  extruder.setAcceleration(100);
+  extruder.setAcceleration(50000);
   
 }
 
@@ -28,51 +30,43 @@ void loop() {
   j++;
   //read input and maybe attach it to the stack of commands
   read_input();
-  //delay(800);
-  //Serial.println(String(j)+ ": " + String(commands[4]));
-  
 
-  
   //if currently not processing any command 
   if(mode == 0){
-
+    
+    //Serial.println("mode is 0");
     //if command stack is not empty -> process command and set mode to 1
     if(commands[0] != "None"){
+      Serial.println("command in the queue");
       mode = 1;
       process_command(commands[0]);
     }
-
   }
-
   
   //if currently procesing command only concerns base
   if(mode == 2) {
-    
-    if(base.distanceToGo() != 0){
-      base.run();
-      
+    if(abs(base.distanceToGo()) >= 1){
+      base.runSpeed();
     }else{
       mode = 0;
+      Serial.println("mode set to 0 again");
       base.setSpeed(0);
-      base.setMaxSpeed(0);
-      base.run();
+      base.setMaxSpeed(max_base_speed);
+      base.runSpeed();
       Serial.println("done:i" + String(current_index));
+      //base.setCurrentPosition(0);
     }
-    //timeout
-    if(millis() - timeout_begin >= 15000)
-      mode = 0;
-      Serial.println("timeout");
   }
 
   //if(mode == 3 ){ base.run(); extruder.run();}
 
   if(mode == 4){
-    base.run();
-
-    //if command stack is not empty -> process command and set mode to 1
+    base.runSpeed();
+    //Serial.println("currently running base in mode 4");
+    //if command stack is not empty -> process command and set mode to 0
     if(commands[0] != "None"){
-      mode = 1;
-      process_command(commands[0]);
+      mode = 0;
+      Serial.println("speed only overriden by different command");
     }
   }
 
@@ -81,7 +75,7 @@ void loop() {
 
 //read input that is called every loop iteration
 void read_input(){
-
+  
   //read icoming text and transform it
   char buffer[32]; // Buffer to hold incoming data
   Serial.setTimeout(10);
@@ -120,14 +114,11 @@ void push_back(String input){
 
   for(int i = 0; i < 5; i++){
 
-    
     if(commands[i] == "None"){
       commands[i] = input;
       return;
     }
-    
   }
-  
 }
 
 
@@ -144,7 +135,10 @@ void process_command(String command){
     { speed_base(command);}
   else if(command.startsWith("reset_base"))
     { reset_base();}
-  else{Serial.println("Invalid command");}
+  else
+  {Serial.println("Invalid command");
+    mode = 0;
+     }
 
   shift_entries();
   timeout_begin = millis();
@@ -171,25 +165,30 @@ bool turn_base(String command){
   int speed = speedString.toInt();
   int index = indexString.toInt();
 
- 
-
+  if(position-previous_base_pos <= 0){
+    speed = speed *(-1);
+  }
   // calculate the number of steps required to move the specified distance
   float distanceInDeg = position;
-  float degPerStep = 1.8; // Adjust this value based on your stepper motor specifications
+  float degPerStep = 1.8/16; // Adjust this value based on your stepper motor specifications
   int steps = distanceInDeg / degPerStep;
 
   //set mode
   mode = 2;
 
   base.moveTo(steps);
-  base.setMaxSpeed(speed);
+  base.setMaxSpeed(max_base_speed);
   base.setSpeed(speed);
   current_index = index;
+  previous_base_pos = position;
 
 }
 
 //command that the extruder is turned
-bool turn_extruder(String command){}
+bool turn_extruder(String command){
+  Serial.println("theoretical turning of extruder");
+  mode = 0;
+}
 
 
 void print_stack(){
@@ -198,7 +197,7 @@ void print_stack(){
   for(int i = 0; i< 5; i++){
     output += commands[i] + " ; ";
   }
-
+  Serial.println("previous position: " + String(previous_base_pos));
   Serial.println(output);
 
 }
@@ -206,24 +205,14 @@ void print_stack(){
 // only let the base turn with speed
 bool speed_base(String command){
 
-  Serial.println("\n-Ackknowleged: base turning at speed");
-  int sIndex = command.indexOf('s');
-  
+  Serial.println("\n-Acknowleged: base turning at speed");
 
   // Extract the position and speed from the command String
-  
-  String speedString = command.substring(sIndex + 1);
- 
-
-  // Convert the position and speed to integers
-  
-  int speed = speedString.toInt();
-  
-
-  Serial.println("ack_s");
-  base.setMaxSpeed(1000);
+  int speed = command.substring(2).toInt();
+  Serial.println("speed is" + String(speed));
+  base.setMaxSpeed(max_base_speed);
   base.setSpeed(speed);
-  base.run();
+  base.runSpeed();
   mode = 4;
   
 }
@@ -234,22 +223,26 @@ bool timeout_check(){}
 
 bool reset_base(){
 
+  for(int i = 0; i < 5; i++){
+    commands[i] = "None";
 
+  }
   base.setCurrentPosition(0);
   Serial.println("position reset");
+  mode = 0;
 }
 
 bool init_motors(){
 
     Serial.println("\n-Ackknowleged: Motor initialization");
-    base.setMaxSpeed(100);
-    base.setSpeed(500);
+    base.setMaxSpeed(100000);
+    base.setSpeed(600);
     unsigned long startTime = millis();
     unsigned long duration = 1000; // 3 seconds
     while (millis() - startTime < duration) {
         base.runSpeed();
     }
-    base.setSpeed(-1000);
+    base.setSpeed(-600);
     startTime = millis();
     duration = 1000; // 3 seconds
     while (millis() - startTime < duration) {
@@ -261,4 +254,5 @@ bool init_motors(){
 
     reset_base();
 
+    mode = 0;
 }

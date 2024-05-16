@@ -63,11 +63,9 @@ void loop() {
 
             Serial.println("ack_b");
             
-            
-
             // calculate the number of steps required to move the specified distance
             float distanceInDeg = position;
-            float degPerStep = 1.8; // Adjust this value based on your stepper motor specifications
+            float degPerStep = 1.8/16; // Adjust this value based on your stepper motor specifications
             int steps = distanceInDeg / degPerStep;
 
             
