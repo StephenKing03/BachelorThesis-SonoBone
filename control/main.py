@@ -51,4 +51,5 @@ def init_logger():
 
 
 #---------------main program start------------
+RobotStats().portname = "COM3"
 gui.init_gui()

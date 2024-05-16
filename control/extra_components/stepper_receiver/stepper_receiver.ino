@@ -8,7 +8,7 @@ String commands[5] = {"None", "None", "None", "None", "None"};
 int mode = 0; // 0 = waiting, 1 = fulfilling, 2 = base.runtoposition, 3 = base + extruder run, 4 = only speedmode for base
 int current_index = 0;
 String previous_input = "None";
-
+int j = 0;
 
 
 
@@ -25,11 +25,14 @@ void setup(){
 }
 
 void loop() {
-
+  j++;
   //read input and maybe attach it to the stack of commands
   read_input();
+  //delay(800);
+  //Serial.println(String(j)+ ": " + String(commands[4]));
+  
 
-
+  
   //if currently not processing any command 
   if(mode == 0){
 
@@ -54,7 +57,6 @@ void loop() {
       base.setMaxSpeed(0);
       base.run();
       Serial.println("done:i" + String(current_index));
-      shift_entries();
     }
     //timeout
     if(millis() - timeout_begin >= 15000)
@@ -76,6 +78,30 @@ void loop() {
 
 }
 
+
+//read input that is called every loop iteration
+void read_input(){
+
+  //read icoming text and transform it
+  char buffer[32]; // Buffer to hold incoming data
+  Serial.setTimeout(10);
+  int length = Serial.readBytesUntil('\n', buffer, sizeof(buffer) - 1);
+  buffer[length] = '\0'; // Null-terminate the String
+  String input = String(buffer);
+
+  if(input.startsWith("print")){
+    print_stack();
+    return;
+  }
+  
+  if(input != "" && input != previous_input){
+    Serial.println("read: " + input);
+    push_back(input);
+    previous_input = input;
+  }
+  
+}
+
 //shift entries to one in front
 void shift_entries(){
 
@@ -87,54 +113,44 @@ void shift_entries(){
 
 //put new input at first entry that is not 'None'
 void push_back(String input){
+  if(commands[4] != "None"){
+    Serial.println("Stack Full");
+    return;
+  }
 
   for(int i = 0; i < 5; i++){
 
-    if(commands[i] != "None"){
+    
+    if(commands[i] == "None"){
       commands[i] = input;
       return;
     }
-    Serial.println("Stack Full!");
+    
   }
-
+  
 }
 
 
 //process any possible command
 void process_command(String command){
 
-  if(command.startsWith("init")) init_motors();
+  if(command.startsWith("init"))
+    {init_motors();}
+  else if(command.startsWith("b"))
+    { turn_base(command);}
+  else if(command.startsWith("e"))
+    { turn_extruder(command);}
+  else if(command.startsWith("sb"))
+    { speed_base(command);}
+  else if(command.startsWith("reset_base"))
+    { reset_base();}
+  else{Serial.println("Invalid command");}
 
-  if(command.startsWith("b")) turn_base(command);
-
-  if(command.startsWith("e")) turn_extruder(command);
-
-  if(command.startsWith("sb")) speed_base(command);
-  
-  if(command.startsWith("reset_base")) reset_base();
-
-  if(command.startsWith("print")) print_stack();
-
+  shift_entries();
   timeout_begin = millis();
 
 }
 
-//read input that is called every loop iteration
-void read_input(){
-
-  //read icoming text and transform it
-  char buffer[32]; // Buffer to hold incoming data
-  Serial.setTimeout(10);
-  int length = Serial.readBytesUntil('\n', buffer, sizeof(buffer) - 1);
-  buffer[length] = '\0'; // Null-terminate the String
-  String input = String(buffer);
-  
-  if(input != "" && input != previous_input){
-    Serial.println("read: " + input);
-    push_back(input);
-    previous_input = input;
-  }
-}
 
 // command that the base is turned
 bool turn_base(String command){
@@ -186,6 +202,7 @@ void print_stack(){
   Serial.println(output);
 
 }
+
 // only let the base turn with speed
 bool speed_base(String command){
 

@@ -26,6 +26,7 @@ def extract_coordinates(file_path):
         e = 0
         
         for line in file:
+            print(line)
             if i <44:
                 i+=1
                 continue

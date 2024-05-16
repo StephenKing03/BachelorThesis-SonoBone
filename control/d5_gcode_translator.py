@@ -29,6 +29,7 @@ def extract_coordinates(file_path):
         e = 0
         
         for line in file:
+            
             er = False
             values = line.split()
             if len(values) >= 6:
@@ -41,6 +42,7 @@ def extract_coordinates(file_path):
                 e = 0
                 #classic cartesian coordinates + three quaternion values
                 pose = [x, y, z, a, b, c]
+                
                 cartesian_coordinates.append([pose[0], pose[1], pose[2], pose[3], pose[4], pose[5], e, False])
             else:
                 er = True
@@ -60,10 +62,12 @@ def extract_coordinates(file_path):
             cartesian_coordinates[i][1] += y_offset
             #transform into rotating base
             pose = transform_rotating_base(cartesian_coordinates[i])	
-            coordinates.append([pose[0:5], cartesian_coordinates[i][6], cartesian_coordinates[i][7]]) #transformed pose + extrusion values + error flag
+            coordinates.append([pose[0], pose[1], pose[2], pose[3], pose[4], cartesian_coordinates[i][6], cartesian_coordinates[i][7]]) #transformed pose + extrusion values + error flag
 
-    GlobalState().cartesian_coordinates = coordinates   
+    GlobalState().cartesian_coordinates = cartesian_coordinates   
     GlobalState().coordinates = coordinates
+    print("coordinates: ")
+    print(str(coordinates))
     return coordinates
 
 def display_preview():

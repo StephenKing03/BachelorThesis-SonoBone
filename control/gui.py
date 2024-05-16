@@ -44,7 +44,7 @@ global speed_up_button
 global speed_down_button
 global e_speed_up_button
 global e_speed_down_button
-global calibrate_button
+
 global reset_button
 global preview_button
 
@@ -421,6 +421,7 @@ def init_print_but():
 
     if(GlobalState().msb != None):
         GlobalState().terminal_text += "Already Initialized"
+        GlobalState().occupied = False
         #no need to reenable because it is disabled after being initialized
         return
 
@@ -452,8 +453,8 @@ def init():
         GlobalState().printing_state = 0    #6 = error
         return
 
-
-    GUI.reenable_button(init_button) #not needed as the button is not useful anymore 
+    GlobalState().occupied = False
+    #GUI.reenable_button(init_button) #not needed as the button is not useful anymore 
     return
 
 def select_file_but():

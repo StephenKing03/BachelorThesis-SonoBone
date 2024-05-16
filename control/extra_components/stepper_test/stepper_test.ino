@@ -146,13 +146,13 @@ void loop() {
             Serial.println("ack");
             Serial.println("Initializing stepper");
             stepper.setMaxSpeed(max_speed);
-            stepper.setSpeed(500);
+            stepper.setSpeed(200);
             unsigned long startTime = millis();
             unsigned long duration = 1000; // 3 seconds
             while (millis() - startTime < duration) {
                 stepper.runSpeed();
             }
-            stepper.setSpeed(-1000);
+            stepper.setSpeed(-200);
             startTime = millis();
             duration = 1000; // 3 seconds
             while (millis() - startTime < duration) {

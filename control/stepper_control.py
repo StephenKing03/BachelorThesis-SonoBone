@@ -149,7 +149,7 @@ def wait_done():
             message = GlobalState().arduino_port.readline().decode().strip()
             print(message)
             if message == "done":
-                print("done init")
+                print("-done init")
                 break
         except serial.SerialException:
             print("Could not read from port")
