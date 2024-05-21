@@ -46,6 +46,32 @@ def send_speed(value):
 
     return
 
+def extrude_speed():
+    
+        extrusion_speed = RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100
+    
+        # Convert value to message
+        message = "sp" + str(extrusion_speed)
+    
+        # Convert message to bytes - for sending
+        message_bytes = message.encode()
+    
+        # Send the bytes over serial
+        GlobalState().arduino_port.write(message_bytes)
+    
+        return
+
+def stop_extrude():
+
+    # Convert value to message
+        message = "sp" + str(0)
+    
+        # Convert message to bytes - for sending
+        message_bytes = message.encode()
+    
+        # Send the bytes over serial
+        GlobalState().arduino_port.write(message_bytes)
+
 
 def send_position(value):
 

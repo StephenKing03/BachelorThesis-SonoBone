@@ -66,8 +66,8 @@ def extract_coordinates(file_path):
 
     GlobalState().cartesian_coordinates = cartesian_coordinates   
     GlobalState().coordinates = coordinates
-    print("coordinates: ")
-    print(str(coordinates))
+    #print("coordinates: ")
+    #print(str(coordinates))
     return coordinates
 
 def display_preview():
@@ -138,9 +138,9 @@ def write_coordinates(coordinates, self):
         if(i > 1):
             checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100)
             start_time = time.time()
-            print(f'Checkpoint {i} reached')
+            #print(f'Checkpoint {i} reached')
             sc.wait_done_base(checkpoint_theta, i-1)
-            print(f'Checkpoint_theta {i} reached after {time.time() - start_time} seconds')
+            print(f'Checkpoint_theta {i} reached {time.time() - start_time} seconds after robot arm reached')
         checkpoint = next_checkpoint
         checkpoint_theta = next_checkpoint_theta
         

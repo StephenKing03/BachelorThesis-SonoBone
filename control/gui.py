@@ -307,7 +307,7 @@ def start_print_but():
     progress_thread.start()
     try:
         ''' change this for the 5d print, exchange d5 with gt '''
-        print_thread = threading.Thread(target=d5.start_print)  
+        print_thread = threading.Thread(target=gt.start_print)  
         print_thread.start()
         
         #wait for program to finish to update the text
@@ -678,6 +678,7 @@ def e_speed_up_but():
     GlobalState().extrusion_speed_modifier += GlobalState().extrusion_speed_increment
     GlobalState().extrusion_speed_modifier = round(GlobalState().extrusion_speed_modifier, 2)
     e_speed_textbox.delete(0, ctk.END)
+    sc.extrude_speed(GlobalState().extrusion_speed_modifier)
 
     # Insert the new text
     e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
@@ -701,6 +702,7 @@ def e_speed_down_but():
     GlobalState().extrusion_speed_modifier -= GlobalState().extrusion_speed_increment
     GlobalState().extrusion_speed_modifier = round(GlobalState().extrusion_speed_modifier, 2)
     e_speed_textbox.delete(0, ctk.END)
+    sc.extrude_speed(GlobalState().extrusion_speed_modifier)
 
     # Insert the new text
     e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
@@ -877,6 +879,7 @@ def on_e_speed_textbox_return(event):
         e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
         return
     GlobalState().extrusion_speed_modifier = value
+    sc.extrude_speed(GlobalState().extrusion_speed_modifier)
     e_speed_textbox.delete(0, ctk.END)
     # Insert the new text
     e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')

@@ -12,7 +12,7 @@ class GlobalState:
 
     #user_z_offset - RT variable for z offset tuning
     user_z_offset = 0
-    user_z_offset_increment = 0.5
+    user_z_offset_increment = 0.1
     max_z_offset = 10
     max_speed = 650
 
@@ -69,10 +69,10 @@ class GlobalState:
 
 class RobotStats:
     def __init__(self):
-        self.min_z = -55 #-68 and then -55
+        self.min_z = 20.6 
         self.max_z = 100
         self.min_x = 120
-        self.max_x = 210
+        self.max_x = 160
         self.min_y = -50
         self.max_y = 50
 
@@ -82,7 +82,7 @@ class RobotStats:
 
         self.tooloffset_x = 0
         self.tooloffset_y = 0
-        self.tooloffset_z = 110+30 #was 182.4 and then 110+30
+        self.tooloffset_z = 41.2 #was 182.4 and then 110+30
         self.tooloffset_alpha = 0
         self.tooloffset_beta = 0
         self.tooloffset_gamma = 0

@@ -13,15 +13,16 @@ import os
 
 
 #---extract the coordinates from the gcode file---------------------------------------------------------
+#---extract the coordinates from the gcode file---------------------------------------------------------
 def extract_coordinates(file_path):
     coordinates = []
 
     
     with open(file_path, 'r') as file:
         i = 0
-        x = RobotStats().min_x + (RobotStats().max_x -RobotStats().min_x) /2
+        x = 0
         y = 0
-        z = RobotStats().max_z
+        z = 0
         
         e = 0
         
@@ -53,12 +54,16 @@ def extract_coordinates(file_path):
     return coordinates
 
 def display_preview():
-    coordinates = np.array(GlobalState().coordinates).T
+    coordinates = np.array(GlobalState().cartesian_coordinates).T
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.plot(*coordinates)
     filename = os.path.basename(GlobalState().filepath)
     ax.set_title(filename)
+
+    #add printbed 
+    circle = plt.Circle((0, 0), 5, color='black', fill=False)
+    ax.add_artist(circle)
 
     # Create a new Tkinter window
     window = tk.Tk()
@@ -68,35 +73,26 @@ def display_preview():
     canvas = FigureCanvasTkAgg(fig, master=window)
     canvas.draw()
     canvas.get_tk_widget().pack()
-    
-
-    # Show the plot
-    #plt.show()
 
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
-def write_coordinates(coordinates, self, x_offset, y_offset):
+def write_coordinates(coordinates,x_offset, y_offset, self):
+
 
     self.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
-    uf.adjust_speed(GlobalState().printspeed_modifier,self)
+    uf.adjust_speed(GlobalState().printspeed_modifier, self)
 
     #coordinates consist of [x, y, z, e, er]        
     z_0 = RobotStats().min_z 
-
-    #offset from modify placement
-    non_none_z = 0
-    non_none_x = 0
-    non_none_y = 0
-    previous_percent = 0
-    non_none_e = 0
-    last_e = 0
     i = 0
     length = len(coordinates)
 
-    #main printing loop
-    for x, y, z, e, er in coordinates:
-        
-        print(f'--{i}--')
+    last_theta = 0
 
+    #main printing loop
+    sc.extrude_speed()
+    for x, y, z, e, er in coordinates:
+
+    #--------------------------loop control-----------------------------------------
         #wait in this position when the print is paused
         while(GlobalState().printing_state != 2): #print paused 
             if GlobalState().printing_state == 5:
@@ -110,69 +106,86 @@ def write_coordinates(coordinates, self, x_offset, y_offset):
                 print("exit path 2")
                 print(GlobalState().printing_state)
                 return
-
+    #-------------------------------------------------------------------------------
+    #--------------------------progress report--------------------------------------
         i += 1 #index
         GlobalState().current_line = i
-        
         GlobalState().current_progress = round(float(i)/float(length) * 100, 1)
-        
 
-        #blank line -> skip
-        if(x == None and y == None and z == None):
-            continue
-        #reference so that constant z is managed if z is not specified
-        if(z != None):
-            non_none_z = z
-        if(x != None):
-            non_none_x = x
-        if(y != None):
-            non_none_y = y  
-        if(e != None):
-            non_none_e = e
 
+    #-------------------------------------------------------------------------------
+    #--------------------------checkpoint system------------------------------------
         #---Set Checkpoint---
         next_checkpoint = GlobalState().msb.SetCheckpoint(i)
 
         if(i > 1):
-            checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100) 
+            checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100)
+            start_time = time.time()
+            #print(f'Checkpoint {i} reached')
+            
+            print(f'Checkpoint_theta {i} reached {time.time() - start_time} seconds after robot arm reached')
         checkpoint = next_checkpoint
-        print(f'Checkpoint {i} reached')
-        print(e)
-
-
-        #if x and y are not specified, move to current position with z offset
-        if (x == None or y == None):
-            
-            #print(f'{non_none_x+x_offset}, {non_none_y + y_offset}, {z+z_0+10}')
-            uf.commandPose(non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180, self)
-            GlobalState().last_pose = [non_none_x+x_offset, non_none_y + y_offset, z + z_0 + 10 + GlobalState().user_z_offset, 180, 0, -180]
-            if(e != None):
-                sc.send_position(e - last_e)
-                last_e = e
-
-            
-        elif z == None:
-            
-            uf.commandPose(x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180, self)
-            GlobalState().last_pose = [x+x_offset, y+y_offset, non_none_z + z_0 + GlobalState().user_z_offset, 180, 0, -180]
-            if(e != None ):
-                sc.send_position(e - last_e)
-                last_e = e
-        else:
-            print("!-!-!-!-!Line skip error!-!-!-!-!")
-            #GlobalState().terminal_text += "Line skip error"
+        
+    #-------------------------------------------------------------------------------
+    #--------------------------send print commands----------------------------------
+        uf.commandPose(x+x_offset, y + y_offset, z + RobotStats().min_z + GlobalState().user_z_offset, 180, 0, -180, self)
+        #sc.turn_base(theta, i)
+        GlobalState().last_pose = [x, y, z + z_0  + GlobalState().user_z_offset, 180, 0, -180]
+        print(f'Printing line {i} of {length} at {GlobalState().current_progress}%')
+        #sc.send_position(e - last_e)
+        last_e = e
 
         time.sleep(0.01)
         GlobalState().checkpoint_reached = False
         
         #-------------------finished print -----------------------------
     
-    sc.send_speed(0)
+    sc.stop_extrude
+    #sc.send_speed(0)
     #set speed higher again
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')
     uf.endpose(self)
     #print finished
     GlobalState().printing_state = 4
+    return
+
+
+#main printing function - refers to the other functions in this file
+def start_print():
+    
+    #Extract coordinates
+    GlobalState().terminal_text += "Extracting coordinates from file..."
+    coordinates = extract_coordinates(GlobalState().filepath)
+            
+    x_offset,y_offset = modify_placement(coordinates)
+    time.sleep(2)
+    GlobalState().terminal_text += " --done! - Starting print--"
+    
+    #wait for msb != None with timeout
+    start_time = time.time() #reset timer
+    timeout = False
+    while (GlobalState().msb == None and timeout):
+        if(time.time() - start_time > 10):
+            timeout = True
+            break
+        time.sleep(0.1)
+
+    if timeout == True:
+        GlobalState().terminal_text += "Robot not connected"
+        GlobalState().occupied = False
+        GlobalState().printing_state = 5
+        return
+
+    time.sleep(1)
+    
+    #set starting position
+    uf.startpose(GlobalState().msb)
+    GlobalState().msb.WaitIdle()
+
+    #start printing
+    GlobalState().printing_state = 2
+    write_coordinates(coordinates, x_offset, y_offset,GlobalState().msb)
+
     return
 
 def modify_placement(coordinates):
@@ -228,54 +241,3 @@ def modify_placement(coordinates):
 
 
     return x_offset, y_offset
-
-#main printing function - refers to the other functions in this file
-def start_print():
-
-    x_offset = 0
-    y_offset = 0
-    
-    #Extract coordinates
-    GlobalState().terminal_text += "Extracting coordinates from file..."
-    coordinates = extract_coordinates(GlobalState().filepath)
-
-    x_offset, y_offset = modify_placement(coordinates)
-    
-    if x_offset == None or y_offset == None:
-        GlobalState().terminal_text += "Select a different File that fits"
-        GlobalState().confirmed = True
-        GlobalState().printing_state = 5
-        return
-        
-    
-    time.sleep(2)
-    GlobalState().terminal_text += " --done! - Starting print--"
-    
-    #wait for msb != None with timeout
-    start_time = time.time() #reset timer
-    timeout = False
-    while (GlobalState().msb == None and timeout):
-        if(time.time() - start_time > 10):
-            timeout = True
-            break
-        time.sleep(0.1)
-
-    if timeout == True:
-        GlobalState().terminal_text += "Robot not connected"
-        GlobalState().confirmed = True
-        GlobalState().printing_state = 5
-        return
-
-    time.sleep(1)
-    
-    #set starting position
-    uf.startpose(GlobalState().msb)
-   
-    
-    GlobalState().msb.WaitIdle()
-
-    GlobalState().printing_state = 2
-    #start printing
-    write_coordinates(coordinates,GlobalState().msb, x_offset, y_offset)
-
-    return

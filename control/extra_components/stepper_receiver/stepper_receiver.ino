@@ -37,7 +37,7 @@ void loop() {
     //Serial.println("mode is 0");
     //if command stack is not empty -> process command and set mode to 1
     if(commands[0] != "None"){
-      Serial.println("command in the queue");
+      
       mode = 1;
       process_command(commands[0]);
     }
@@ -66,12 +66,21 @@ void loop() {
     //if command stack is not empty -> process command and set mode to 0
     if(commands[0] != "None"){
       mode = 0;
-      Serial.println("speed only overriden by different command");
+      Serial.println("speed-only overriden by different command");
+    }
+  }
+
+  if(mode == 5){
+    extruder.runSpeed();
+    //Serial.println("currently running base in mode 4");
+    //if command stack is not empty -> process command and set mode to 0
+    if(commands[0] != "None"){
+      mode = 0;
+      Serial.println("extruderspeed-only overriden by different command");
     }
   }
 
 }
-
 
 //read input that is called every loop iteration
 void read_input(){
@@ -133,6 +142,8 @@ void process_command(String command){
     { turn_extruder(command);}
   else if(command.startsWith("sb"))
     { speed_base(command);}
+  else if(command.startsWith("se"))
+    { speed_extruder(command);}
   else if(command.startsWith("reset_base"))
     { reset_base();}
   else
@@ -209,11 +220,25 @@ bool speed_base(String command){
 
   // Extract the position and speed from the command String
   int speed = command.substring(2).toInt();
-  Serial.println("speed is" + String(speed));
+  Serial.println("speed is " + String(speed));
   base.setMaxSpeed(max_base_speed);
   base.setSpeed(speed);
   base.runSpeed();
   mode = 4;
+  
+}
+// only let the extruder turn with speed
+bool speed_extruder(String command){
+
+  Serial.println("\n-Acknowleged: extruder turning at speed");
+
+  // Extract the position and speed from the command String
+  int speed = command.substring(2).toInt();
+  Serial.println("extruderspeed is " + String(speed));
+  //extruder.setMaxSpeed(max_base_speed);
+  extruder.setSpeed(speed);
+  extruder.runSpeed();
+  mode = 5;
   
 }
 
