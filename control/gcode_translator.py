@@ -31,8 +31,8 @@ def extract_coordinates(file_path):
             if i <44:
                 i+=1
                 continue
-            if line.startswith(';TIME_ELAPSED'):
-                break
+            #if line.startswith(';TIME_ELAPSED'):
+                #break
             if line.startswith('G0') or line.startswith('G1'):
                 
                 er = False
@@ -50,7 +50,7 @@ def extract_coordinates(file_path):
                         e = float(command[1:])
                 coordinates.append([x, y, z, e, er])
                 
-    GlobalState().coordinates = coordinates
+    GlobalState().cartesian_coordinates = coordinates
     return coordinates
 
 def display_preview():
@@ -62,8 +62,8 @@ def display_preview():
     ax.set_title(filename)
 
     #add printbed 
-    circle = plt.Circle((0, 0), 5, color='black', fill=False)
-    ax.add_artist(circle)
+    #circle = plt.Circle((0, 0), 5, color='black', fill=False)
+    #ax.add_artist(circle)
 
     # Create a new Tkinter window
     window = tk.Tk()

@@ -1,7 +1,7 @@
 #include "AccelStepper.h"
 #include "Vector.h"
-AccelStepper base = AccelStepper(1,3,6);
-AccelStepper extruder = AccelStepper(1,2,5);
+AccelStepper base = AccelStepper(1,2,5);
+AccelStepper extruder = AccelStepper(1,3,6);
 int timeout_begin = 0;
 // Array for stored commands
 String commands[5] = {"None", "None", "None", "None", "None"};
@@ -33,8 +33,6 @@ void loop() {
 
   //if currently not processing any command 
   if(mode == 0){
-    
-    //Serial.println("mode is 0");
     //if command stack is not empty -> process command and set mode to 1
     if(commands[0] != "None"){
       
@@ -235,7 +233,7 @@ bool speed_extruder(String command){
   // Extract the position and speed from the command String
   int speed = command.substring(2).toInt();
   Serial.println("extruderspeed is " + String(speed));
-  //extruder.setMaxSpeed(max_base_speed);
+  extruder.setMaxSpeed(max_base_speed);
   extruder.setSpeed(speed);
   extruder.runSpeed();
   mode = 5;
