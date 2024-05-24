@@ -402,7 +402,7 @@ def stop():
     GlobalState().filepath = " "
     GlobalState().msb.ResetError()
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
-    sc.send_speed(0)
+    #sc.send_speed(0)
     uf.cleanpose(GlobalState().msb)
     GlobalState().msb.WaitIdle()
     GlobalState().printing_state = 1 #1 = ready to print
@@ -529,7 +529,7 @@ def pause():
     
     GlobalState().printing_state = 3 #3 = paused
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().joint_vel_limit})')
-    sc.send_speed(0)
+    #sc.send_speed(0)
     GlobalState().msb.WaitIdle()
     #GlobalState().msb.ClearMotion() #Watch OUT! This clears the motion queue
     time.sleep(0.3)
@@ -678,7 +678,7 @@ def e_speed_up_but():
     GlobalState().extrusion_speed_modifier += GlobalState().extrusion_speed_increment
     GlobalState().extrusion_speed_modifier = round(GlobalState().extrusion_speed_modifier, 2)
     e_speed_textbox.delete(0, ctk.END)
-    sc.extrude_speed(GlobalState().extrusion_speed_modifier)
+    #sc.extrude_speed(GlobalState().extrusion_speed_modifier)
 
     # Insert the new text
     e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
@@ -702,7 +702,7 @@ def e_speed_down_but():
     GlobalState().extrusion_speed_modifier -= GlobalState().extrusion_speed_increment
     GlobalState().extrusion_speed_modifier = round(GlobalState().extrusion_speed_modifier, 2)
     e_speed_textbox.delete(0, ctk.END)
-    sc.extrude_speed(GlobalState().extrusion_speed_modifier)
+    #sc.extrude_speed(GlobalState().extrusion_speed_modifier)
 
     # Insert the new text
     e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
@@ -879,7 +879,7 @@ def on_e_speed_textbox_return(event):
         e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')
         return
     GlobalState().extrusion_speed_modifier = value
-    sc.extrude_speed(GlobalState().extrusion_speed_modifier)
+    #sc.extrude_speed(GlobalState().extrusion_speed_modifier)
     e_speed_textbox.delete(0, ctk.END)
     # Insert the new text
     e_speed_textbox.insert(0, f'{GlobalState().extrusion_speed_modifier}%')

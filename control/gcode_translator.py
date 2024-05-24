@@ -89,7 +89,7 @@ def write_coordinates(coordinates,x_offset, y_offset, self):
     last_theta = 0
 
     #main printing loop
-    sc.extrude_speed()
+   # sc.extrude_speed()
     for x, y, z, e, er in coordinates:
 
     #--------------------------loop control-----------------------------------------
@@ -140,7 +140,7 @@ def write_coordinates(coordinates,x_offset, y_offset, self):
         
         #-------------------finished print -----------------------------
     
-    sc.stop_extrude
+    #sc.stop_extrude
     #sc.send_speed(0)
     #set speed higher again
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')

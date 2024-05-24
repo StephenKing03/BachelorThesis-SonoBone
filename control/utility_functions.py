@@ -230,8 +230,8 @@ def init_sequence():
         GlobalState().msb.ResetError()
         
         #activate steppers
-        sc.init_steppers()
-        sc.wait_done()
+        #sc.init_steppers()
+        #sc.wait_done()
 
         
     msb = GlobalState().msb

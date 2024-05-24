@@ -69,10 +69,10 @@ class GlobalState:
 
 class RobotStats:
     def __init__(self):
-        self.min_z = 21.6 +5.5
+        self.min_z = -1.8
         self.max_z = 100
-        self.min_x = 120
-        self.max_x = 160
+        self.min_x = 110
+        self.max_x = 170
         self.min_y = -50
         self.max_y = 50
 
@@ -82,7 +82,7 @@ class RobotStats:
 
         self.tooloffset_x = 0
         self.tooloffset_y = 0
-        self.tooloffset_z = 41.2 #was 182.4 and then 110+30
+        self.tooloffset_z = 80 #was 182.4 and then 110+30
         self.tooloffset_alpha = 0
         self.tooloffset_beta = 0
         self.tooloffset_gamma = 0
