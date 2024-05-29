@@ -5,10 +5,13 @@ import stepper_control as sc
 from globals import GlobalState
 from globals import RobotStats
 
+
 import numpy as np
 import matplotlib.pyplot as plt
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.patches as patches
+from mpl_toolkits.mplot3d import art3d
 import os
 
 
@@ -70,27 +73,33 @@ def extract_coordinates(file_path):
     #print(str(coordinates))
     return coordinates
 
-def display_preview():
-    coordinates = np.array(GlobalState().cartesian_coordinates).T
+
+def visualize_coordinates():
+    # Get the coordinates
+    coordinates = GlobalState().cartesian_coordinates  # Replace this with the function that returns your coordinates
+
+    # Convert the list to a numpy array and transpose it
+    coordinates = np.array(coordinates).T
+
+    # Create a 3D plot
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.plot(*coordinates)
-    filename = os.path.basename(GlobalState().filepath)
-    ax.set_title(filename)
 
-    #add printbed 
-    circle = plt.Circle((0, 0), 5, color='black', fill=False)
-    ax.add_artist(circle)
+    # Set the labels for the axes
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
 
-    # Create a new Tkinter window
-    window = tk.Tk()
-    window.title("SonoBone Print Preview")
+    # Check the shape of the coordinates array
+    if coordinates.shape[0] >= 3:
+        # If there are three or more sets of values, plot the first three as x, y, z
+        ax.plot(coordinates[0][0:10], coordinates[1][0:10], coordinates[2][0:10])
+    else:
+        raise ValueError("Invalid number of coordinate sets")
 
-    # Create a canvas and add the plot to it
-    canvas = FigureCanvasTkAgg(fig, master=window)
-    canvas.draw()
-    canvas.get_tk_widget().pack()
+    plt.show()
 
+    return
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
 def write_coordinates(coordinates, self):
 
@@ -134,6 +143,8 @@ def write_coordinates(coordinates, self):
         #---Set Checkpoint---
         next_checkpoint = GlobalState().msb.SetCheckpoint(i)
         next_checkpoint_theta = theta
+        if(i>0):
+            sc.wait_done_base(last_theta, i-1)
 
         if(i > 1):
             checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100)
@@ -147,13 +158,11 @@ def write_coordinates(coordinates, self):
     #-------------------------------------------------------------------------------
     #--------------------------send print commands----------------------------------
         uf.commandPose5d(x+RobotStats().center_x, y + RobotStats().center_y, z + RobotStats().min_z + GlobalState().user_z_offset, phi, 0, -180, self)
-        sc.turn_base(theta, i)
+        sc.send_combined_position(theta, i)
         GlobalState().last_pose = [x, y, z + z_0  + GlobalState().user_z_offset, phi, 0, -180]
         GlobalState().last_base_angle = theta
         print(f'Printing line {i} of {length} at {GlobalState().current_progress}%')
-        if(e != None ):
-                #sc.send_position(e - last_e)
-                last_e = e
+        
 
         time.sleep(0.01)
         GlobalState().checkpoint_reached = False
@@ -165,6 +174,7 @@ def write_coordinates(coordinates, self):
     #set speed higher again
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')
     uf.endpose(self)
+    sc.stop_extrude()
     #print finished
     GlobalState().printing_state = 4
     return

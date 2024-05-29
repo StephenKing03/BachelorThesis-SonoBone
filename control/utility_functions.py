@@ -218,9 +218,7 @@ def init_sequence():
 
     #connect to robot if the robot is not connected already (e.g. from reset)
     if(GlobalState().msb == None):
-        #sc.init_steppers()
-        # sc.wait_ack()
-        
+
         GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
         GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
         
@@ -230,8 +228,9 @@ def init_sequence():
         GlobalState().msb.ResetError()
         
         #activate steppers
-        #sc.init_steppers()
-        #sc.wait_done()
+        sc.init_steppers()
+        time.sleep(3)
+        sc.wait_init()
 
         
     msb = GlobalState().msb

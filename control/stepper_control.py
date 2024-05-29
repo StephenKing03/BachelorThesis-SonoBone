@@ -10,7 +10,7 @@ def find_arduino():
         try:
             # Try to open and close the port
             # If it fails, it's not the Arduino
-            GlobalState().arduino_port = serial.Serial(port.device, 9600, timeout=1)
+            GlobalState().arduino_port = serial.Serial(port.device, 115200, timeout=1)
             time.sleep(3)
             
             
@@ -28,69 +28,25 @@ def command_speed():
     return
 
 
-# Function to send the integer value to the stepper motor
-def send_speed(value):
-
+def send_combined_position(base_position, index):
     
-    #port = GlobalState().arduino_port
-    port  = GlobalState().arduino_port
+    extrusion_speed = RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100
+    base_speed = GlobalState().printspeed_modifier * 0.1
     # Convert value to message
-    message = "sp" + str(value)
-
+    message = "c" + str(extrusion_speed) + "b" + str(base_position) + "s" + str(base_speed) + "i" + str(index)
+    
     # Convert message to bytes - for sending
     message_bytes = message.encode()
-
+    
     # Send the bytes over serial
-    port.write(message_bytes)
-    print("speed "  +str(value) + " sent")
-
+    GlobalState().arduino_port.write(message_bytes)
+    
     return
-
-def extrude_speed():
-    
-        extrusion_speed = RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100
-    
-        # Convert value to message
-        message = "sp" + str(extrusion_speed)
-    
-        # Convert message to bytes - for sending
-        message_bytes = message.encode()
-    
-        # Send the bytes over serial
-        GlobalState().arduino_port.write(message_bytes)
-    
-        return
 
 def stop_extrude():
 
     # Convert value to message
-        message = "sp" + str(0)
-    
-        # Convert message to bytes - for sending
-        message_bytes = message.encode()
-    
-        # Send the bytes over serial
-        GlobalState().arduino_port.write(message_bytes)
-
-
-def send_position(value):
-
-    extrusion_speed = RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100
-
-    '''test with constant extrusion'''
-
-    if(value == 0):
-        send_speed(0)
-    elif(value > 0):
-        send_speed(extrusion_speed)
-    elif(value < 0):
-        send_speed(-extrusion_speed)
-    '''end test with constant extrusion'''
-
-    return
-
-    # Convert value to message
-    message = "p" + str(value) + ";s" + str(extrusion_speed)
+    message = "exstop"
 
     # Convert message to bytes - for sending
     message_bytes = message.encode()
@@ -98,15 +54,26 @@ def send_position(value):
     # Send the bytes over serial
     GlobalState().arduino_port.write(message_bytes)
 
-def retract(direction = -1):
+    return
 
-    if direction > 0:
-        value = 10
-    else:
-        value = -10
-        
+
+def retract_extrude():
+
     # Convert value to message
-    message = "p" + str(value) + ";s" + str(extrusion_speed)
+    message = "exretract"
+
+    # Convert message to bytes - for sending
+    message_bytes = message.encode()
+
+    # Send the bytes over serial
+    GlobalState().arduino_port.write(message_bytes)
+
+    return
+
+def engage_extrude():
+
+    # Convert value to message
+    message = "exengage"
 
     # Convert message to bytes - for sending
     message_bytes = message.encode()
@@ -143,21 +110,20 @@ def read_steppers():
     while True:
         #read from serial port
         message = GlobalState().arduino_port.readline()
-        print(message)
+        if(message != ""):
+            GlobalState().arduino_info.append(message)
+            print("------" + str(message))
 
-    return
+def wait_init():
 
-def wait_ack():
-    
     while True:
-        print("wait ack")
+        print("wait init")
         try:
             # Read from serial port
-            
             message = GlobalState().arduino_port.readline().decode().strip()
             print(message)
-            if message == "ack":
-                print("acknowledged init")
+            if message == "initialized":
+                print("init done")
                 break
         except serial.SerialException:
             print("Could not read from port")
@@ -165,40 +131,20 @@ def wait_ack():
 
     return
 
-def wait_done():
-    
-    while True:
-        print("wait done")
-        try:
-            # Read from serial port
-            
-            message = GlobalState().arduino_port.readline().decode().strip()
-            print(message)
-            if message == "done":
-                print("-done init")
-                break
-        except serial.SerialException:
-            print("Could not read from port")
-            break
-
-        time.sleep(0.05)
-    return
 
 def wait_done_base(theta, index):
 
     while True:
-        print("wait base" + str(theta))
-        try:
-            # Read from serial port
-            message = GlobalState().arduino_port.readline().decode().strip()
-            print(message)
-            if message == "done:i"+str(index):
-                print("base position reached" + str(index))
+        print("wait_done_base" + str(index))
+        messages = GlobalState().arduino_info
+        for i, message in enumerate(messages):
+            if message == "-done i"  + str(index):
+                print("done")
+                GlobalState().arduino_info = GlobalState().arduino_info[i:]
                 break
-        except serial.SerialException:
-            print("Could not read from port")
-            break
-
+            
+            
+        
     return
 
 
@@ -223,8 +169,6 @@ def turn_base(theta, index):
     # Send the bytes over serial
     port.write(message_bytes)
     print("theta "  +str(theta) + " sent")
-
-
 
     return
 

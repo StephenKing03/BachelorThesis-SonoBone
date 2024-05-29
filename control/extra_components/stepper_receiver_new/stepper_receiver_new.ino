@@ -16,6 +16,7 @@ float previous_extruder_half_duration = 0;
 bool continue_extruder = false;
 float previous_switchtime = micros();
 bool extruder_high = false;
+bool base_high = false;
 
 
 // STEP_PIN , DIR_PIN for small CNC Shield
@@ -45,27 +46,16 @@ void loop() {
     handle_leftover_extruder_rotation();
 }
 
-void switch_extruder(bool high){
-
-  if(high == true){
-    digitalWrite(STEP_Extruder, LOW);
-  }else{
-    digitalWrite(STEP_Extruder, HIGH);
-  }
-}
-
 void handle_leftover_extruder_rotation(){
 
   if(continue_extruder && micros()  - previous_switchtime > previous_extruder_half_duration){
-    switch_extruder(extruder_high);
+    switch_extruder();
   }
 
   if(continue_extruder == false){
-
     digitalWrite(STEP_Extruder, LOW);
     digitalWrite(DIR_Extruder, LOW);
     extruder_high = false;
-
   }
 
 }
@@ -75,7 +65,7 @@ void read_input(){
   
   //read icoming text and transform it
   char buffer[32]; // Buffer to hold incoming data
-  Serial.setTimeout(10);
+  Serial.setTimeout(2);
   int length = Serial.readBytesUntil('\n', buffer, sizeof(buffer) - 1);
   buffer[length] = '\0'; // Null-terminate the String
   String input = String(buffer);
@@ -104,9 +94,6 @@ float setRotationSpeed(float speed) {
     int MICROSTEPPING_FACT = 16;
     return 1000000L * 360L / 2L / STEPS_PER_REVOLUTION / MICROSTEPPING_FACT / speed;
 }
-
-
-
 
 
 //function to turn the base to a certain position
@@ -140,48 +127,7 @@ bool turn_base(String command){
   Serial.println("-done i" + String(index));
 }
 
-void combined_turning(String command){
 
-  Serial.println("\nAckknowleged: combined turning initiated");
-
-  int cIndex = command.indexOf('c');
-  int pIndex = command.indexOf('b');
-  int sIndex = command.indexOf('s');
-  int iIndex = command.indexOf('i');
-
-  // Extract the position and speed from the command String
-  String extruderString = command.substring(cIndex + 1, cIndex);
-  String positionString = command.substring(pIndex + 1, sIndex);
-  String speedString = command.substring(sIndex + 1,iIndex);
-  String indexString = command.substring(iIndex + 1);
-
-  // Convert the position and speed to integers
-  int extruder = extruderString.toInt();
-  int position = positionString.toInt();
-  int speed = speedString.toInt();   
-  int index = indexString.toInt();
-
-  
-
-
-  //calc steps and speed
-  int extruder_halfPulse = setRotationSpeed(extruder);
-  int stepgoal = setStepsNumber(position, previous_base_position);
-  float halfPulseDuration = setRotationSpeed(speed);
-  previous_base_position = position;
-  
-  
-  //actually move the motors
-  if(extruder > 0){
-    move_combined(stepgoal, 1, halfPulseDuration, extruder_halfPulse);}
-  else {
-    move_combined(stepgoal, -1, halfPulseDuration, extruder_halfPulse);
-    
-  }
-  Serial.println("-done i" + String(index)); 
-
-
-}
 
 
 void move_base_solo(int steps, float halfPulseDuration) {
@@ -218,51 +164,112 @@ void init_motors(){
   
   Serial.println("initialized");
 }
+void combined_turning(String command){
+
+  Serial.println("\nAckknowleged: combined turning initiated: " + command);
+
+  int cIndex = command.indexOf('c');
+  int bIndex = command.indexOf('b');
+  int sIndex = command.indexOf('s');
+  int iIndex = command.indexOf('i');
+
+  // Extract the position and speed from the command String
+  String extruderString = command.substring(cIndex + 1, bIndex);
+  String positionString = command.substring(bIndex + 1, sIndex);
+  String speedString = command.substring(sIndex + 1,iIndex);
+  String indexString = command.substring(iIndex + 1);
+
+  // Convert the position and speed to integers
+  int extruder = extruderString.toInt();
+  int position = positionString.toInt();
+  int speed = speedString.toInt();   
+  int index = indexString.toInt();
+
+  //calc steps and speed
+  int extruder_halfPulse = setRotationSpeed(abs(extruder));
+  int stepgoal = setStepsNumber(position, previous_base_position);
+  float halfPulseDuration = setRotationSpeed(speed);
+  previous_base_position = position;
+  
+  
+  //actually move the motors
+  move_combined(stepgoal, extruder, halfPulseDuration, extruder_halfPulse);
+    
+  
+  Serial.println("-done i" + String(index)); 
+
+
+}
+
 void move_combined(int steps_base, int direction_extruder, float halfPulseDuration_base, float halfPulseDuration_extruder){
 
+  continue_extruder = true;
+  //Serial.print("Base duration: " + String(halfPulseDuration_base) + "; Extruder:" + String(halfPulseDuration_extruder)+ "Extruder Direction: " + String(direction_extruder));
   //set direction
   if(steps_base > 0){
     digitalWrite(DIR_Base, LOW); 
   }else{
     digitalWrite(DIR_Base, HIGH);
   }
+  
   if(direction_extruder > 0){
-    digitalWrite(DIR_Extruder, LOW); 
-  }else
-    digitalWrite(DIR_Extruder, HIGH);
+    digitalWrite(DIR_Extruder, LOW);
+    Serial.print("direction front") ;
+  }else{
+   digitalWrite(DIR_Extruder, HIGH);
+   Serial.print("direction back") ;}
+   
 
-  if(halfPulseDuration_base > halfPulseDuration_extruder){
   extruder_high = false;
-  digitalWrite(STEP_Extruder, LOW);
-  double iteration_time = micros();
-  for (int i = 0; i < abs(steps_base); i++) {
-      iteration_time = micros();
-      
-        digitalWrite(STEP_Base, HIGH);
-        while(micros() - iteration_time < halfPulseDuration_base){
-            if((micros() - previous_switchtime) > halfPulseDuration_extruder){
-              switch_extruder(extruder_high);
-              previous_switchtime = micros();
-            }
-        }
+  base_high = false;
+  
+  previous_switchtime = micros();
+  double previous_base_steptime = micros();
+  int steps_done = 0;
+  
+    while(steps_done < abs(steps_base)){
+        
+        if((micros() - previous_base_steptime) > halfPulseDuration_base){
+                switch_base();
+                previous_base_steptime = micros();
+                steps_done++;
+              }
 
-        digitalWrite(STEP_Base, LOW);
-        iteration_time = micros();
-        while(micros() - iteration_time < halfPulseDuration_base){
-            if((micros() - previous_switchtime) > halfPulseDuration_extruder){
-              switch_extruder(extruder_high);
-              previous_switchtime = micros();
-            }
-        }
-    }
 
-    digitalWrite(STEP_Base, LOW);
-    digitalWrite(DIR_Base, LOW);
+        if((micros() - previous_switchtime) > halfPulseDuration_extruder){
+                switch_extruder();
+                previous_switchtime = micros();
+              }
+          
+    }  
 
-  }
-
+      digitalWrite(STEP_Base, LOW);
+      digitalWrite(DIR_Base, LOW);
 
 }
+
+void switch_extruder(){
+
+  if(extruder_high == true){
+    digitalWrite(STEP_Extruder, LOW);
+    extruder_high = false;
+  }else{
+    digitalWrite(STEP_Extruder, HIGH);
+    extruder_high = true;
+  }
+}
+
+void switch_base(){
+
+  if(base_high == true){
+    digitalWrite(STEP_Base, LOW);
+    base_high = false;
+  }else{
+    digitalWrite(STEP_Base, HIGH);
+    base_high = true;
+  }
+}
+
 void process_data(String command){
 
   if(command.startsWith("init")) // command "init"

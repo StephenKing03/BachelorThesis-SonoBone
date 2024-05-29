@@ -46,6 +46,8 @@ class GlobalState:
     last_base_angle = 0
     previous_state = 0
 
+    arduino_info = [None]
+
     #progress
     current_line = 0
     displaying_preview = False 
@@ -69,7 +71,7 @@ class GlobalState:
 
 class RobotStats:
     def __init__(self):
-        self.min_z = -1.8
+        self.min_z = 0
         self.max_z = 100
         self.min_x = 110
         self.max_x = 170
@@ -82,7 +84,7 @@ class RobotStats:
 
         self.tooloffset_x = 0
         self.tooloffset_y = 0
-        self.tooloffset_z = 80 #was 182.4 and then 110+30
+        self.tooloffset_z = 93 
         self.tooloffset_alpha = 0
         self.tooloffset_beta = 0
         self.tooloffset_gamma = 0
