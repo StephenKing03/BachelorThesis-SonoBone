@@ -73,10 +73,10 @@ class RobotStats:
     def __init__(self):
         self.min_z = 0
         self.max_z = 100
-        self.min_x = 110
+        self.min_x = 112
         self.max_x = 170
-        self.min_y = -50
-        self.max_y = 50
+        self.min_y = -40
+        self.max_y = 40
 
         self.diameter = 90
         self.center_x = 165

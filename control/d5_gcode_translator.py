@@ -51,13 +51,12 @@ def extract_coordinates(file_path):
                 er = True
                 cartesian_coordinates.append([0, 0, 0, 0, 180, 0, -180, er])
 
-            
-
             #---finished reading all the lines---
 
         coordinates = []
         #shift them into the middle and transform then into the rotating base system
         x_offset, y_offset = shift_to_middle(cartesian_coordinates)
+        print("x_offset: " + str(x_offset) + " y_offset: " + str(y_offset))
         for i in range(len(cartesian_coordinates)):
             
             #shift to be centered
@@ -69,35 +68,53 @@ def extract_coordinates(file_path):
 
     GlobalState().cartesian_coordinates = cartesian_coordinates   
     GlobalState().coordinates = coordinates
-    #print("coordinates: ")
-    #print(str(coordinates))
+
+    #print(coordinates)
+
     return coordinates
 
 
-def visualize_coordinates():
+import matplotlib.patches as patches
+from mpl_toolkits.mplot3d import art3d
+
+def display_preview():
     # Get the coordinates
-    coordinates = GlobalState().cartesian_coordinates  # Replace this with the function that returns your coordinates
+    if(GlobalState().cartesian_coordinates != []):
+        coordinates = GlobalState().cartesian_coordinates
+        
 
-    # Convert the list to a numpy array and transpose it
-    coordinates = np.array(coordinates).T
+        # Convert the list to a numpy array and transpose it
+        coordinates = np.array(coordinates).T
+        print(coordinates)
+        # Create a 3D plot
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
 
-    # Create a 3D plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+        # Set the labels for the axes
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        '''
+        ax.set_xlim(-1, 1)
+        ax.set_ylim(-1, 1)
+        ax.set_zlim(0, 2)
+        '''
 
-    # Set the labels for the axes
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-
-    # Check the shape of the coordinates array
-    if coordinates.shape[0] >= 3:
-        # If there are three or more sets of values, plot the first three as x, y, z
-        ax.plot(coordinates[0][0:10], coordinates[1][0:10], coordinates[2][0:10])
+            # Check the shape of the coordinates array
+        if coordinates.shape[0] >= 3:
+            # If there are three or more sets of values, plot the first three as x, y, z
+            ax.plot(coordinates[0][0:10], coordinates[1][0:10], coordinates[2][0:10])
+        else:
+            raise ValueError("Invalid number of coordinate sets")
+        
+        # Add a circle in the z-plane
+        circle = patches.Circle((0, 0, 0),0.005, color='r', fill=False)  # Create a circle at the origin with radius 50
+        ax.add_patch(circle)  # Add the circle to the plot
+        art3d.pathpatch_2d_to_3d(circle, z=0, zdir="z")  # Convert the 2D circle to a 3D patch at z=0
+        
+        plt.show()  
     else:
-        raise ValueError("Invalid number of coordinate sets")
-
-    plt.show()
+        GlobalState().terminal_text += "Visualization not possible \n            - wait for coordinates to be extracted first"            
 
     return
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
@@ -112,10 +129,10 @@ def write_coordinates(coordinates, self):
     i = 0
     length = len(coordinates)
 
-    last_theta = 0
+    last_theta_base = 0
 
     #main printing loop
-    for x, y, z, phi, theta, e, er in coordinates:
+    for x, y, z, phi_robot, theta_base, e, er in coordinates:
 
     #--------------------------loop control-----------------------------------------
         #wait in this position when the print is paused
@@ -126,7 +143,7 @@ def write_coordinates(coordinates, self):
                 return
             time.sleep(0.1)
         
-        # Check printing_state if the print is stoppedc
+        # Check printing_state if the print is stopped
             if GlobalState().printing_state == 5:  
                 print("exit path 2")
                 print(GlobalState().printing_state)
@@ -142,25 +159,49 @@ def write_coordinates(coordinates, self):
     #--------------------------checkpoint system------------------------------------
         #---Set Checkpoint---
         next_checkpoint = GlobalState().msb.SetCheckpoint(i)
-        next_checkpoint_theta = theta
-        if(i>0):
-            sc.wait_done_base(last_theta, i-1)
+        next_checkpoint_theta_base = theta_base
+        
+        #wait for base to be reached
+        if(i>1):
+            print("wait done base: " + str(i-1))
+            while sc.done_base(i-1) == False:
+                if GlobalState().printing_state != 2:  
+                    print("exit path 4")
+                    print(GlobalState().printing_state)
+                    break
+                time.sleep(0.1)
+            
+        
+        #make it that the first position is already there
+        #if(i == 1):
+            #sc.reset_pos(theta_base)
 
+        #if(i>1):
+         #   sc.wait_base(i-1)
         if(i > 1):
             checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100)
             start_time = time.time()
             #print(f'Checkpoint {i} reached')
-            sc.wait_done_base(checkpoint_theta, i-1)
-            print(f'Checkpoint_theta {i} reached {time.time() - start_time} seconds after robot arm reached')
+            #sc.wait_done_base(checkpoint_theta_base, i-1)
+            print(f'Checkpoint_theta_base {i} reached {time.time() - start_time} seconds after robot arm reached')
         checkpoint = next_checkpoint
-        checkpoint_theta = next_checkpoint_theta
+        checkpoint_theta_base = next_checkpoint_theta_base
         
     #-------------------------------------------------------------------------------
     #--------------------------send print commands----------------------------------
-        uf.commandPose5d(x+RobotStats().center_x, y + RobotStats().center_y, z + RobotStats().min_z + GlobalState().user_z_offset, phi, 0, -180, self)
-        sc.send_combined_position(theta, i)
-        GlobalState().last_pose = [x, y, z + z_0  + GlobalState().user_z_offset, phi, 0, -180]
-        GlobalState().last_base_angle = theta
+
+        if(phi_robot < 130 and phi_robot > 0):
+            phi_robot = 130
+            print("corrected")
+        elif (phi_robot > -130 and phi_robot < 0):
+            phi_robot = 230
+            print("corrected")
+        
+        uf.commandPose5d(x+RobotStats().center_x, y + RobotStats().center_y, z + RobotStats().min_z + GlobalState().user_z_offset, phi_robot, 0, -180, self)
+        sc.send_combined_position(theta_base, i)
+        print("Sent combined position: " + str(i))
+        GlobalState().last_pose = [x, y, z + z_0  + GlobalState().user_z_offset, phi_robot, 0, -180]
+        GlobalState().last_base_angle = theta_base
         print(f'Printing line {i} of {length} at {GlobalState().current_progress}%')
         
 
@@ -229,9 +270,9 @@ def start_print():
 def rad_to_deg(rad):
     return rad * 180 / np.pi
 
-def rotation_around_z(pre, theta):
-    return np.array([[np.cos(theta), -np.sin(theta), 0],
-                     [np.sin(theta), np.cos(theta), 0],
+def rotation_around_z(pre, theta_base):
+    return np.array([[np.cos(theta_base), -np.sin(theta_base), 0],
+                     [np.sin(theta_base), np.cos(theta_base), 0],
                      [0, 0, 1]]) @ pre 
 
 def transform_rotating_base(coordinate):
@@ -241,18 +282,18 @@ def transform_rotating_base(coordinate):
     #print("r: " + str(r))
     #print("p: " + str(p_pre))
 
-    #get angle phi from v to z-axis
-    phi = np.arccos(r[2] / np.linalg.norm(r))
+    #get angle phi_robot from v to z-axis
+    phi_robot = np.arccos(r[2] / np.linalg.norm(r))
 
-    #get angle theta from v projected into the xy-plane to y-axis
-    theta = np.arccos(r[1] / (np.sin(phi) * np.linalg.norm(r)))
+    #get angle theta_base from v projected into the xy-plane to y-axis
+    theta_base = np.arccos(r[1] / (np.sin(phi_robot) * np.linalg.norm(r)))
 
 
     #transform coordinates from before p_pre to p_post
-    p_post = rotation_around_z(p_pre, theta)
+    p_post = rotation_around_z(p_pre, theta_base)
 
     
-    return [p_post[0], p_post[1], p_post[2], rad_to_deg(theta), rad_to_deg(phi), 0]
+    return [p_post[0], p_post[1], p_post[2], rad_to_deg(theta_base), rad_to_deg(phi_robot), 0]
 
 
 def shift_to_middle(coordinates):
@@ -282,10 +323,8 @@ def shift_to_middle(coordinates):
 
 
 #calculate offset so that the print is centered
-    '''           + (half the distance left if evenly spaced)     '''
-    x_offset = -min_x  + (max_x - min_x) /2
-    '''         (align to the left edge)      + (half the distance left if evenly spaced)      '''
-    y_offset = -min_y  + max_y - min_y /2
+    x_offset = -min_x - (max_x - min_x) /2
+    y_offset = -min_y - (max_y - min_y) /2
 
 
     return x_offset, y_offset

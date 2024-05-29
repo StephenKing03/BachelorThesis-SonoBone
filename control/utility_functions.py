@@ -148,7 +148,7 @@ def checklimits(x, y, z, self = mdr.Robot()):
 #---move the robot to a predefined position (cleanpose) so that it doesn't obstruct anything---------------------------------------------------------
 def cleanpose(self = mdr.Robot()):
 
-    self.MoveJoints(0, -60, 60, 0, 0, 0)
+    self.MoveJoints(0, -50, 60, 0, 30, 0)
 
     self.WaitIdle()
     print('cleanpose reached')

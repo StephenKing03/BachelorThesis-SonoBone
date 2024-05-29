@@ -4,6 +4,22 @@ from tkinter import filedialog
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from mpl_toolkits.mplot3d import Axes3D
+import math
+import time #for time.sleep()
+import utility_functions as uf #import utility functions
+import stepper_control as sc
+from globals import GlobalState
+from globals import RobotStats
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.patches as patches
+from mpl_toolkits.mplot3d import art3d
+import os
+
 
 
 #---extract the coordinates from the gcode file---------------------------------------------------------
@@ -27,9 +43,9 @@ def extract_coordinates(file_path):
             er = False
             values = line.split()
             if len(values) >= 6:
-                x = 0.1*float(values[0])
-                y = 0.1*float(values[1])
-                z = 0.1*float(values[2])
+                x = float(values[0])
+                y = float(values[1])
+                z = float(values[2])
                 a = float(values[3])
                 b = float(values[4])
                 c = float(values[5])
@@ -48,31 +64,42 @@ def extract_coordinates(file_path):
 
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-
-def visualize_coordinates():
+def display_preview():
     # Get the coordinates
-    file_path = filedialog.askopenfilename()
-    coordinates = extract_coordinates(file_path)  # Replace this with the function that returns your coordinates
+    
+        file_path = filedialog.askopenfilename()
+        coordinates = extract_coordinates(file_path)
 
-    # Convert the list to a numpy array and transpose it
-    coordinates = np.array(coordinates).T
+        # Convert the list to a numpy array and transpose it
+        coordinates = np.array(coordinates).T
 
-    # Create a 3D plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+        # Create a 3D plot
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
 
-    # Set the labels for the axes
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
+        # Set the labels for the axes
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
 
-    # Check the shape of the coordinates array
-    if coordinates.shape[0] >= 3:
-        # If there are three or more sets of values, plot the first three as x, y, z
-        ax.plot(coordinates[0][0:10], coordinates[1][0:10], coordinates[2][0:10])
-    else:
-        raise ValueError("Invalid number of coordinate sets")
+        ax.set_xlim(-10, 10)
+        ax.set_ylim(-10, 10)
+        ax.set_zlim(0, 20)
 
-    plt.show()
 
-visualize_coordinates()
+            # Check the shape of the coordinates array
+        if coordinates.shape[0] >= 3:
+            # If there are three or more sets of values, plot the first three as x, y, z
+            ax.plot(coordinates[0][0:10], coordinates[1][0:10], coordinates[2][0:10])
+        else:
+            raise ValueError("Invalid number of coordinate sets")
+
+        # Add a circle in the z-plane
+        circle = patches.Circle((0, 0),5, color='r', fill=False)  # Create a circle at the origin with radius 50
+        ax.add_patch(circle)  # Add the circle to the plot
+        art3d.pathpatch_2d_to_3d(circle, z=0, zdir="z")  # Convert the 2D circle to a 3D patch at z=0
+
+        plt.show()  
+    
+
+display_preview()

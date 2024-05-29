@@ -17,6 +17,7 @@ bool continue_extruder = false;
 float previous_switchtime = micros();
 bool extruder_high = false;
 bool base_high = false;
+float last_time = micros();
 
 
 // STEP_PIN , DIR_PIN for small CNC Shield
@@ -31,7 +32,7 @@ bool base_high = false;
 
 
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(250000);
     // Set up pin modes for motor control
 
     pinMode(STEP_Base, OUTPUT);
@@ -52,7 +53,7 @@ void handle_leftover_extruder_rotation(){
     switch_extruder();
   }
 
-  if(continue_extruder == false){
+  if(continue_extruder == false || micros() - last_time > 10000 ){
     digitalWrite(STEP_Extruder, LOW);
     digitalWrite(DIR_Extruder, LOW);
     extruder_high = false;
@@ -65,7 +66,7 @@ void read_input(){
   
   //read icoming text and transform it
   char buffer[32]; // Buffer to hold incoming data
-  Serial.setTimeout(2);
+  Serial.setTimeout(4);
   int length = Serial.readBytesUntil('\n', buffer, sizeof(buffer) - 1);
   buffer[length] = '\0'; // Null-terminate the String
   String input = String(buffer);
@@ -196,7 +197,7 @@ void combined_turning(String command){
   move_combined(stepgoal, extruder, halfPulseDuration, extruder_halfPulse);
     
   
-  Serial.println("-done i" + String(index)); 
+  Serial.println("done i" + String(index)); 
 
 
 }
@@ -213,11 +214,9 @@ void move_combined(int steps_base, int direction_extruder, float halfPulseDurati
   }
   
   if(direction_extruder > 0){
-    digitalWrite(DIR_Extruder, LOW);
-    Serial.print("direction front") ;
+    digitalWrite(DIR_Extruder, HIGH);
   }else{
-   digitalWrite(DIR_Extruder, HIGH);
-   Serial.print("direction back") ;}
+   digitalWrite(DIR_Extruder, LOW);}
    
 
   extruder_high = false;
@@ -245,6 +244,17 @@ void move_combined(int steps_base, int direction_extruder, float halfPulseDurati
 
       digitalWrite(STEP_Base, LOW);
       digitalWrite(DIR_Base, LOW);
+      last_time = micros();
+
+}
+
+void reset_position_to(String command){
+
+ int rIndex = command.indexOf('r');
+ String rString = command.substring(rIndex + 1); 
+ int position = rString.toInt();
+
+ previous_base_position = position;
 
 }
 
@@ -281,11 +291,10 @@ void process_data(String command){
   else if (command.startsWith("exstop")) //command "exstop"
     { Serial.println("extruder stopped");
       continue_extruder = false;}
+  else if (command.startsWith("r"))
+      {reset_position_to(command); }
   else
-    {Serial.println("Invalid Command");}
-
-
-
+    {Serial.println("Invalid Command. Command was: " + String(command));}
 }
 
 
