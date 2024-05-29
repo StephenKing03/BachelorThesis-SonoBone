@@ -309,9 +309,6 @@ def start_print_but():
         ''' change this for the 5d print, exchange d5 with gt '''
         print_thread = threading.Thread(target=d5.start_print)  
         print_thread.start()
-
-        arduino_thread = threading.Thread(target= sc.read_steppers)
-        arduino_thread.start()
         
         #wait for program to finish to update the text
         finished_thread = threading.Thread(target=wait_for_printing)
@@ -334,6 +331,8 @@ def late_init():
     try:
         uf.init_sequence()
         GUI.disable_button(init_button)
+        arduino_thread = threading.Thread(target= sc.read_steppers)
+        arduino_thread.start()
     
     except Exception as e:
         GlobalState().terminal_text += "Error: " + str(e) + " - try again"
@@ -436,6 +435,9 @@ def init_print_but():
     print("start init")
     init_thread = threading.Thread(target=init)
     init_thread.start()
+
+    arduino_thread = threading.Thread(target= sc.read_steppers)
+    arduino_thread.start()
 
     status_update("Ready to print")
     
