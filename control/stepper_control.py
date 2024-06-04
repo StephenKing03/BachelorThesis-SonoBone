@@ -35,8 +35,11 @@ def extrude(distance, speed):
 
 def send_combined_position(base_position, extruder_position, index):
     
-    extrusion_speed = round(RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /100)
+    extrusion_speed = round(RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /10)
     base_speed = round(GlobalState().printspeed_modifier * 0.1,2)
+
+    '''override'''
+    extrusion_speed = 30
     # Convert value to message
     message = "cb" + str(round(base_position,2)) + "s" + str(round(base_speed,2)) + "e" + str(round(extruder_position,2)) + "t" + str(round(extrusion_speed))+ "i" + str(index)
     
@@ -163,7 +166,7 @@ def done_arduino(index):
     try:
         # Read from serial port
         message = GlobalState().arduino_port.readline().decode().strip()
-        print(message)
+        print("waiting" + str(message))
         if message == "-done i" + str(index):
             print("arduino done")
             return

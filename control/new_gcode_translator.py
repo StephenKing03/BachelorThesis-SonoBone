@@ -42,6 +42,9 @@ def extract_coordinates(file_path):
             if line.startswith(';LAYER:0'):
                 start = True #start signal
 
+            if line.startswith('G91 ;Relative positioning'):
+                break #end signal
+
             if start == True and (line.startswith('G0') or line.startswith('G1')):
                 for command in line.split():
                     #if there is an x-value
@@ -94,7 +97,6 @@ def extract_coordinates(file_path):
                         cartesian_coordinates.append([x, y, z, a, b, c, e, f])   
 
         #check maximum size of the print
-
         if(max_x-max_y > RobotStats().max_x- RobotStats().min_x):
             GlobalState().terminal_text +=("Print too large in x-direction for delta x = " + str(max_x - min_x) + "it must be withing the range of delta x = " + str(RobotStats().max_x - RobotStats().min_x))
             return
@@ -110,10 +112,6 @@ def extract_coordinates(file_path):
         y_offset = -min_y - (max_y - min_y) /2
         z_offset = -min_z
 
-        print("max_y: " + str(max_y))
-        print("min_y: " + str(min_y))
-
-        
         
         #modify the coordinates so that they are centered  
         printing_coordinates = modify_coordinates(cartesian_coordinates, x_offset,y_offset,z_offset)
@@ -148,6 +146,15 @@ def write_coordinates():
     #initial setup
     sc.reset_pos(0)
     theta_base = 0
+
+    #test here
+    sc.send_combined_position(30, 30, 1)
+    while sc.done_arduino(1) == False:
+        time.sleep(0.01)
+
+    sc.send_combined_position(0, 30, 1)
+    while sc.done_arduino(1) == False:
+        time.sleep(0.01)
 
     #**main printing loop**
     for x,y,z,a,b,c,e,f in coordinates:
@@ -200,7 +207,7 @@ def write_coordinates():
         checkpoint = next_checkpoint
 
         #-----------------------send commands--------------------------------------------
-        uf.commandPose(x,y,z,a,0,-180)
+        uf.commandPose(x+RobotStats().center_x,y+RobotStats().center_y,z+RobotStats().min_z,a,0,-180)
         sc.send_combined_position(theta_base, e, i)
 
 

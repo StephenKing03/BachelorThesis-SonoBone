@@ -243,7 +243,7 @@ void combined_turning(String command){
   move_combined(base_stepgoal, extruder_stepgoal, base_halfPulseDuration, extruder_halfPulseDuration);
     
   
-  Serial.println("done i" + String(index)); 
+  Serial.println("-done i" + String(index)); 
   //Serial.println("done i" + String(index)); 
 
 
@@ -296,6 +296,7 @@ void move_combined(int steps_base, int steps_extruder, float halfPulseDuration_b
       digitalWrite(STEP_Base, LOW);
       digitalWrite(DIR_Base, LOW);
       last_time = micros();
+      delay(100);
       Serial.println("done");
 
 }
