@@ -22,6 +22,16 @@ def find_arduino():
     # If no port was found, return None
     return None
 
+def extrude(distance, speed):
+
+    extrusion_speed = round(speed * RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /100)
+
+    message = "e" + str(distance) + "s" + str(extrusion_speed)
+
+    message_bytes = message.encode()
+
+    GlobalState().arduino_port.write(message_bytes)
+
 
 def send_combined_position(base_position, index):
     
@@ -35,9 +45,24 @@ def send_combined_position(base_position, index):
     
     # Send the bytes over serial
     GlobalState().arduino_port.write(message_bytes)
-    #print("sent in fundction: " + str(message))
-    
+    #print("sent in fundction: " + str(message))    
     return
+
+def send_base_solo_position(base_position, index):
+    
+    extrusion_speed = round(RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /100)
+    base_speed = round(GlobalState().printspeed_modifier * 0.1,2)
+    # Convert value to message
+    message = "b" + str(round(base_position,2)) + "s" + str(base_speed) + "i" + str(index)
+    
+    # Convert message to bytes - for sending
+    message_bytes = message.encode()
+    
+    # Send the bytes over serial
+    GlobalState().arduino_port.write(message_bytes)
+    #print("sent in fundction: " + str(message))    
+    return
+
 
 def stop_extrude():
 
@@ -132,30 +157,6 @@ def wait_init():
     return
 
 
-def wait_base(index):
-
-    while True:
-        print("wait base")
-        try:
-            # Read from serial port
-            message = GlobalState().arduino_port.readline().decode().strip()
-            print(message)
-            if message == ("done i" + str(index)):
-                print("checkpoint reached")
-                return
-    
-        except serial.SerialException:
-            print("Could not read from port")
-            break
-        #stop if not printing   
-        if GlobalState().printing_state != 2:  
-                    print("exit path 4")
-                    print(GlobalState().printing_state)
-                    return
-
-    return
-
-
 #answers true if the base has reached the desired position of the corresponding index
 def done_base(index):
 
@@ -184,32 +185,6 @@ def reset_pos(theta):
     return
 
 
-
-'''
-def turn_base(theta, index):
-
-    turnspeed_modifier = 1
-    #angle = GlobalState().last_base_angle - theta
-     #if(angle < 0):
-    speed  = GlobalState().printspeed_modifier * turnspeed_modifier
-    #else:
-    #    speed  = -GlobalState().printspeed_modifier * turnspeed_modifier
-    
-    speed = speed * 10
-    
-    port  = GlobalState().arduino_port
-    # Convert value to message
-    message = "b" + str(theta) + "s" + str(speed)+ "i" + str(index)
-
-    # Convert message to bytes - for sending
-    message_bytes = message.encode()
-
-    # Send the bytes over serial
-    port.write(message_bytes)
-    print("theta "  +str(theta) + " sent")
-
-    return
-'''
 
 def close_steppers():
 

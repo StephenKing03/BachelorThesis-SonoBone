@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////
-//         ROBOTIC ARM Arduino Code          //
+//     SonoBone ROBOTIC ARM Arduino Code     //
 //                                           //
 //                                           //
 //              Stephan Koenig               //
@@ -13,6 +13,7 @@
 String command = "";
 float previous_base_position = 0;
 float previous_extruder_half_duration = 0;
+float previous_extruder_position;
 bool continue_extruder = false;
 float previous_switchtime = micros();
 bool extruder_high = false;
@@ -32,7 +33,7 @@ float last_time = micros();
 
 
 void setup() {
-    Serial.begin(250000);
+    Serial.begin(2000000);
     // Set up pin modes for motor control
 
     pinMode(STEP_Base, OUTPUT);
@@ -53,10 +54,11 @@ void handle_leftover_extruder_rotation(){
     switch_extruder();
   }
 
-  if(continue_extruder == false || micros() - last_time > 10000 ){
+  if(continue_extruder == false || micros() - last_time > 100000000 ){
     digitalWrite(STEP_Extruder, LOW);
-    digitalWrite(DIR_Extruder, LOW);
     extruder_high = false;
+    continue_extruder = false;
+    //Serial.println("timed out");
   }
 
 }
@@ -66,7 +68,7 @@ void read_input(){
   
   //read icoming text and transform it
   char buffer[32]; // Buffer to hold incoming data
-  Serial.setTimeout(4);
+  Serial.setTimeout(2);
   int length = Serial.readBytesUntil('\n', buffer, sizeof(buffer) - 1);
   buffer[length] = '\0'; // Null-terminate the String
   String input = String(buffer);
@@ -127,7 +129,57 @@ bool turn_base(String command){
   move_base_solo(stepgoal, halfPulseDuration);
   Serial.println("-done i" + String(index));
 }
+void turn_extruder(String command){
 
+  Serial.println("\nAckknowleged: extruder turning to position");
+
+  int pIndex = command.indexOf('e');
+  int sIndex = command.indexOf('s');
+  int iIndex = command.indexOf('i');
+
+  // Extract the position and speed from the command String
+  String positionString = command.substring(pIndex + 1, sIndex);
+  String speedString = command.substring(sIndex + 1,iIndex);
+  String indexString = command.substring(iIndex + 1);
+
+  // Convert the position and speed to integers
+  int position = positionString.toInt();
+  int speed = speedString.toInt();   
+  int index = indexString.toInt();
+
+
+  //calc steps and speed
+  int stepgoal = setStepsNumber(position, previous_extruder_position);
+  float halfPulseDuration = setRotationSpeed(speed);
+  previous_extruder_position = position;
+  
+  
+  //actually move the motors
+  move_extruder_solo(stepgoal, halfPulseDuration);
+  Serial.println("-done i" + String(index));
+  
+}
+
+void move_extruder_solo(int steps, float halfPulseDuration) {
+
+    //set direction
+    if(steps > 0){
+      digitalWrite(DIR_Extruder, LOW); 
+    }else{
+      digitalWrite(DIR_Extruder, HIGH);
+    }
+
+    for (int i = 0; i < abs(steps); i++) {
+        digitalWrite(STEP_Extruder, HIGH);
+        delayMicroseconds(halfPulseDuration);
+        digitalWrite(STEP_Extruder, LOW);
+        delayMicroseconds(halfPulseDuration);
+    }
+
+    digitalWrite(STEP_Extruder, LOW);
+    digitalWrite(DIR_Extruder, LOW);
+    continue_extruder = false;
+}
 
 
 
@@ -136,8 +188,9 @@ void move_base_solo(int steps, float halfPulseDuration) {
     //set direction
     if(steps > 0){
       digitalWrite(DIR_Base, LOW); 
-    }else
+    }else{
       digitalWrite(DIR_Base, HIGH);
+    }
 
     for (int i = 0; i < abs(steps); i++) {
         digitalWrite(STEP_Base, HIGH);
@@ -291,6 +344,8 @@ void process_data(String command){
   else if (command.startsWith("exstop")) //command "exstop"
     { Serial.println("extruder stopped");
       continue_extruder = false;}
+  else if (command.startsWith("e")){ // command "e[steps extruder]s[speed extruder]"
+      turn_extruder(command);}
   else if (command.startsWith("r"))
       {reset_position_to(command); }
   else

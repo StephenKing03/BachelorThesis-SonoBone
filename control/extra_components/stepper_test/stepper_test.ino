@@ -1,5 +1,5 @@
-#define dirPin 6
-#define stepPin 3
+#define dirPin 2
+#define stepPin 5
 #define motorInterfaceType 1
 #include "AccelStepper.h"
 float last_command = 0;
