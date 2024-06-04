@@ -151,11 +151,12 @@ def write_coordinates():
     sc.send_combined_position(30, 30, 1)
     while sc.done_arduino(1) == False:
         time.sleep(0.01)
-
+    time.sleep(1)
     sc.send_combined_position(0, 30, 1)
     while sc.done_arduino(1) == False:
         time.sleep(0.01)
 
+    time.sleep(1)
     #**main printing loop**
     for x,y,z,a,b,c,e,f in coordinates:
 
