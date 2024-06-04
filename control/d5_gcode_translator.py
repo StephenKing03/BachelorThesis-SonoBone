@@ -4,8 +4,6 @@ import utility_functions as uf #import utility functions
 import stepper_control as sc
 from globals import GlobalState
 from globals import RobotStats
-
-
 import numpy as np
 import matplotlib.pyplot as plt
 import tkinter as tk
@@ -23,66 +21,45 @@ def extract_coordinates(file_path):
     with open(file_path, 'r') as file:
 
         i = 0
-        
+        x = 0
+        y = 0
+        z = 0
+        a = 0
+        b = 0
+        c = 0
+        e = 0
         
         for line in file:
-
-            x = None
-            y = None
-            z = None
-            a = None
-            b = None
-            c = None
-            f = None
-            e = 1
             
+            er = False
+            values = line.split()
+            if len(values) >= 6:
+                x = 0.1*float(values[0])
+                y = 0.1*float(values[1])
+                z = 0.1*float(values[2])
+                a = float(values[3])
+                b = float(values[4])
+                c = float(values[5])
+                e = 0
+                #classic cartesian coordinates + three quaternion values
+                pose = [x, y, z, a, b, c]
+                
+                cartesian_coordinates.append([pose[0], pose[1], pose[2], pose[3], pose[4], pose[5], e, False])
+            else:
+                er = True
+                cartesian_coordinates.append([0, 0, 0, 0, 180, 0, -180, er])
 
-            #skip the first 17 lines
-            if i <17:
-                i+=1
-                continue
-
-            if line.startswith('G0') or line.startswith('G1'):
-                for command in line.split():
-                    if command.startswith('X'):
-                        x = float(command[1:])
-                    elif command.startswith('Y'):
-                        y = float(command[1:])
-                    elif command.startswith('Z'):
-                        z = float(command[1:])
-                    elif command.startswith('A'):
-                        a = float(command[1:])
-                    elif command.startswith('B'):
-                        b = float(command[1:])
-                    elif command.startswith('C'):
-                        c = float(command[1:])
-                    elif command.startswith('E'):
-                        e = float(command[1:])
-                    elif command.startswith('F'):
-                        f = float(command[1:])
-                        
-                    
-                    if x == None or y == None or z == None or a == None or b == None or c == None or f == None:
-                        e = 0
-                        continue
-
-                    else:
-                        #classic cartesian coordinates + three quaternion values                      
-                        cartesian_coordinates.append([x, y, z, a, b, c, e, f])
-                        e = 1
-                    
             #---finished reading all the lines---
 
         coordinates = []
         #shift them into the middle and transform then into the rotating base system
-        x_offset, y_offset, z_offset = shift_to_middle(cartesian_coordinates)
-        #print("x_offset: " + str(x_offset) + " y_offset: " + str(y_offset))
+        x_offset, y_offset = shift_to_middle(cartesian_coordinates)
+        print("x_offset: " + str(x_offset) + " y_offset: " + str(y_offset))
         for i in range(len(cartesian_coordinates)):
             
             #shift to be centered
             cartesian_coordinates[i][0] += x_offset
             cartesian_coordinates[i][1] += y_offset
-            cartesian_coordinates[i][2] += z_offset
             #transform into rotating base
             pose = transform_rotating_base(cartesian_coordinates[i])
             coordinates.append([pose[0], pose[1], pose[2], pose[3], pose[4], cartesian_coordinates[i][6], cartesian_coordinates[i][7]]) #transformed pose + extrusion values + error flag
@@ -93,7 +70,6 @@ def extract_coordinates(file_path):
     #print(coordinates)
 
     return coordinates
-
 
 
 import matplotlib.patches as patches
@@ -136,7 +112,7 @@ def display_preview():
         
         plt.show()  
     else:
-        GlobalState().terminal_text += "Visualization not possible \n - wait for coordinates to be extracted first"            
+        GlobalState().terminal_text += "Visualization not possible \n            - wait for coordinates to be extracted first"            
 
     return
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
@@ -151,10 +127,12 @@ def write_coordinates(coordinates, self):
     i = 0
     length = len(coordinates)
 
-    #main printing loop
-    for x, y, z, phi_robot, theta_base, e, f in coordinates:
+    last_theta_base = 0
 
-    #--------------------------loop print control-----------------------------------------
+    #main printing loop
+    for x, y, z, phi_robot, theta_base, e, er in coordinates:
+
+    #--------------------------loop control-----------------------------------------
         #wait in this position when the print is paused
         while(GlobalState().printing_state != 2): #print paused 
             if GlobalState().printing_state == 5:
@@ -173,6 +151,8 @@ def write_coordinates(coordinates, self):
         i += 1 #index
         GlobalState().current_line = i
         GlobalState().current_progress = round(float(i)/float(length) * 100, 1)
+
+
     #-------------------------------------------------------------------------------
     #--------------------------checkpoint system------------------------------------
         #---Set Checkpoint---
@@ -181,7 +161,7 @@ def write_coordinates(coordinates, self):
         
         #wait for base to be reached
         if(i>1):
-            #print("wait done base: " + str(i-1))
+            print("wait done base: " + str(i-1))
             while sc.done_base(i-1) == False:
                 if GlobalState().printing_state != 2:  
                     print("exit path 4")
@@ -193,7 +173,6 @@ def write_coordinates(coordinates, self):
         #make it that the first position is already there
         #if(i == 1):
             #sc.reset_pos(theta_base)
-        
         if(i > 1):
             checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100)
             start_time = time.time()
@@ -214,13 +193,8 @@ def write_coordinates(coordinates, self):
             print("corrected")
         
         uf.commandPose5d(x+RobotStats().center_x, y + RobotStats().center_y, z + RobotStats().min_z + GlobalState().user_z_offset, phi_robot, 0, -180, self)
-        if e == 0:
-            sc.stop_extrude()
-            sc.send_base_solo_position(theta_base, i)
-            print("Sent solo position: " + str(i))
-        else:
-            sc.send_combined_position(theta_base, i)
-            print("Sent combined position: " + str(i))
+        sc.send_combined_position(theta_base, i)
+        print("Sent combined position: " + str(i))
         GlobalState().last_pose = [x, y, z + z_0  + GlobalState().user_z_offset, phi_robot, 0, -180]
         GlobalState().last_base_angle = theta_base
         print(f'Printing line {i} of {length} at {GlobalState().current_progress}%')
@@ -232,6 +206,7 @@ def write_coordinates(coordinates, self):
         #-------------------finished print -----------------------------
     
 
+    #sc.send_speed(0)
     #set speed higher again
     GlobalState().msb.SendCustomCommand(f'SetJointVelLimit({RobotStats().start_joint_vel_limit})')
     uf.endpose(self)
@@ -337,20 +312,15 @@ def shift_to_middle(coordinates):
                 max_y = y
             elif y < min_y:
                 min_y = y
-        if z != None:
-            if z > max_z:
-                max_z = z
-            elif z < min_z:
-                min_z = z
         
 
         GlobalState().max_z_offset = RobotStats().max_z - max_z
 
+    
 
 #calculate offset so that the print is centered
     x_offset = -min_x - (max_x - min_x) /2
     y_offset = -min_y - (max_y - min_y) /2
-    z_offset = -min_z
 
 
-    return x_offset, y_offset, z_offset
+    return x_offset, y_offset

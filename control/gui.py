@@ -15,7 +15,7 @@ from tkinter import filedialog
 #implement the function for disabling the buttons and error handling
 
 import utility_functions as uf  # import utility functions
-import gcode_translator as gt  # import gcode translator
+import new_gcode_translator as gt  # import gcode translator
 import stepper_control as sc  # import stepper control
 import d5_gcode_translator as d5 #5d test file
 
@@ -248,7 +248,7 @@ def tuning(root):
 
 def open_preview():
 
-    d5.display_preview()
+    gt.display_preview()
     return    
     
 
@@ -307,7 +307,7 @@ def start_print_but():
     progress_thread.start()
     try:
         ''' change this for the 5d print, exchange d5 with gt '''
-        print_thread = threading.Thread(target=d5.start_print)  
+        print_thread = threading.Thread(target=gt.start_print)  
         print_thread.start()
         
         #wait for program to finish to update the text
@@ -331,8 +331,7 @@ def late_init():
     try:
         uf.init_sequence()
         GUI.disable_button(init_button)
-        arduino_thread = threading.Thread(target= sc.read_steppers)
-        arduino_thread.start()
+        
     
     except Exception as e:
         GlobalState().terminal_text += "Error: " + str(e) + " - try again"
@@ -435,9 +434,6 @@ def init_print_but():
     print("start init")
     init_thread = threading.Thread(target=init)
     init_thread.start()
-
-    arduino_thread = threading.Thread(target= sc.read_steppers)
-    arduino_thread.start()
 
     status_update("Ready to print")
     

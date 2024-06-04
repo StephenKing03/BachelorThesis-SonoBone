@@ -19,21 +19,18 @@ import os
 def extract_coordinates(file_path):
     cartesian_coordinates = []
 
-    
     with open(file_path, 'r') as file:
 
         i = 0
         x = None
         y = None
         z = None
+        a = 180
+        b = 0
+        c = -180
         f = 0
         e = 0
-        
-        
         for line in file:
-
-            
-            
 
             #skip the first 17 lines
             if i <17:
@@ -47,13 +44,18 @@ def extract_coordinates(file_path):
                     elif command.startswith('Y'):
                         y = float(command[1:])
                     elif command.startswith('Z'):
-                        z = float(command[1:])
+                        try:
+                            z = float(command[1:])
+                        except:
+                            time.sleep(0.01)
                     elif command.startswith('E'):
                         e = float(command[1:])
                     elif command.startswith('F'):
                         f = float(command[1:])
                         
-                    
+                    a = 180
+                    b = 0
+                    c = -180
                     #classic cartesian coordinates + three quaternion values                      
                     cartesian_coordinates.append([x, y, z, a, b, c, e, f])
                     
@@ -71,8 +73,8 @@ def extract_coordinates(file_path):
             cartesian_coordinates[i][1] += y_offset
             cartesian_coordinates[i][2] += z_offset
             #transform into rotating base
-            pose = transform_rotating_base(cartesian_coordinates[i])
-            coordinates.append([pose[0], pose[1], pose[2], pose[3], pose[4], cartesian_coordinates[i][6], cartesian_coordinates[i][7]]) #transformed pose + extrusion values + error flag
+
+            coordinates.append([cartesian_coordinates[i][0],cartesian_coordinates[i][1],cartesian_coordinates[i][2], cartesian_coordinates[i][3], cartesian_coordinates[i][4], cartesian_coordinates[i][5],cartesian_coordinates[i][6],cartesian_coordinates[i][7]]) 
 
     GlobalState().cartesian_coordinates = cartesian_coordinates   
     GlobalState().coordinates = coordinates
@@ -103,16 +105,12 @@ def display_preview():
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
-        '''
-        ax.set_xlim(-1, 1)
-        ax.set_ylim(-1, 1)
-        ax.set_zlim(0, 2)
-        '''
+
 
             # Check the shape of the coordinates array
         if coordinates.shape[0] >= 3:
             # If there are three or more sets of values, plot the first three as x, y, z
-            ax.plot(coordinates[0][0:10], coordinates[1][0:10], coordinates[2][0:10])
+            ax.plot(coordinates[0], coordinates[1], coordinates[2])
         else:
             raise ValueError("Invalid number of coordinate sets")
         
@@ -126,6 +124,7 @@ def display_preview():
         GlobalState().terminal_text += "Visualization not possible \n - wait for coordinates to be extracted first"            
 
     return
+
 #---write the coordinates (2D print) to the robot ---------------------------------------------------------
 def write_coordinates(coordinates, self):
 
@@ -133,9 +132,6 @@ def write_coordinates(coordinates, self):
     self.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
     uf.adjust_speed(GlobalState().printspeed_modifier, self)
 
-    #coordinates consist of [x, y, z, e, er]        
-    z_0 = RobotStats().min_z 
-    i = 0
     length = len(coordinates)
 
     #main printing loop
@@ -241,7 +237,6 @@ def start_print():
             GlobalState().occupied = False
             GlobalState().printing_state = 5
             return
-        
     
     time.sleep(2)
     GlobalState().terminal_text += " --done! - Starting print--"

@@ -33,7 +33,7 @@ float last_time = micros();
 
 
 void setup() {
-    Serial.begin(2000000);
+    Serial.begin(11520);
     // Set up pin modes for motor control
 
     pinMode(STEP_Base, OUTPUT);
@@ -44,23 +44,7 @@ void setup() {
 }
 
 void loop() {
-    read_input();
-    handle_leftover_extruder_rotation();
-}
-
-void handle_leftover_extruder_rotation(){
-
-  if(continue_extruder && micros()  - previous_switchtime > previous_extruder_half_duration){
-    switch_extruder();
-  }
-
-  if(continue_extruder == false || micros() - last_time > 100000000 ){
-    digitalWrite(STEP_Extruder, LOW);
-    extruder_high = false;
-    continue_extruder = false;
-    //Serial.println("timed out");
-  }
-
+    read_input();  
 }
 
 //read input that is called every loop iteration
@@ -68,7 +52,7 @@ void read_input(){
   
   //read icoming text and transform it
   char buffer[32]; // Buffer to hold incoming data
-  Serial.setTimeout(2);
+  Serial.setTimeout(4);
   int length = Serial.readBytesUntil('\n', buffer, sizeof(buffer) - 1);
   buffer[length] = '\0'; // Null-terminate the String
   String input = String(buffer);
@@ -76,7 +60,6 @@ void read_input(){
   if (input != ""){
       process_data(input);
   }
-
   return;
 }
 
@@ -156,6 +139,7 @@ void turn_extruder(String command){
   
   //actually move the motors
   move_extruder_solo(stepgoal, halfPulseDuration);
+  
   Serial.println("-done i" + String(index));
   
 }
@@ -220,53 +204,60 @@ void init_motors(){
 }
 void combined_turning(String command){
 
+  //command in the form of : 'cb[position base]s[speedbase]e[extruderposition]t[extruderspeed]i[index]
   Serial.println("\nAckknowleged: combined turning initiated: " + command);
 
-  int cIndex = command.indexOf('c');
   int bIndex = command.indexOf('b');
   int sIndex = command.indexOf('s');
+  int eIndex = command.indexOf('e');
+  int tIndex = command.indexOf('t');
   int iIndex = command.indexOf('i');
 
   // Extract the position and speed from the command String
-  String extruderString = command.substring(cIndex + 1, bIndex);
-  String positionString = command.substring(bIndex + 1, sIndex);
-  String speedString = command.substring(sIndex + 1,iIndex);
+  String basepositionString = command.substring(bIndex + 1, sIndex);
+  String basespeedString = command.substring(sIndex + 1,eIndex);
+  String extruderpositionString = command.substring(eIndex + 1, tIndex);
+  String extruderspeedString = command.substring(tIndex, iIndex);
   String indexString = command.substring(iIndex + 1);
 
   // Convert the position and speed to integers
-  int extruder = extruderString.toInt();
-  int position = positionString.toInt();
-  int speed = speedString.toInt();   
+  int extruderspeed = extruderspeedString.toInt();
+  int extruderposition = extruderpositionString.toInt();
+  int baseposition = basepositionString.toInt();
+  int basespeed = basespeedString.toInt();   
   int index = indexString.toInt();
 
   //calc steps and speed
-  int extruder_halfPulse = setRotationSpeed(abs(extruder));
-  int stepgoal = setStepsNumber(position, previous_base_position);
-  float halfPulseDuration = setRotationSpeed(speed);
+
+  int base_stepgoal = setStepsNumber(base_position, previous_base_position);
+  int extruder_stepgoal = setStepsNumber(extruder_position, previous_extruder_position);
+  float base_halfPulseDuration = setRotationSpeed(basespeed);
+  float extruder_halfPulseDuration = setRotationSpeed(extruderspeed);
+
   previous_base_position = position;
-  
+  previous_extruder_position;
   
   //actually move the motors
-  move_combined(stepgoal, extruder, halfPulseDuration, extruder_halfPulse);
+  move_combined(base_stepgoal, extruder_stepgoal, base_halfPulseDuration, extruder_halfPulseDuration);
     
   
   Serial.println("done i" + String(index)); 
+  //Serial.println("done i" + String(index)); 
 
 
 }
 
-void move_combined(int steps_base, int direction_extruder, float halfPulseDuration_base, float halfPulseDuration_extruder){
+void move_combined(int steps_base, int steps_extruder, float halfPulseDuration_base, float halfPulseDuration_extruder){
 
-  continue_extruder = true;
-  //Serial.print("Base duration: " + String(halfPulseDuration_base) + "; Extruder:" + String(halfPulseDuration_extruder)+ "Extruder Direction: " + String(direction_extruder));
-  //set direction
+
   if(steps_base > 0){
     digitalWrite(DIR_Base, LOW); 
   }else{
     digitalWrite(DIR_Base, HIGH);
   }
   
-  if(direction_extruder > 0){
+  //does not work because of the motor for some reason - change polarity with the cable if necessary
+  if(steps_extruder > 0){
     digitalWrite(DIR_Extruder, HIGH);
   }else{
    digitalWrite(DIR_Extruder, LOW);}
@@ -275,22 +266,24 @@ void move_combined(int steps_base, int direction_extruder, float halfPulseDurati
   extruder_high = false;
   base_high = false;
   
-  previous_switchtime = micros();
+  double previous_extruder_steptime = micros();
   double previous_base_steptime = micros();
-  int steps_done = 0;
+  int steps_done_base = 0;
+  int steps_done_extruder = 0;
   
-    while(steps_done < abs(steps_base)){
+    while(steps_done_base < abs(steps_base) && steps_done_extruder < abs(steps_extruder)){
         
-        if((micros() - previous_base_steptime) > halfPulseDuration_base){
+        //switch base
+        if((micros() - previous_base_steptime) > halfPulseDuration_base && steps_done_base < abs(steps_base)){
                 switch_base();
                 previous_base_steptime = micros();
                 steps_done++;
               }
 
 
-        if((micros() - previous_switchtime) > halfPulseDuration_extruder){
+        if((micros() - previous_extruder_steptime) > halfPulseDuration_extruder && steps_done extruder < abs(steps_extruder)){
                 switch_extruder();
-                previous_switchtime = micros();
+                previous_extruder_steptime = micros();
               }
           
     }  

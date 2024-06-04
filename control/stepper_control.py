@@ -33,19 +33,19 @@ def extrude(distance, speed):
     GlobalState().arduino_port.write(message_bytes)
 
 
-def send_combined_position(base_position, index):
+def send_combined_position(base_position, extruder_position, index):
     
     extrusion_speed = round(RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /100)
     base_speed = round(GlobalState().printspeed_modifier * 0.1,2)
     # Convert value to message
-    message = "c" + str(extrusion_speed) + "b" + str(round(base_position,2)) + "s" + str(base_speed) + "i" + str(index)
+    message = "cb" + str(round(base_position,2)) + "s" + str(round(base_speed,2)) + "e" + str(round(extruder_position,2)) + "t" + str(round(extrusion_speed))+ "i" + str(index)
     
     # Convert message to bytes - for sending
     message_bytes = message.encode()
     
     # Send the bytes over serial
     GlobalState().arduino_port.write(message_bytes)
-    #print("sent in fundction: " + str(message))    
+    print("sent in function: " + str(message))    
     return
 
 def send_base_solo_position(base_position, index):
@@ -156,19 +156,21 @@ def wait_init():
 
     return
 
-
 #answers true if the base has reached the desired position of the corresponding index
-def done_base(index):
+def done_arduino(index):
 
-        #print("wait_done_base" + str(index))
-        messages = GlobalState().arduino_info
-        for i, message in enumerate(messages):
-            if message == "done i"  + str(index):
-                print("done")
-                GlobalState().arduino_info = GlobalState().arduino_info[i-1:]
-                return True
-            
-        return False    
+    try:
+        # Read from serial port
+        message = GlobalState().arduino_port.readline().decode().strip()
+        print(message)
+        if message == "-done i" + str(index):
+            print("arduino done")
+            return
+        
+    except serial.SerialException:
+        print("Could not read from port")
+        
+    return False    
             
         
 def reset_pos(theta):
