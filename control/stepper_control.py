@@ -10,7 +10,7 @@ def find_arduino():
         try:
             # Try to open and close the port
             # If it fails, it's not the Arduino
-            GlobalState().arduino_port = serial.Serial(port.device, 250000, timeout=1)
+            GlobalState().arduino_port = serial.Serial(port.device, 115200, timeout=1)
             time.sleep(3)
             
             
@@ -126,6 +126,7 @@ def init_steppers():
     
     return
 
+#not used
 def read_steppers():
 
     while True:

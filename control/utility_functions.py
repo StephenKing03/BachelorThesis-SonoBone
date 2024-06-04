@@ -229,7 +229,6 @@ def init_sequence():
         
         #activate steppers
         sc.init_steppers()
-        time.sleep(3)
         sc.wait_init()
 
         

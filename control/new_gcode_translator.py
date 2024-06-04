@@ -110,6 +110,9 @@ def extract_coordinates(file_path):
         y_offset = -min_y - (max_y - min_y) /2
         z_offset = -min_z
 
+        print("max_y: " + str(max_y))
+        print("min_y: " + str(min_y))
+
         
         
         #modify the coordinates so that they are centered  
@@ -249,8 +252,6 @@ def start_print():
     return
 
 
-
-
 import matplotlib.patches as patches
 from mpl_toolkits.mplot3d import art3d
 
@@ -271,6 +272,7 @@ def display_preview():
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
+
 
 
             # Check the shape of the coordinates array
