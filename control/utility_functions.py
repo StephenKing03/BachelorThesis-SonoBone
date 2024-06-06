@@ -226,6 +226,11 @@ def init_sequence():
         GlobalState().msb.ResetError()
         GlobalState().msb.Home() #Home the robot
         GlobalState().msb.ResetError()
+
+    if(GlobalState().arduino_port == None):
+       #activate steppers
+        sc.init_steppers()
+        sc.wait_init()
         
     
 
@@ -260,10 +265,6 @@ def init_sequence():
     cleanpose(GlobalState().msb)
     GlobalState().msb.WaitIdle()
 
-    if(GlobalState().arduino_port == None):
-       #activate steppers
-        sc.init_steppers()
-        sc.wait_init()
 
 
     GlobalState().printing_state = 1 #1 = ready to print

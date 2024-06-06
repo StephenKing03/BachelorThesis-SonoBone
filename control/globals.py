@@ -17,7 +17,7 @@ class GlobalState:
     max_speed = 650
 
     #printspeed - RT variable for print speed tuning
-    printspeed_modifier = 50 #% 
+    printspeed_modifier = 20 #% 
     printspeed_increment = 5
 
     #extrusion speed modifier
@@ -39,7 +39,7 @@ class GlobalState:
 
     #target position stack for smooth printing
     target_positions = None
-    semaphore = 0
+    sending_to_arduino = False
 
     
     last_pose = [130, 0, 100, 180, 0, -180]

@@ -308,6 +308,9 @@ def start_print_but():
         ''' change this for the 5d print, exchange d5 with gt '''
         print_thread = threading.Thread(target=gt.start_print)  
         print_thread.start()
+
+        arduino_thread = threading.Thread(target=sc.read_steppers)
+        arduino_thread.start()
         
         #wait for program to finish to update the text
         finished_thread = threading.Thread(target=wait_for_printing)

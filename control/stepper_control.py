@@ -35,12 +35,13 @@ def extrude(distance, speed):
 
 def send_combined_position(base_position, extruder_position, index):
     
+    GlobalState().sending_to_arduino = True
     extrusion_speed = round(RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /10)
     base_speed = round(GlobalState().printspeed_modifier * 0.1,2)
 
     '''override'''
     extrusion_speed = 100
-    extruder_position = extruder_position * 10
+    extruder_position = extruder_position * 0.5
     # Convert value to message
     message = "cb" + str(round(base_position,2)) + "s" + str(round(base_speed,2)) + "e" + str(round(extruder_position,2)) + "t" + str(round(extrusion_speed))+ "i" + str(index)
     
@@ -49,7 +50,9 @@ def send_combined_position(base_position, extruder_position, index):
     
     # Send the bytes over serial
     GlobalState().arduino_port.write(message_bytes)
-    print("sent in function: " + str(message))    
+    print("sent in function: " + str(message))   
+    time.sleep(0.02) 
+    GlobalState().sending_to_arduino = False
     return
 
 def send_base_solo_position(base_position, index):
@@ -132,13 +135,13 @@ def init_steppers():
 
 #not used
 def read_steppers():
-
     while True:
         #read from serial port
-        message = GlobalState().arduino_port.readline().decode().strip()
+        if GlobalState().sending_to_arduino == False:
+            message = GlobalState().arduino_port.readline().decode().strip()
 
-        if(message != ""):
-            GlobalState().arduino_info.append(message)
+            if(message != ""):
+                GlobalState().arduino_info.append(message)
         
         #print("message" + message)
         #print("------" + str(GlobalState().arduino_info))
@@ -167,15 +170,28 @@ def done_arduino(index):
     try:
         # Read from serial port
         message = GlobalState().arduino_port.readline().decode().strip()
-        print("waiting" + str(message))
+        #print("waiting: " + str(message))
         if message == "-done i" + str(index):
-            print("arduino done")
+            #print("arduino done")
             return
         
     except serial.SerialException:
         print("Could not read from port")
         
     return False    
+
+def done_arduino_queue(index):
+
+    messages = GlobalState().arduino_info
+    print("waiting for: done i"+ str(index) + "  messages: " + str(messages))
+    for i, message in enumerate(messages):
+        if message == "-done i" + str(index):
+            GlobalState().arduino_info = GlobalState().arduino_info[i-1:] #remove old messages
+            print("arduino checkpoint completed")
+            return True
+        
+    return False
+    
             
         
 def reset_pos(theta):

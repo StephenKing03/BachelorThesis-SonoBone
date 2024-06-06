@@ -152,14 +152,6 @@ def write_coordinates():
     sc.reset_pos(0)
     theta_base = 0
     '''
-    #test here
-    sc.send_combined_position(30, 30, 1)
-    while sc.done_arduino(1) == False:
-        time.sleep(0.01)
-    time.sleep(1)
-    sc.send_combined_position(0, 30, 1)
-    while sc.done_arduino(1) == False:
-        time.sleep(0.01)
 
     time.sleep(1)
     #**main printing loop**
@@ -197,8 +189,8 @@ def write_coordinates():
         next_checkpoint = GlobalState().msb.SetCheckpoint(i)
         
         #wait for arduino to confirm success:
-        if(i>1):
-            while sc.done_arduino(i-1) == False:
+        if(i>2):
+            while sc.done_arduino_queue(i-2) == False:
                 if GlobalState().printing_state != 2:  
                     print("exit path 4")
                     print(GlobalState().printing_state)
@@ -285,18 +277,21 @@ def display_preview():
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
+        ax.set_xlim(-40, 40)
+        ax.set_ylim(-40, 40)
+        ax.set_zlim(0, 100)
 
 
 
-            # Check the shape of the coordinates array
+        # Check the shape of the coordinates array
         if coordinates.shape[0] >= 3:
             # If there are three or more sets of values, plot the first three as x, y, z
-            ax.plot(coordinates[0], coordinates[1], coordinates[2])
+            ax.plot(coordinates[0][::5], coordinates[1][::5], coordinates[2][::5])
         else:
             raise ValueError("Invalid number of coordinate sets")
         
         # Add a circle in the z-plane
-        circle = patches.Circle((0, 0, 0),5, color='r', fill=False)  # Create a circle at the origin with radius 50
+        circle = patches.Circle((0, 0, 0),30, color='r', fill=False)  # Create a circle at the origin with radius 50
         ax.add_patch(circle)  # Add the circle to the plot
         art3d.pathpatch_2d_to_3d(circle, z=0, zdir="z")  # Convert the 2D circle to a 3D patch at z=0
         
