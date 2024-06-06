@@ -39,7 +39,8 @@ def send_combined_position(base_position, extruder_position, index):
     base_speed = round(GlobalState().printspeed_modifier * 0.1,2)
 
     '''override'''
-    extrusion_speed = 30
+    extrusion_speed = 100
+    extruder_position = extruder_position * 10
     # Convert value to message
     message = "cb" + str(round(base_position,2)) + "s" + str(round(base_speed,2)) + "e" + str(round(extruder_position,2)) + "t" + str(round(extrusion_speed))+ "i" + str(index)
     
@@ -160,7 +161,7 @@ def wait_init():
 
     return
 
-#answers true if the base has reached the desired position of the corresponding index
+#returns true if it reads the message that the base has reached the desired position of the corresponding index
 def done_arduino(index):
 
     try:
@@ -189,8 +190,6 @@ def reset_pos(theta):
     #print("sent in fundction: " + str(message))
     
     return
-
-
 
 def close_steppers():
 

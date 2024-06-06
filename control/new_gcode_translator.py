@@ -15,7 +15,7 @@ from mpl_toolkits.mplot3d import art3d
 import os
 
 def extract_coordinates(file_path):
-    cartesian_coordinates = []
+    coordinates = []
 
     with open(file_path, 'r') as file:
 
@@ -94,7 +94,7 @@ def extract_coordinates(file_path):
 
                     if(x != None and y != None and z != None):
                         #print(x, y, z, a, b, c, e, f)
-                        cartesian_coordinates.append([x, y, z, a, b, c, e, f])   
+                        coordinates.append([x, y, z, a, b, c, e, f])   
 
         #check maximum size of the print
         if(max_x-max_y > RobotStats().max_x- RobotStats().min_x):
@@ -112,12 +112,17 @@ def extract_coordinates(file_path):
         y_offset = -min_y - (max_y - min_y) /2
         z_offset = -min_z
 
+        centered_coordinates = []
+        for x,y,z,a,b,c,e,f in coordinates:
+
+            centered_coordinates.append([x+x_offset, y+y_offset, z+z_offset, a, b, c, e, f])  
+        
         
         #modify the coordinates so that they are centered  
-        printing_coordinates = modify_coordinates(cartesian_coordinates, x_offset,y_offset,z_offset)
-
+        printing_coordinates = modify_coordinates(coordinates, x_offset,y_offset,z_offset)
+    
         GlobalState().coordinates = printing_coordinates
-        GlobalState().cartesian_coordinates = cartesian_coordinates          
+        GlobalState().cartesian_coordinates = centered_coordinates          
 
 def modify_coordinates(cartesian_coordinates, x_offset, y_offset, z_offset):
 
@@ -138,15 +143,15 @@ def write_coordinates():
 
     #loop iteration index
     i = 0
-
+    
     #set speed to printing speed
     msb.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
     uf.adjust_speed(GlobalState().printspeed_modifier, msb)
-
+    '''
     #initial setup
     sc.reset_pos(0)
     theta_base = 0
-
+    '''
     #test here
     sc.send_combined_position(30, 30, 1)
     while sc.done_arduino(1) == False:
@@ -291,7 +296,7 @@ def display_preview():
             raise ValueError("Invalid number of coordinate sets")
         
         # Add a circle in the z-plane
-        circle = patches.Circle((0, 0, 0),0.005, color='r', fill=False)  # Create a circle at the origin with radius 50
+        circle = patches.Circle((0, 0, 0),5, color='r', fill=False)  # Create a circle at the origin with radius 50
         ax.add_patch(circle)  # Add the circle to the plot
         art3d.pathpatch_2d_to_3d(circle, z=0, zdir="z")  # Convert the 2D circle to a 3D patch at z=0
         

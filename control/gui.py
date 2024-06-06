@@ -68,7 +68,6 @@ class GUI:
         self.configure(state="disabled")
         #sleep so that mutliple hits do not crash anything
         
-        
         #if other button active don't do anything
         if GlobalState().occupied == True:
             print("OCCUPIED")

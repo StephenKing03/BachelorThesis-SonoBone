@@ -227,9 +227,7 @@ def init_sequence():
         GlobalState().msb.Home() #Home the robot
         GlobalState().msb.ResetError()
         
-        #activate steppers
-        sc.init_steppers()
-        sc.wait_init()
+    
 
         
     msb = GlobalState().msb
@@ -250,9 +248,8 @@ def init_sequence():
     #setpayload!!!!!--------------------------------
     msb.WaitIdle()
 
-      
-  
-
+    
+    
     #send info text
     GlobalState().msb.WaitIdle()
     time.sleep(1)
@@ -262,6 +259,12 @@ def init_sequence():
     #set the robot to cleanpose
     cleanpose(GlobalState().msb)
     GlobalState().msb.WaitIdle()
+
+    if(GlobalState().arduino_port == None):
+       #activate steppers
+        sc.init_steppers()
+        sc.wait_init()
+
 
     GlobalState().printing_state = 1 #1 = ready to print
     GlobalState().confirmed = True
@@ -287,24 +290,25 @@ def exit_print():
 #---move the robot to specified position with out of bounds check---------------------------------------------------------
 def commandPose(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
 
+    error_code = checklimits(x,y,z,self)
     #check if the pose is within the limits
-    if(checklimits(x, y, z, self) != 0):
+    if(error_code != 0):
         print(f'Out of bounds detected -> override')
         #GlobalState().terminal_text += "out of bounds\n"
 
-        if(checklimits(x, y, z, self) == 1):
+        if(error_code == 1):
             x = RobotStats().max_x
-        elif(checklimits(x, y, z, self)  == -1):
+        elif(error_code  == -1):
             x = RobotStats().min_x
 
-        if(checklimits(x, y, z, self)  == 2):
+        if(error_code  == 2):
             y = RobotStats().max_y
-        elif(checklimits(x, y, z, self)  == -2):
+        elif(error_code  == -2):
             y = RobotStats().max_z
 
-        if(checklimits(x, y, z, self)  == 3):
+        if(error_code  == 3):
             z = RobotStats().max_z + GlobalState().user_z_offset
-        elif(checklimits(x, y, z, self)  == -3):
+        elif(error_code  == -3):
             z = RobotStats().min_z+ GlobalState().user_z_offset
     
     GlobalState().msb.SendCustomCommand(f'MovePose({x},{y},{z},{alpha},{beta},{gamma})')
