@@ -52,7 +52,7 @@ void read_input(){
   
   //read icoming text and transform it
   char buffer[32]; // Buffer to hold incoming data
-  Serial.setTimeout(4);
+  Serial.setTimeout(8);
   int length = Serial.readBytesUntil('\n', buffer, sizeof(buffer) - 1);
   buffer[length] = '\0'; // Null-terminate the String
   String input = String(buffer);
@@ -207,7 +207,7 @@ void init_motors(){
 void combined_turning(String command){
 
   //command in the form of : 'cb[position base]s[speedbase]e[extruderposition]t[extruderspeed]i[index]
-  Serial.println("\nAckknowleged: combined turning initiated: " + command);
+  //Serial.println("\nAckknowleged: combined turning initiated: " + command);
 
   int bIndex = command.indexOf('b');
   int sIndex = command.indexOf('s');
@@ -237,7 +237,7 @@ void combined_turning(String command){
   float extruder_halfPulseDuration = setRotationSpeed(extruderspeed);
 
   previous_base_position = base_position;
-  previous_extruder_position;
+  previous_extruder_position = extruder_position;
   
   //actually move the motors
   move_combined(base_stepgoal, extruder_stepgoal, base_halfPulseDuration, extruder_halfPulseDuration);

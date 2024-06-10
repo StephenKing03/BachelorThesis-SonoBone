@@ -189,8 +189,13 @@ def write_coordinates():
         next_checkpoint = GlobalState().msb.SetCheckpoint(i)
         
         #wait for arduino to confirm success:
-        if(i>2):
-            while sc.done_arduino_queue(i-2) == False:
+        timeout_time = time.time()
+        if(i>3):
+            while sc.done_arduino_queue(i-3) == False:
+                if(time.time() - timeout_time > 0.05):
+                    print("TIMEOUT ERROR")
+                    break
+
                 if GlobalState().printing_state != 2:  
                     print("exit path 4")
                     print(GlobalState().printing_state)
@@ -205,7 +210,7 @@ def write_coordinates():
         checkpoint = next_checkpoint
 
         #-----------------------send commands--------------------------------------------
-        uf.commandPose(x+RobotStats().center_x,y+RobotStats().center_y,z+RobotStats().min_z,a,0,-180)
+        uf.commandPose(x+RobotStats().center_x,y+RobotStats().center_y,z+RobotStats().min_z+GlobalState().user_z_offset,a,0,-180)
         sc.send_combined_position(theta_base, e, i)
 
 

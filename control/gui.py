@@ -9,6 +9,16 @@ import mecademicpy.robot as mdr
 from PIL import Image, ImageTk
 import sys
 
+'''
+from rich import print
+from rich.traceback import install
+install(show_locals=True)
+from rich.progress import track
+
+for i in track(range(10)):
+
+
+'''
 from tkinter import filedialog
 
 #TODO:
