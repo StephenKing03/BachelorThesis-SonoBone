@@ -33,17 +33,18 @@ def extrude(distance, speed):
     GlobalState().arduino_port.write(message_bytes)
 
 
-def send_combined_position(base_position, extruder_position, index):
+def send_combined_position(base_position, extruder_position, index, distance):
     
     GlobalState().sending_to_arduino = True
     extrusion_speed = round(100*RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /10)
     base_speed = round(GlobalState().printspeed_modifier * 0.1,2)
 
+    
     '''override'''
-    extrusion_speed = 100 
-    extruder_position = extruder_position * 0.5 * GlobalState().extrusion_speed_modifier / 10
+    extrusion_speed = 10 * distance *0.003
+    extruder_position = (extruder_position * 0.5 * GlobalState().extrusion_speed_modifier / 10 * 0.035) * distance/2
     # Convert value to message
-    message = "cb" + str(round(base_position,2)) + "s" + str(round(base_speed,2)) + "e" + str(round(extruder_position,2)) + "t" + str(round(extrusion_speed))+ "i" + str(index) + "\n"
+    message = "cb" + str(round(base_position,2)) + "s" + str(round(base_speed,2)) + "e" + str(round(extruder_position,2)) + "t" + str(round(extrusion_speed,2))+ "i" + str(index) + "\n"
     
     # Convert message to bytes - for sending
     message_bytes = message.encode()
@@ -53,11 +54,12 @@ def send_combined_position(base_position, extruder_position, index):
     print("sent in function: " + str(message))   
     time.sleep(0.02) 
     GlobalState().sending_to_arduino = False
+    GlobalState().last_extruder_pos = extruder_position
     return
 
 def send_base_solo_position(base_position, index):
     
-    extrusion_speed = round(RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /100)
+    extrusion_speed =0.8* round(RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /100)
     base_speed = round(GlobalState().printspeed_modifier * 0.1,2)
     # Convert value to message
     message = "b" + str(round(base_position,2)) + "s" + str(base_speed) + "i" + str(index)
@@ -186,13 +188,20 @@ def done_arduino_queue(index):
     print("waiting for: done i"+ str(index) + "  messages: " + str(messages))
     for i, message in enumerate(messages):
         if message == "-done i" + str(index):
-            GlobalState().arduino_info = GlobalState().arduino_info[i-1:] #remove old messages
+            buffer = GlobalState().arduino_info[i-1:] #remove old messages
+            GlobalState().arduino_info = []
+            GlobalState().arduino_info = buffer
             print("arduino checkpoint completed")
             return True
         
     return False
-    
-            
+
+def start_reset():
+
+    message = "reset"
+    message_bytes = message.encode()
+    GlobalState().arduino_port.write(message_bytes)
+    print("reset sent") 
         
 def reset_pos(theta):
 

@@ -143,10 +143,12 @@ def write_coordinates():
 
     #loop iteration index
     i = 0
+    j = 0
     
     #set speed to printing speed
     msb.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
     uf.adjust_speed(GlobalState().printspeed_modifier, msb)
+    sc.start_reset()
     '''
     #initial setup
     sc.reset_pos(0)
@@ -180,19 +182,26 @@ def write_coordinates():
 
         #--------------------------progress report--------------------------------------
         i += 1 #index
+        if j < 100:
+            j += 1 #index
+        else:
+            j = 1 #checkpoint system only goes to max of 8000 on the robot =(
+            GlobalState().arduino_info.clear()
+
         GlobalState().current_line = i
         GlobalState().current_progress = round(float(i)/float(len(coordinates)) * 100, 1)
 
         #--------------------------checkpoint system------------------------------------
         
         #create checkpoint for the program to wait so that the poses are synchronized
-        next_checkpoint = GlobalState().msb.SetCheckpoint(i)
+        if(i %4 == 0):
+            next_checkpoint = GlobalState().msb.SetCheckpoint(j)
         
         #wait for arduino to confirm success:
         timeout_time = time.time()
-        if(i>3):
+        if(i>9 and i % 4 == 0):
             while sc.done_arduino_queue(i-3) == False:
-                if(time.time() - timeout_time > 0.05):
+                if(time.time() - timeout_time > 0.2):
                     print("TIMEOUT ERROR")
                     break
 
@@ -203,15 +212,20 @@ def write_coordinates():
                 time.sleep(0.1)
 
         #wait for robot arm to have reached the position
-        if(i > 1):
+        if(i > 9 and i % 4 == 0):
             checkpoint.wait(timeout=5/GlobalState().printspeed_modifier * 100)
 
         #move checkpoint object for the next iteration
-        checkpoint = next_checkpoint
+        if i%4 == 0 and i > 4:
+            checkpoint = next_checkpoint
+
+        distance = (((GlobalState().last_pose[0]-x)**2 + (GlobalState().last_pose[1]-y)**2 + (GlobalState().last_pose[2]-z)**2) **0.5)
 
         #-----------------------send commands--------------------------------------------
         uf.commandPose(x+RobotStats().center_x,y+RobotStats().center_y,z+RobotStats().min_z+GlobalState().user_z_offset,a,0,-180)
-        sc.send_combined_position(theta_base, e, i)
+        if(i % 2 == 0):
+            sc.send_combined_position(theta_base, e, j, distance)
+            GlobalState().last_pose = [x+RobotStats().center_x,y+RobotStats().center_y,z*1.3+RobotStats().min_z+GlobalState().user_z_offset,a,0,-180]
 
 
     #print loop finished

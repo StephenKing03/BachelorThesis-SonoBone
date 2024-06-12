@@ -45,6 +45,7 @@ class GlobalState:
     last_pose = [130, 0, 100, 180, 0, -180]
     last_base_angle = 0
     previous_state = 0
+    last_extruder_pos = 0
 
     arduino_info = [None]
 
@@ -71,7 +72,7 @@ class GlobalState:
 
 class RobotStats:
     def __init__(self):
-        self.min_z = -4.9 + 1.3
+        self.min_z = -4.9 + 1.3 - 0.5
         self.max_z = 100
         self.min_x = 110
         self.max_x = 170

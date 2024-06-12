@@ -296,18 +296,16 @@ void move_combined(int steps_base, int steps_extruder, float halfPulseDuration_b
       digitalWrite(STEP_Base, LOW);
       digitalWrite(DIR_Base, LOW);
       last_time = micros();
-      delay(100);
       Serial.println("done");
 
 }
 
-void reset_position_to(String command){
+void reset_position(String command){
 
- int rIndex = command.indexOf('r');
- String rString = command.substring(rIndex + 1); 
- int position = rString.toInt();
+ previous_base_position = 0;
+ previous_extruder_position = 0;
 
- previous_base_position = position;
+ Serial.println("reset done");
 
 }
 
@@ -347,7 +345,7 @@ void process_data(String command){
   else if (command.startsWith("e")){ // command "e[steps extruder]s[speed extruder]"
       turn_extruder(command);}
   else if (command.startsWith("r"))
-      {reset_position_to(command); }
+      {reset_position(command); }
   else
     {Serial.println("Invalid Command. Command was: " + String(command));}
 }

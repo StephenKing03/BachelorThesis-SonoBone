@@ -622,7 +622,7 @@ def wait_for_callibration():
 def uncallibrate():
 
     #uf.commandPose(GlobalState().last_pose)
-
+    uf.cleanpose(GlobalState().msb)
     return
 
 
