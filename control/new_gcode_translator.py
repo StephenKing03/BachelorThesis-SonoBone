@@ -144,10 +144,14 @@ def write_coordinates():
     #loop iteration index
     i = 0
     j = 0
+    extruder_zero = 0.5
+   
     
     #set speed to printing speed
     msb.SendCustomCommand(f'SetJointVelLimit({GlobalState().printspeed_modifier * RobotStats().joint_vel_limit/100/2})')
     uf.adjust_speed(GlobalState().printspeed_modifier, msb)
+    #sc.send_combined_position(0, 10, 1, 1)
+    #GlobalState.arduino_info.clear()
     sc.start_reset()
     '''
     #initial setup
@@ -224,7 +228,7 @@ def write_coordinates():
         #-----------------------send commands--------------------------------------------
         uf.commandPose(x+RobotStats().center_x,y+RobotStats().center_y,z+RobotStats().min_z+GlobalState().user_z_offset,a,0,-180)
         if(i % 2 == 0):
-            sc.send_combined_position(theta_base, e, j, distance)
+            sc.send_combined_position(theta_base, e + extruder_zero, j, distance)
             GlobalState().last_pose = [x+RobotStats().center_x,y+RobotStats().center_y,z*1.3+RobotStats().min_z+GlobalState().user_z_offset,a,0,-180]
 
 

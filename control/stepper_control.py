@@ -36,13 +36,13 @@ def extrude(distance, speed):
 def send_combined_position(base_position, extruder_position, index, distance):
     
     GlobalState().sending_to_arduino = True
-    extrusion_speed = round(100*RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /10)
+    extrusion_speed = round(100*RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /50)
     base_speed = round(GlobalState().printspeed_modifier * 0.1,2)
 
     
     '''override'''
-    extrusion_speed = 10 * distance *0.003
-    extruder_position = (extruder_position * 0.5 * GlobalState().extrusion_speed_modifier / 10 * 0.035) * distance/2
+    #extrusion_speed = 10 #* distance *0.003
+    extruder_position = (extruder_position * 0.5 * GlobalState().extrusion_speed_modifier / 10 * 0.0075) * distance/2
     # Convert value to message
     message = "cb" + str(round(base_position,2)) + "s" + str(round(base_speed,2)) + "e" + str(round(extruder_position,2)) + "t" + str(round(extrusion_speed,2))+ "i" + str(index) + "\n"
     
