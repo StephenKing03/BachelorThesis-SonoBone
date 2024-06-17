@@ -38,14 +38,16 @@ def send_combined_position(base_position, extruder_position, index, distance):
     GlobalState().sending_to_arduino = True
     extrusion_speed = round(100*RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /50)
     base_speed = round(GlobalState().printspeed_modifier * 0.1,2)
-
+    
+    if extruder_position < 0:
+        extrusion_speed = 300
+    print("EX---------------------------------" +str(extruder_position))
     
     '''override'''
     #extrusion_speed = 10 #* distance *0.003
-    extruder_position = (extruder_position * 0.5 * GlobalState().extrusion_speed_modifier / 10 * 0.0075) * distance/2
+    extruder = (extruder_position) * GlobalState().extrusion_speed_modifier * 0.07
     # Convert value to message
-    message = "cb" + str(round(base_position,2)) + "s" + str(round(base_speed,2)) + "e" + str(round(extruder_position,2)) + "t" + str(round(extrusion_speed,2))+ "i" + str(index) + "\n"
-    
+    message = "cb" + str(round(base_position,2)) + "s" + str(round(base_speed,2)) + "e" + str(round(extruder,4)) + "t" + str(round(extrusion_speed,2))+ "i" + str(index) + "\n"
     # Convert message to bytes - for sending
     message_bytes = message.encode()
     
@@ -54,7 +56,7 @@ def send_combined_position(base_position, extruder_position, index, distance):
     print("sent in function: " + str(message))   
     time.sleep(0.02) 
     GlobalState().sending_to_arduino = False
-    GlobalState().last_extruder_pos = extruder_position
+    
     return
 
 def send_base_solo_position(base_position, index):
@@ -194,7 +196,7 @@ def done_arduino_queue(index):
             print("arduino checkpoint completed")
             return True
         
-    return False
+    return True  #change this to false if you want to wait for the message
 
 def start_reset():
 

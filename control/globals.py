@@ -72,7 +72,7 @@ class GlobalState:
 
 class RobotStats:
     def __init__(self):
-        self.min_z = -4.9 + 1.3 - 0.6
+        self.min_z = -4.9 + 1.3 - 0.1
         self.max_z = 100
         self.min_x = 110
         self.max_x = 170

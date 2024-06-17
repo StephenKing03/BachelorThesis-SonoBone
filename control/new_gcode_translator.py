@@ -144,7 +144,7 @@ def write_coordinates():
     #loop iteration index
     i = 0
     j = 0
-    extruder_zero = 0.5
+    extruder_zero = 1
    
     
     #set speed to printing speed
@@ -203,7 +203,7 @@ def write_coordinates():
         
         #wait for arduino to confirm success:
         timeout_time = time.time()
-        if(i>9 and i % 4 == 0):
+        if(i>9 and i % 4 == 0 and distance > 1):
             while sc.done_arduino_queue(i-3) == False:
                 if(time.time() - timeout_time > 0.2):
                     print("TIMEOUT ERROR")
@@ -227,11 +227,13 @@ def write_coordinates():
 
         #-----------------------send commands--------------------------------------------
         uf.commandPose(x+RobotStats().center_x,y+RobotStats().center_y,z+RobotStats().min_z+GlobalState().user_z_offset,a,0,-180)
-        if(i % 2 == 0):
-            sc.send_combined_position(theta_base, e + extruder_zero, j, distance)
+        if(i % 2 == 0 or e + extruder_zero - GlobalState().last_extruder_pos < 0):
+            sc.send_combined_position(theta_base, e + extruder_zero - GlobalState().last_extruder_pos, j, distance)
             GlobalState().last_pose = [x+RobotStats().center_x,y+RobotStats().center_y,z*1.3+RobotStats().min_z+GlobalState().user_z_offset,a,0,-180]
+            if GlobalState().last_extruder_pos != e + extruder_zero:
+                GlobalState().last_extruder_pos = e + extruder_zero
 
-
+        
     #print loop finished
 
     #set speed higher again

@@ -132,7 +132,7 @@ void turn_extruder(String command){
 
 
   //calc steps and speed
-  int stepgoal = setStepsNumber(position, previous_extruder_position);
+  int stepgoal = setStepsNumber(position, 0);
   float halfPulseDuration = setRotationSpeed(speed);
   previous_extruder_position = position;
   
