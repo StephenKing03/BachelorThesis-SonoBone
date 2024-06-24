@@ -1,3 +1,4 @@
+'''actually used'''
 import math
 import time #for time.sleep()
 import utility_functions as uf #import utility functions
@@ -97,7 +98,7 @@ def extract_coordinates(file_path):
                         coordinates.append([x, y, z, a, b, c, e, f])   
 
         #check maximum size of the print
-        if(max_x-max_y > RobotStats().max_x- RobotStats().min_x):
+        if(max_x-min_x > RobotStats().max_x- RobotStats().min_x):
             GlobalState().terminal_text +=("Print too large in x-direction for delta x = " + str(max_x - min_x) + "it must be withing the range of delta x = " + str(RobotStats().max_x - RobotStats().min_x))
             return
         if(max_y-min_y > RobotStats().max_y- RobotStats().min_y):
@@ -179,10 +180,10 @@ def write_coordinates():
             time.sleep(0.1)
         
         # Check printing_state if the print is stopped
-            if GlobalState().printing_state == 5:  
-                print("exit path 2")
-                print(GlobalState().printing_state)
-                return
+        if GlobalState().printing_state == 5:  
+            print("exit path 2")
+            print(GlobalState().printing_state)
+            return
 
         #--------------------------progress report--------------------------------------
         i += 1 #index

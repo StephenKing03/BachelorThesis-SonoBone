@@ -1,3 +1,4 @@
+'''actually used'''
 import customtkinter as ctk
 import tkinter as tk
 import string
@@ -20,9 +21,6 @@ for i in track(range(10)):
 
 '''
 from tkinter import filedialog
-
-#TODO:
-#implement the function for disabling the buttons and error handling
 
 import utility_functions as uf  # import utility functions
 import new_gcode_translator as gt  # import gcode translator
@@ -376,7 +374,6 @@ def wait_for_printing():
     global calibrate_button
     global select_file_button
     
-
     #re-enable the buttons
     calibrate_button.configure(state="normal", fg_color = GUI.buttoncolor)
     file_button.configure(state="normal", fg_color = GUI.buttoncolor)
@@ -421,7 +418,7 @@ def stop():
     GlobalState().printing_state = 1 #1 = ready to print
 
     GUI.reenable_button(stop_button)
-    
+    #blabliblub
     status_update("stopped - ready to print again")
     return
 

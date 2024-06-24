@@ -1,3 +1,4 @@
+'''actually used'''
 import serial
 import time
 from globals import GlobalState
@@ -36,7 +37,7 @@ def extrude(distance, speed):
 def send_combined_position(base_position, extruder_position, index, distance):
     
     GlobalState().sending_to_arduino = True
-    extrusion_speed = round(100*RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /50)
+    #extrusion_speed = round(100*RobotStats().extrusion_speed * GlobalState().extrusion_speed_modifier * GlobalState().printspeed_modifier / 100 / 100 /50)
     base_speed = round(GlobalState().printspeed_modifier * 0.1,2)
     
     if extruder_position < 0:
@@ -196,7 +197,7 @@ def done_arduino_queue(index):
             print("arduino checkpoint completed")
             return True
         
-    return True  #change this to false if you want to wait for the message
+    return False  #change this to false if you want to wait for the message #or maybe not??
 
 def start_reset():
 

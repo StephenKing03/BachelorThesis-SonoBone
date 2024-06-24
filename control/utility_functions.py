@@ -1,3 +1,5 @@
+'''actually used'''
+
 import mecademicpy.robot as mdr #mechademicpy API import (see Github documentation)
 import time #for time.sleep()
 from globals import RobotStats
@@ -218,17 +220,15 @@ def init_sequence():
 
     #connect to robot if the robot is not connected already (e.g. from reset)
     if(GlobalState().msb == None):
-        try:    
-            GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
-            GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
-            
-            GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
-            GlobalState().msb.ResetError()
-            GlobalState().msb.Home() #Home the robot
-            GlobalState().msb.ResetError()
-        except:
-            print("Could not connect to robot")
-            return
+          
+        GlobalState().msb = mdr.Robot() #msb = MegaSonoBot # instance of the robot class
+        GlobalState().msb.Connect(address='192.168.0.100') #using IP address of the robot and Port 10000 to control
+        
+        GlobalState().msb.ActivateRobot() #same as in the webinterface: activate Robot
+        GlobalState().msb.ResetError()
+        GlobalState().msb.Home() #Home the robot
+        GlobalState().msb.ResetError()
+        
 
     if(GlobalState().arduino_port == None):
        #activate steppers
@@ -339,7 +339,7 @@ def commandPose5d(x,y,z,alpha,beta,gamma, self = mdr.Robot()):
     
 def check_round_bounds(x,y):
 
-    r = math.sqrt(x**2 + y**2)
+    r = math.sqrt(x**2 + y**2) #this wrong
     if r > RobotStats().diameter/2:
         GlobalState().terminal_text += "\nDiameter of the print is too large for r = " + str(r)+ " \n" + "It must be within r = " + str(RobotStats().diameter /2) 
         return True

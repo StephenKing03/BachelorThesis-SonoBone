@@ -1,4 +1,5 @@
 # globals.py
+'''actually used'''
 
 class GlobalState:
     #singeleton class
@@ -72,7 +73,7 @@ class GlobalState:
 
 class RobotStats:
     def __init__(self):
-        self.min_z = -4.9 + 1.3 - 0.1
+        self.min_z = -4.9 + 1.3 +0.2
         self.max_z = 100
         self.min_x = 110
         self.max_x = 170
